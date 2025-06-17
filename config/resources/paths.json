@@ -3,6 +3,6 @@
   "modelPath": "assets/models",
   "shaderPath": "assets/shaders",
   "debugPath": "config/debug",
-  "scenesPath": "config/scenes",
+  "scenesPath": "assets/scenes",
   "engineSettingsPath": "config/engine"
 }

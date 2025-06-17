@@ -3,96 +3,6 @@
     "name": "scene",
     "entities": [
         {
-            "name": "PointLight",
-            "components": [
-                {
-                    "type": "transform",
-                    "position": [
-                        -3.2417795658111574,
-                        7.275007724761963,
-                        -8.229402542114258
-                    ],
-                    "rotation": [
-                        0.0,
-                        -0.0,
-                        0.0
-                    ],
-                    "scale": [
-                        1.0,
-                        1.0,
-                        1.0
-                    ]
-                },
-                {
-                    "type": "light",
-                    "color": [
-                        1.0,
-                        1.0,
-                        1.0
-                    ],
-                    "intensity": 1.0
-                },
-                {
-                    "type": "pointLight",
-                    "range": 10.0
-                }
-            ]
-        },
-        {
-            "name": "Model_Duck.gltf",
-            "components": [
-                {
-                    "type": "transform",
-                    "position": [
-                        2.5071985721588136,
-                        3.4570724964141847,
-                        -6.285557746887207
-                    ],
-                    "rotation": [
-                        0.0,
-                        -0.0,
-                        0.0
-                    ],
-                    "scale": [
-                        1.0,
-                        1.0,
-                        1.0
-                    ]
-                },
-                {
-                    "type": "model",
-                    "path": "assets/models\\gltf\\2.0\\Duck\\glTF\\Duck.gltf"
-                }
-            ]
-        },
-        {
-            "name": "Model_CesiumMilkTruck.gltf",
-            "components": [
-                {
-                    "type": "transform",
-                    "position": [
-                        -3.927945375442505,
-                        1.2749940156936646,
-                        -0.2390882968902588
-                    ],
-                    "rotation": [
-                        -179.9999542236328,
-                        89.99999237060547,
-                        -179.9999542236328
-                    ],
-                    "scale": [
-                        2.5896942615509035,
-                        2.5899999141693117,
-                        2.5896942615509035
-                    ]
-                },
-                {
-                    "type": "model",
-                    "path": "assets/models\\gltf\\2.0\\CesiumMilkTruck\\glTF\\CesiumMilkTruck.gltf"
-                }
-            ]
-        },
-        {
             "name": "Model_WaterBottle.gltf",
             "components": [
                 {
@@ -152,13 +62,13 @@
                 {
                     "type": "transform",
                     "position": [
-                        -2.762599229812622,
-                        6.6258721351623539,
-                        -13.049397468566895
+                        -3.1162538528442385,
+                        8.36567211151123,
+                        -13.440471649169922
                     ],
                     "rotation": [
-                        15.400434494018555,
-                        0.8018279075622559,
+                        23.800155639648439,
+                        -0.08629604429006577,
                         0.0
                     ],
                     "scale": [
@@ -191,14 +101,14 @@
                         1.0,
                         1.0
                     ],
-                    "intensity": 3.200000047683716
+                    "intensity": 4.5
                 },
                 {
                     "type": "directionalLight",
                     "direction": [
                         0.0,
-                        -0.6363011598587036,
-                        0.771440863609314
+                        -0.6224371194839478,
+                        0.7826697826385498
                     ]
                 }
             ]
@@ -234,17 +144,17 @@
             ]
         },
         {
-            "name": "SpotLight",
+            "name": "PointLight",
             "components": [
                 {
                     "type": "transform",
                     "position": [
-                        -1.7634743452072144,
-                        4.9535322189331059,
-                        -5.968710899353027
+                        -2.6818690299987795,
+                        7.275007724761963,
+                        -7.1555023193359379
                     ],
                     "rotation": [
-                        90.00000762939453,
+                        0.0,
                         -0.0,
                         0.0
                     ],
@@ -257,17 +167,15 @@
                 {
                     "type": "light",
                     "color": [
-                        0.0,
-                        0.0,
+                        1.0,
+                        1.0,
                         1.0
                     ],
-                    "intensity": 5.0
+                    "intensity": 1.0
                 },
                 {
-                    "type": "spotLight",
-                    "range": 20.0,
-                    "innerConeAngle": 20.0,
-                    "outerConeAngle": 30.0
+                    "type": "pointLight",
+                    "range": 10.0
                 }
             ]
         },
@@ -277,9 +185,36 @@
                 {
                     "type": "transform",
                     "position": [
-                        -7.731057643890381,
+                        -7.98748779296875,
                         4.322293281555176,
                         -6.492524147033691
+                    ],
+                    "rotation": [
+                        0.0,
+                        -0.0,
+                        0.0
+                    ],
+                    "scale": [
+                        1.2599999904632569,
+                        1.2599965333938599,
+                        1.2599965333938599
+                    ]
+                },
+                {
+                    "type": "model",
+                    "path": "assets/models\\gltf\\2.0\\SciFiHelmet\\glTF\\SciFiHelmet.gltf"
+                }
+            ]
+        },
+        {
+            "name": "Model_Duck.gltf",
+            "components": [
+                {
+                    "type": "transform",
+                    "position": [
+                        2.5071985721588136,
+                        3.4570724964141847,
+                        -6.285557746887207
                     ],
                     "rotation": [
                         0.0,
@@ -294,7 +229,7 @@
                 },
                 {
                     "type": "model",
-                    "path": "assets/models\\gltf\\2.0\\SciFiHelmet\\glTF\\SciFiHelmet.gltf"
+                    "path": "assets/models\\gltf\\2.0\\Duck\\glTF\\Duck.gltf"
                 }
             ]
         }

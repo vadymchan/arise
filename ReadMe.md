@@ -75,7 +75,6 @@ Tracy profile
 
 ### Asset Pipeline
 
-- Model loading via Assimp
 - glTF 2.0 support with KTX2/BasisU textures
 - Mesh optimization at runtime (EXT_meshopt decoder)
 - MikkTSpace tangent generation
@@ -147,7 +146,6 @@ I strongly recommend creating a separate build directory and building the projec
 - `BUILD_SPDLOG` (default: ON) - Logging library
 - `BUILD_BULLET` (default: OFF) - Physics engine
 - `BUILD_IMGUI` (default: ON) - Dear ImGui UI library
-- `BUILD_ASSIMP` (default: OFF) - Asset import library
 - `BUILD_STB` (default: ON) - STB image loading
 - `BUILD_MATH_LIBRARY` (default: ON) - Custom math library with SIMD
 - `BUILD_ENTT` (default: ON) - Entity Component System
@@ -276,7 +274,6 @@ To enable profiling, build with `-DUSE_PROFILING=ON`. The engine integrates with
 
 ### Asset Loading
 
-- [Assimp](https://github.com/assimp/assimp.git) - 3D model loading
 - [stb](https://github.com/nothings/stb.git) - Image loading
 - [cgltf](https://github.com/jkuhlmann/cgltf.git) - glTF parsing
 - [libktx](https://github.com/KhronosGroup/KTX-Software.git) - KTX texture loading

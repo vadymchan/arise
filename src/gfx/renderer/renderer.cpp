@@ -89,26 +89,38 @@ RenderContext Renderer::beginFrame(Scene* scene, const RenderSettings& renderSet
     return RenderContext();
   }
 
-  m_currentFrame = (m_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
-  auto& fence    = m_frameFences[m_currentFrame];
+  {
+    CPU_ZONE_NC("Frame Synchronization", color::PURPLE);
+    m_currentFrame = (m_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+    auto& fence    = m_frameFences[m_currentFrame];
 
-  fence->wait();
-  fence->reset();
-
-  if (auto* profiler = ServiceLocator::s_get<gpu::GpuProfiler>()) {
-    profiler->newFrame();
+    fence->wait();
+    fence->reset();
   }
 
-  auto deletionManager = ServiceLocator::s_get<ResourceDeletionManager>();
-  if (deletionManager) {
-    deletionManager->setCurrentFrame(m_frameIndex);
+  {
+    CPU_ZONE_NC("Profiler Setup", color::PURPLE);
+    if (auto* profiler = ServiceLocator::s_get<gpu::GpuProfiler>()) {
+      profiler->newFrame();
+    }
+
+    auto deletionManager = ServiceLocator::s_get<ResourceDeletionManager>();
+    if (deletionManager) {
+      deletionManager->setCurrentFrame(m_frameIndex);
+    }
   }
 
-  m_resourceManager->updateScheduledPipelines();
+  {
+    CPU_ZONE_NC("Resource Updates", color::PURPLE);
+    m_resourceManager->updateScheduledPipelines();
+  }
 
-  if (!m_swapChain->acquireNextImage(m_imageAvailableSemaphores[m_currentFrame].get())) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to acquire next swapchain image");
-    return RenderContext();
+  {
+    CPU_ZONE_NC("Swapchain Acquisition", color::PURPLE);
+    if (!m_swapChain->acquireNextImage(m_imageAvailableSemaphores[m_currentFrame].get())) {
+      GlobalLogger::Log(LogLevel::Error, "Failed to acquire next swapchain image");
+      return RenderContext();
+    }
   }
 
   auto commandBuffer = acquireCommandBuffer_();
@@ -116,41 +128,47 @@ RenderContext Renderer::beginFrame(Scene* scene, const RenderSettings& renderSet
 
   GPU_ZONE_NC(commandBuffer.get(), "Begin Frame", color::PURPLE);
 
+  {
+    GPU_ZONE_NC(commandBuffer.get(), "Descriptor Heap Setup", color::PURPLE);
 #ifdef ARISE_RHI_DX12
-  if (m_device->getApiType() == rhi::RenderingApi::Dx12) {
-    auto dx12CmdBuffer = static_cast<rhi::CommandBufferDx12*>(commandBuffer.get());
-    dx12CmdBuffer->bindDescriptorHeaps();
-  }
+    if (m_device->getApiType() == rhi::RenderingApi::Dx12) {
+      auto dx12CmdBuffer = static_cast<rhi::CommandBufferDx12*>(commandBuffer.get());
+      dx12CmdBuffer->bindDescriptorHeaps();
+    }
 #endif  //  ARISE_RHI_DX12
-
-  math::Dimension2i viewportDimension;
-  switch (renderSettings.appMode) {
-    case ApplicationRenderMode::Game:
-      viewportDimension = m_window->getSize();
-      break;
-    case ApplicationRenderMode::Editor:
-      viewportDimension = renderSettings.renderViewportDimension;
-      onViewportResize(viewportDimension);
-      break;
-    default:
-      GlobalLogger::Log(LogLevel::Error, "Invalid application mode");
-      return RenderContext();
   }
 
-  auto  swapchainImage    = m_swapChain->getCurrentImage();
-  auto& renderTarget      = m_frameResources->getRenderTargets(m_swapChain->getCurrentImageIndex());
-  renderTarget.backBuffer = swapchainImage;
+  {
+    CPU_ZONE_NC("Viewport Setup", color::PURPLE);
+    math::Dimension2i viewportDimension;
+    switch (renderSettings.appMode) {
+      case ApplicationRenderMode::Game:
+        viewportDimension = m_window->getSize();
+        break;
+      case ApplicationRenderMode::Editor:
+        viewportDimension = renderSettings.renderViewportDimension;
+        onViewportResize(viewportDimension);
+        break;
+      default:
+        GlobalLogger::Log(LogLevel::Error, "Invalid application mode");
+        return RenderContext();
+    }
 
-  RenderContext context;
-  context.scene             = scene;
-  context.commandBuffer     = std::move(commandBuffer);
-  context.viewportDimension = viewportDimension;
-  context.renderSettings    = renderSettings;
-  context.currentImageIndex = m_swapChain->getCurrentImageIndex();
+    auto  swapchainImage    = m_swapChain->getCurrentImage();
+    auto& renderTarget      = m_frameResources->getRenderTargets(m_swapChain->getCurrentImageIndex());
+    renderTarget.backBuffer = swapchainImage;
 
-  m_frameResources->updatePerFrameResources(context);
+    RenderContext context;
+    context.scene             = scene;
+    context.commandBuffer     = std::move(commandBuffer);
+    context.viewportDimension = viewportDimension;
+    context.renderSettings    = renderSettings;
+    context.currentImageIndex = m_swapChain->getCurrentImageIndex();
 
-  return context;
+    m_frameResources->updatePerFrameResources(context);
+
+    return context;
+  }
 }
 
 void Renderer::renderFrame(RenderContext& context) {
@@ -220,6 +238,7 @@ void Renderer::endFrame(RenderContext& context) {
   }
 
   {
+    CPU_ZONE_NC("Collect GPU Profiler Data", color::PURPLE);
     GPU_ZONE_NC(context.commandBuffer.get(), "End Frame", color::PURPLE);
 
     if (auto* profiler = ServiceLocator::s_get<gpu::GpuProfiler>()) {
@@ -227,28 +246,39 @@ void Renderer::endFrame(RenderContext& context) {
     }
   }
 
-  context.commandBuffer->end();
-
-  std::vector<rhi::Semaphore*> waitSemaphores;
-  auto&                        imageAvailableSemaphore = m_imageAvailableSemaphores[m_currentFrame];
-  if (imageAvailableSemaphore.get()) {
-    waitSemaphores.push_back(imageAvailableSemaphore.get());
+  {
+    CPU_ZONE_NC("End Command Buffer", color::PURPLE);
+    context.commandBuffer->end();
   }
 
-  std::vector<rhi::Semaphore*> signalSemaphores;
-  auto&                        renderFinishedSemaphore = m_renderFinishedSemaphores[m_currentFrame];
-  if (renderFinishedSemaphore.get()) {
-    signalSemaphores.push_back(renderFinishedSemaphore.get());
+  auto& renderFinishedSemaphore = m_renderFinishedSemaphores[m_currentFrame];
+  {
+    CPU_ZONE_NC("Prepare Semaphores", color::PURPLE);
+    std::vector<rhi::Semaphore*> waitSemaphores;
+    auto&                        imageAvailableSemaphore = m_imageAvailableSemaphores[m_currentFrame];
+    if (imageAvailableSemaphore.get()) {
+      waitSemaphores.push_back(imageAvailableSemaphore.get());
+    }
+
+    std::vector<rhi::Semaphore*> signalSemaphores;
+
+    if (renderFinishedSemaphore.get()) {
+      signalSemaphores.push_back(renderFinishedSemaphore.get());
+    }
+
+    m_device->submitCommandBuffer(
+        context.commandBuffer.get(), m_frameFences[m_currentFrame].get(), waitSemaphores, signalSemaphores);
   }
 
-  m_device->submitCommandBuffer(
-      context.commandBuffer.get(), m_frameFences[m_currentFrame].get(), waitSemaphores, signalSemaphores);
-
-  m_swapChain->present(renderFinishedSemaphore.get());
-
-  recycleCommandBuffer_(std::move(context.commandBuffer));
-
-  m_frameIndex++;
+  {
+    CPU_ZONE_NC("Present", color::PURPLE);
+    m_swapChain->present(renderFinishedSemaphore.get());
+  }
+  {
+    CPU_ZONE_NC("Cleanup", color::PURPLE);
+    recycleCommandBuffer_(std::move(context.commandBuffer));
+    m_frameIndex++;
+  }
 }
 
 bool Renderer::onWindowResize(uint32_t width, uint32_t height) {

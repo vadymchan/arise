@@ -9,7 +9,7 @@
 
 namespace arise {
 
-// This is the geometry data on CPU side (imported from assimp / cgltf)
+// This is the geometry data on CPU side (imported from cgltf)
 struct Mesh {
   std::string           meshName;
   std::vector<Vertex>   vertices;

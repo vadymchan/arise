@@ -1,4 +1,3 @@
-
 #include "core/engine.h"
 
 #include "config/config_manager.h"
@@ -20,8 +19,6 @@
 #include "input/input_manager.h"
 #include "profiler/backends/gpu_profiler_factory.h"
 #include "profiler/profiler.h"
-#include "resources/assimp/assimp_material_loader.h"
-#include "resources/assimp/assimp_render_model_loader.h"
 #include "resources/cgltf/cgltf_material_loader.h"
 #include "resources/cgltf/cgltf_model_loader.h"
 #include "resources/cgltf/cgltf_render_model_loader.h"
@@ -288,11 +285,6 @@ auto Engine::initialize() -> bool {
   // CPU
   ServiceLocator::s_provide<MeshManager>();
   auto modelLoaderManager = std::make_unique<ModelLoaderManager>();
-#ifdef ARISE_USE_ASSIMP
-  auto assimpCpuModelLoader = std::make_shared<AssimpModelLoader>();
-  modelLoaderManager->registerLoader(ModelType::OBJ, assimpCpuModelLoader);
-  modelLoaderManager->registerLoader(ModelType::FBX, assimpCpuModelLoader);
-#endif  // ARISE_USE_ASSIMP
   auto cgltfCpuModelLoader = std::make_shared<CgltfModelLoader>();
   modelLoaderManager->registerLoader(ModelType::GLTF, cgltfCpuModelLoader);
   modelLoaderManager->registerLoader(ModelType::GLB, cgltfCpuModelLoader);
@@ -303,11 +295,6 @@ auto Engine::initialize() -> bool {
   ServiceLocator::s_provide<RenderMeshManager>();
   ServiceLocator::s_provide<RenderGeometryMeshManager>();
   auto renderModelLoaderManager = std::make_unique<RenderModelLoaderManager>();
-#ifdef ARISE_USE_ASSIMP
-  auto assimpModelLoader = std::make_shared<AssimpRenderModelLoader>();
-  renderModelLoaderManager->registerLoader(ModelType::OBJ, assimpModelLoader);
-  renderModelLoaderManager->registerLoader(ModelType::FBX, assimpModelLoader);
-#endif  // ARISE_USE_ASSIMP
   auto cgltfModelLoader = std::make_shared<CgltfRenderModelLoader>();
   renderModelLoaderManager->registerLoader(ModelType::GLTF, cgltfModelLoader);
   renderModelLoaderManager->registerLoader(ModelType::GLB, cgltfModelLoader);
@@ -318,11 +305,6 @@ auto Engine::initialize() -> bool {
   // Materials
   ServiceLocator::s_provide<MaterialManager>();
   auto materialLoaderManager = std::make_unique<MaterialLoaderManager>();
-#ifdef ARISE_USE_ASSIMP
-  auto assimpMaterialLoader = std::make_shared<AssimpMaterialLoader>();
-  materialLoaderManager->registerLoader(MaterialType::MTL, assimpMaterialLoader);
-  materialLoaderManager->registerLoader(MaterialType::FBX, assimpMaterialLoader);
-#endif  // ARISE_USE_ASSIMP
   auto cgltfMaterialLoader = std::make_shared<CgltfMaterialLoader>();
   materialLoaderManager->registerLoader(MaterialType::GLTF, cgltfMaterialLoader);
   ServiceLocator::s_provide<MaterialLoaderManager>(std::move(materialLoaderManager));

@@ -9,7 +9,7 @@
 
 namespace arise {
 
-// This is the geometry data on CPU side (imported from assimp / cgltf)
+// This is the geometry data on CPU side (imported from cgltf)
 struct Model {
   // TODO: no modelNames (consider adding it, maybe filename is already okay)
   std::filesystem::path filePath;

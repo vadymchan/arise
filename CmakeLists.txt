@@ -12,7 +12,6 @@ option(BUILD_GLFW         "Build the GLFW library"      OFF)
 option(BUILD_SPDLOG       "Build the SPDLOG library"    ON)
 option(BUILD_BULLET       "Build the Bullet library"    OFF)
 option(BUILD_IMGUI        "Build the ImGui library"     ON)
-option(BUILD_ASSIMP       "Build the Assimp library"    OFF)
 option(BUILD_STB          "Build the STB library"       ON)
 option(BUILD_BOOST        "Build the Boost library"     OFF)
 option(BUILD_EIGEN        "Build the Eigen library"     OFF)
@@ -230,22 +229,6 @@ if(BUILD_IMGUIFILEDIALOG)
         imguifiledialog
         GIT_REPOSITORY https://github.com/aiekick/ImGuiFileDialog.git
         GIT_TAG v0.6.7   
-    )
-endif()
-
-if(BUILD_ASSIMP)
-    message(STATUS "Fetching ASSIMP...")
-    set(ASSIMP_BUILD_ZLIB ON CACHE BOOL "" FORCE)
-    set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-    set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE) # Generation of shared libs (dll for windows, so for Linux). Set this to OFF to get a static lib.
-    FetchContent_Declare(
-        assimp
-        GIT_REPOSITORY https://github.com/assimp/assimp.git
-        GIT_TAG v5.4.3
-        # GIT_TAG v5.3.1
-        GIT_SHALLOW ON
-        GIT_PROGRESS ON
-        #FIND_PACKAGE_ARGS 5.3.1
     )
 endif()
 
@@ -725,23 +708,6 @@ if(BUILD_IMGUIFILEDIALOG)
     target_compile_definitions(${PROJECT_NAME}
         PRIVATE ${PROJECT_UPPER}_USE_IMGUIFILEDIALOG
     )
-endif()
-
-if(BUILD_ASSIMP)
-    FetchContent_MakeAvailable(assimp)
-    target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
-        ${assimp_INCLUDE_DIRS}
-        ${assimp_SOURCE_DIR}/code/../include
-        ${assimp_BINARY_DIR}/code/../include
-    )
-    target_link_libraries(${PROJECT_NAME} PRIVATE assimp)
-
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        $<TARGET_FILE:assimp>
-        $<TARGET_FILE_DIR:${PROJECT_NAME}>)
-
-    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_ASSIMP)
 endif()
 
 if(BUILD_STB)

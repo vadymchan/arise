@@ -348,9 +348,9 @@ void Editor::renderModeSelectionWindow() {
     m_renderParams.renderMode = gfx::renderer::RenderMode::LightVisualization;
   }
 
-  // if (ImGui::RadioButton("World Grid", m_renderParams.renderMode == gfx::renderer::RenderMode::WorldGrid)) {
-  //   m_renderParams.renderMode = gfx::renderer::RenderMode::WorldGrid;
-  // }
+   if (ImGui::RadioButton("World Grid", m_renderParams.renderMode == gfx::renderer::RenderMode::WorldGrid)) {
+     m_renderParams.renderMode = gfx::renderer::RenderMode::WorldGrid;
+   }
 
   ImGui::End();
 }

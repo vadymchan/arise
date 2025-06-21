@@ -22,6 +22,7 @@ void LightSystem::initialize() {
   }
 
   createDescriptorSetLayout_();
+  createEmptyBuffers_(); 
   m_initialized = true;
 
   GlobalLogger::Log(LogLevel::Info, "LightSystem initialized");
@@ -253,6 +254,8 @@ void LightSystem::updateLightBuffers_() {
 }
 
 void LightSystem::createOrUpdateDescriptorSet_() {
+  ensureAllBuffersExist_();
+
   if (!m_lightDescriptorSet) {
     auto descriptorSet   = m_device->createDescriptorSet(m_lightLayout);
     m_lightDescriptorSet = m_resourceManager->addDescriptorSet(std::move(descriptorSet), "light_descriptor");
@@ -263,17 +266,9 @@ void LightSystem::createOrUpdateDescriptorSet_() {
     m_lightDescriptorSet->setUniformBuffer(0, m_lightCountBuffer);
   }
 
-  if (m_dirLightBuffer) {
-    m_lightDescriptorSet->setStorageBuffer(1, m_dirLightBuffer);
-  }
-
-  if (m_pointLightBuffer) {
-    m_lightDescriptorSet->setStorageBuffer(2, m_pointLightBuffer);
-  }
-
-  if (m_spotLightBuffer) {
-    m_lightDescriptorSet->setStorageBuffer(3, m_spotLightBuffer);
-  }
+  m_lightDescriptorSet->setStorageBuffer(1, m_dirLightBuffer);
+  m_lightDescriptorSet->setStorageBuffer(2, m_pointLightBuffer);
+  m_lightDescriptorSet->setStorageBuffer(3, m_spotLightBuffer);
 }
 
 void LightSystem::createDescriptorSetLayout_() {
@@ -314,6 +309,56 @@ void LightSystem::createDescriptorSetLayout_() {
   m_lightLayout = m_resourceManager->addDescriptorSetLayout(std::move(layout), "light_descriptor_layout");
 }
 
+void LightSystem::createEmptyBuffers_() {
+  LightCounts counts           = {};
+  counts.directionalLightCount = 0;
+  counts.pointLightCount       = 0;
+  counts.spotLightCount        = 0;
+  counts.padding               = 0;
+
+  gfx::rhi::BufferDesc countDesc;
+  countDesc.size        = alignConstantBufferSize(sizeof(LightCounts));
+  countDesc.type        = gfx::rhi::BufferType::Dynamic;
+  countDesc.createFlags = gfx::rhi::BufferCreateFlag::CpuAccess | gfx::rhi::BufferCreateFlag::ConstantBuffer;
+  countDesc.debugName   = "light_count_buffer";
+  auto buffer           = m_device->createBuffer(countDesc);
+  m_lightCountBuffer    = m_resourceManager->addBuffer(std::move(buffer), "light_count_buffer");
+  m_device->updateBuffer(m_lightCountBuffer, &counts, sizeof(counts));
+
+  gfx::rhi::BufferDesc dirDesc;
+  dirDesc.size        = alignConstantBufferSize(sizeof(DirectionalLightData));  
+  dirDesc.createFlags = gfx::rhi::BufferCreateFlag::CpuAccess | gfx::rhi::BufferCreateFlag::ShaderResource;
+  dirDesc.type        = gfx::rhi::BufferType::Dynamic;
+  dirDesc.stride      = sizeof(DirectionalLightData);
+  dirDesc.debugName   = "empty_directional_light_buffer";
+  auto dirBuffer      = m_device->createBuffer(dirDesc);
+  m_dirLightBuffer    = m_resourceManager->addBuffer(std::move(dirBuffer), "empty_directional_light_buffer");
+
+  gfx::rhi::BufferDesc pointDesc;
+  pointDesc.size        = alignConstantBufferSize(sizeof(PointLightData));
+  pointDesc.createFlags = gfx::rhi::BufferCreateFlag::CpuAccess | gfx::rhi::BufferCreateFlag::ShaderResource;
+  pointDesc.type        = gfx::rhi::BufferType::Dynamic;
+  pointDesc.stride      = sizeof(PointLightData);
+  pointDesc.debugName   = "empty_point_light_buffer";
+  auto pointBuffer      = m_device->createBuffer(pointDesc);
+  m_pointLightBuffer    = m_resourceManager->addBuffer(std::move(pointBuffer), "empty_point_light_buffer");
+
+  gfx::rhi::BufferDesc spotDesc;
+  spotDesc.size        = alignConstantBufferSize(sizeof(SpotLightData));
+  spotDesc.createFlags = gfx::rhi::BufferCreateFlag::CpuAccess | gfx::rhi::BufferCreateFlag::ShaderResource;
+  spotDesc.type        = gfx::rhi::BufferType::Dynamic;
+  spotDesc.stride      = sizeof(SpotLightData);
+  spotDesc.debugName   = "empty_spot_light_buffer";
+  auto spotBuffer      = m_device->createBuffer(spotDesc);
+  m_spotLightBuffer    = m_resourceManager->addBuffer(std::move(spotBuffer), "empty_spot_light_buffer");
+
+  m_dirLightCapacity   = 1;
+  m_pointLightCapacity = 1;
+  m_spotLightCapacity  = 1;
+
+  GlobalLogger::Log(LogLevel::Info, "Created empty light buffers for Vulkan compatibility");
+}
+
 void LightSystem::createOrResizeBuffer_(size_t             requiredSize,
                                         gfx::rhi::Buffer*& buffer,
                                         const std::string& debugName,
@@ -340,4 +385,46 @@ void LightSystem::createOrResizeBuffer_(size_t             requiredSize,
   }
 }
 
+void LightSystem::ensureAllBuffersExist_() {
+  if (!m_lightCountBuffer) {
+    createEmptyBuffers_();
+    return;
+  }
+
+  if (!m_dirLightBuffer) {
+    gfx::rhi::BufferDesc dirDesc;
+    dirDesc.size        = alignConstantBufferSize(sizeof(DirectionalLightData));
+    dirDesc.createFlags = gfx::rhi::BufferCreateFlag::CpuAccess | gfx::rhi::BufferCreateFlag::ShaderResource;
+    dirDesc.type        = gfx::rhi::BufferType::Dynamic;
+    dirDesc.stride      = sizeof(DirectionalLightData);
+    dirDesc.debugName   = "empty_directional_light_buffer";
+    auto dirBuffer      = m_device->createBuffer(dirDesc);
+    m_dirLightBuffer    = m_resourceManager->addBuffer(std::move(dirBuffer), "empty_directional_light_buffer");
+    m_dirLightCapacity  = 1;
+  }
+
+  if (!m_pointLightBuffer) {
+    gfx::rhi::BufferDesc pointDesc;
+    pointDesc.size        = alignConstantBufferSize(sizeof(PointLightData));
+    pointDesc.createFlags = gfx::rhi::BufferCreateFlag::CpuAccess | gfx::rhi::BufferCreateFlag::ShaderResource;
+    pointDesc.type        = gfx::rhi::BufferType::Dynamic;
+    pointDesc.stride      = sizeof(PointLightData);
+    pointDesc.debugName   = "empty_point_light_buffer";
+    auto pointBuffer      = m_device->createBuffer(pointDesc);
+    m_pointLightBuffer    = m_resourceManager->addBuffer(std::move(pointBuffer), "empty_point_light_buffer");
+    m_pointLightCapacity  = 1;
+  }
+
+  if (!m_spotLightBuffer) {
+    gfx::rhi::BufferDesc spotDesc;
+    spotDesc.size        = alignConstantBufferSize(sizeof(SpotLightData));
+    spotDesc.createFlags = gfx::rhi::BufferCreateFlag::CpuAccess | gfx::rhi::BufferCreateFlag::ShaderResource;
+    spotDesc.type        = gfx::rhi::BufferType::Dynamic;
+    spotDesc.stride      = sizeof(SpotLightData);
+    spotDesc.debugName   = "empty_spot_light_buffer";
+    auto spotBuffer      = m_device->createBuffer(spotDesc);
+    m_spotLightBuffer    = m_resourceManager->addBuffer(std::move(spotBuffer), "empty_spot_light_buffer");
+    m_spotLightCapacity  = 1;
+  }
+}
 }  // namespace arise

@@ -39,6 +39,8 @@ class Editor {
 
   void render(gfx::renderer::RenderContext& context);
 
+  void update(float deltaTime);
+
   const gfx::renderer::RenderSettings& getRenderParams() const { return m_renderParams; }
 
   void onWindowResize(uint32_t width, uint32_t height);
@@ -54,6 +56,7 @@ class Editor {
   void renderInspectorWindow();
   void renderNotifications();
   void renderControlsWindow();
+  void renderApiWindow();
 
   void renderGizmo(const math::Dimension2i& viewportSize, const ImVec2& viewportPos);
   void handleGizmoInput();
@@ -97,7 +100,11 @@ class Editor {
   void switchToScene_(const std::string& sceneName);
   void renderNewSceneDialog_();
   bool hasLoadingModels_() const;
-  void checkPendingSceneSwitch_();
+
+  bool switchRenderingApi_(gfx::rhi::RenderingApi newApi);
+  void scheduleApiSwitch_(gfx::rhi::RenderingApi newApi);
+  void processPendingApiSwitch_();
+  bool recreateImGuiContext_();
 
   // Editor state
   gfx::renderer::RenderSettings m_renderParams;
@@ -148,6 +155,9 @@ class Editor {
   bool                     m_showNewSceneDialog      = false;
   char                     m_newSceneNameBuffer[256] = "";
   std::string              m_pendingSceneSwitch      = "";
+
+  bool                   m_pendingApiSwitch = false;
+  gfx::rhi::RenderingApi m_pendingApi;
 };
 
 }  // namespace arise

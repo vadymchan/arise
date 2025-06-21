@@ -13,10 +13,10 @@
 #include "gfx/rhi/backends/vulkan/synchronization_vk.h"
 #include "gfx/rhi/backends/vulkan/texture_vk.h"
 #include "platform/common/window.h"
-//#include "profiler/backends/gpu_profiler_vk.h"
+// #include "profiler/backends/gpu_profiler_vk.h"
 #include "profiler/backends/gpu_profiler.h"
-#include "utils/service/service_locator.h"
 #include "utils/logger/global_logger.h"
+#include "utils/service/service_locator.h"
 
 #include <SDL_vulkan.h>
 
@@ -243,8 +243,18 @@ bool DeviceVk::createLogicalDevice_() {
   deviceFeatures.fillModeNonSolid         = VK_TRUE;
   deviceFeatures.geometryShader           = VK_TRUE;
 
+  VkPhysicalDeviceDescriptorIndexingFeatures descriptorIndexingFeatures = {};
+  descriptorIndexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
+  descriptorIndexingFeatures.descriptorBindingUniformBufferUpdateAfterBind = VK_TRUE;
+  descriptorIndexingFeatures.descriptorBindingSampledImageUpdateAfterBind  = VK_TRUE;
+  descriptorIndexingFeatures.descriptorBindingStorageBufferUpdateAfterBind = VK_TRUE;
+  descriptorIndexingFeatures.descriptorBindingUpdateUnusedWhilePending     = VK_TRUE;
+  descriptorIndexingFeatures.descriptorBindingPartiallyBound               = VK_TRUE;
+  descriptorIndexingFeatures.runtimeDescriptorArray                        = VK_TRUE;
+
   VkDeviceCreateInfo createInfo      = {};
   createInfo.sType                   = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+  createInfo.pNext                   = &descriptorIndexingFeatures;
   createInfo.queueCreateInfoCount    = static_cast<uint32_t>(queueCreateInfos.size());
   createInfo.pQueueCreateInfos       = queueCreateInfos.data();
   createInfo.pEnabledFeatures        = &deviceFeatures;

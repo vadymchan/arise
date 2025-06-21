@@ -17,6 +17,14 @@ BufferManager::BufferManager(gfx::rhi::Device* device)
 }
 
 BufferManager::~BufferManager() {
+  if (!m_buffers.empty()) {
+    GlobalLogger::Log(LogLevel::Info,
+                      "BufferManager destroyed, releasing " + std::to_string(m_buffers.size()) + " buffers");
+
+    for (const auto& [name, buffer] : m_buffers) {
+      GlobalLogger::Log(LogLevel::Info, "Released buffer: " + name);
+    }
+  }
   release();
 }
 

@@ -32,10 +32,20 @@ DescriptorSetLayoutVk::DescriptorSetLayoutVk(const DescriptorSetLayoutDesc& desc
     layoutBindings.push_back(vkBinding);
   }
 
+  // Add binding flags to allow updating descriptor sets while in use
+  std::vector<VkDescriptorBindingFlags> bindingFlags(layoutBindings.size(), VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT);
+
+  VkDescriptorSetLayoutBindingFlagsCreateInfo bindingFlagsInfo = {};
+  bindingFlagsInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO;
+  bindingFlagsInfo.bindingCount = static_cast<uint32_t>(bindingFlags.size());
+  bindingFlagsInfo.pBindingFlags = bindingFlags.data();
+
   VkDescriptorSetLayoutCreateInfo layoutInfo = {};
   layoutInfo.sType                           = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+  layoutInfo.pNext                           = &bindingFlagsInfo;
   layoutInfo.bindingCount                    = static_cast<uint32_t>(layoutBindings.size());
   layoutInfo.pBindings                       = layoutBindings.data();
+  layoutInfo.flags                           = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT;
 
   if (vkCreateDescriptorSetLayout(device->getDevice(), &layoutInfo, nullptr, &m_layout_) != VK_SUCCESS) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create Vulkan descriptor set layout");
@@ -272,7 +282,7 @@ bool DescriptorPoolManager::createPool() {
   poolInfo.poolSizeCount              = static_cast<uint32_t>(poolSizes.size());
   poolInfo.pPoolSizes                 = poolSizes.data();
   poolInfo.maxSets                    = m_maxSets_;
-  poolInfo.flags                      = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+  poolInfo.flags                      = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT | VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT;
 
   if (vkCreateDescriptorPool(m_device_, &poolInfo, nullptr, &m_currentPool_) != VK_SUCCESS) {
     return false;

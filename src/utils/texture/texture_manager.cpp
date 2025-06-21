@@ -17,6 +17,14 @@ TextureManager::TextureManager(gfx::rhi::Device* device)
 }
 
 TextureManager::~TextureManager() {
+  if (!m_textures.empty()) {
+    GlobalLogger::Log(LogLevel::Info,
+                      "TextureManager destroyed, releasing " + std::to_string(m_textures.size()) + " textures");
+
+    for (const auto& [name, texture] : m_textures) {
+      GlobalLogger::Log(LogLevel::Info, "Released texture: " + name);
+    }
+  }
   release();
 }
 

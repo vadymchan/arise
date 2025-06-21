@@ -14,6 +14,7 @@ namespace arise {
 class RenderModelManager {
   public:
   RenderModelManager() = default;
+  ~RenderModelManager();
 
   RenderModel* getRenderModel(const std::filesystem::path& filepath, Model** outModel = nullptr);
 

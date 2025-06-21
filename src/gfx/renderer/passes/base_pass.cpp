@@ -489,60 +489,62 @@ rhi::DescriptorSet* BasePass::getOrCreateMaterialDescriptorSet_(Material* materi
   auto descriptorSetPtr = m_resourceManager->getDescriptorSet(materialKey);
   if (!descriptorSetPtr) {
     auto descriptorSet = m_device->createDescriptorSet(materialLayout);
-    descriptorSetPtr   = m_resourceManager->addDescriptorSet(std::move(descriptorSet), materialKey);
-  }
-
-  rhi::Buffer* paramBuffer = m_frameResources->getOrCreateMaterialParamBuffer(material);
-  if (paramBuffer) {
-    descriptorSetPtr->setUniformBuffer(0, paramBuffer);
-  }
-
-  std::vector<std::string> textureNames = {"albedo", "normal_map", "metallic_roughness"};
-  uint32_t                 binding      = 1;
-
-  bool allTexturesValid = true;
-
-  for (const auto& textureName : textureNames) {
-    rhi::Texture* texture = nullptr;
-
-    auto textureIt = material->textures.find(textureName);
-    if (textureIt != material->textures.end() && textureIt->second) {
-      texture = textureIt->second;
+    
+    // Update the descriptor set BEFORE adding it to the resource manager
+    rhi::Buffer* paramBuffer = m_frameResources->getOrCreateMaterialParamBuffer(material);
+    if (paramBuffer) {
+      descriptorSet->setUniformBuffer(0, paramBuffer);
     }
 
-    if (!texture) {
-      if (textureName == "albedo") {
-        texture = m_frameResources->getDefaultWhiteTexture();
-      } else if (textureName == "normal_map") {
-        texture = m_frameResources->getDefaultNormalTexture();
-      } else if (textureName == "metallic_roughness") {
-        texture = m_frameResources->getDefaultBlackTexture();
+    std::vector<std::string> textureNames = {"albedo", "normal_map", "metallic_roughness"};
+    uint32_t                 binding      = 1;
+
+    bool allTexturesValid = true;
+
+    for (const auto& textureName : textureNames) {
+      rhi::Texture* texture = nullptr;
+
+      auto textureIt = material->textures.find(textureName);
+      if (textureIt != material->textures.end() && textureIt->second) {
+        texture = textureIt->second;
       }
 
-      GlobalLogger::Log(LogLevel::Debug,
-                        "Using fallback texture for '" + textureName + "' in material: " + material->materialName);
+      if (!texture) {
+        if (textureName == "albedo") {
+          texture = m_frameResources->getDefaultWhiteTexture();
+        } else if (textureName == "normal_map") {
+          texture = m_frameResources->getDefaultNormalTexture();
+        } else if (textureName == "metallic_roughness") {
+          texture = m_frameResources->getDefaultBlackTexture();
+        }
+
+        GlobalLogger::Log(LogLevel::Debug,
+                          "Using fallback texture for '" + textureName + "' in material: " + material->materialName);
+      }
+
+      if (!texture) {
+        GlobalLogger::Log(
+            LogLevel::Error,
+            "No texture available (including fallback) for '" + textureName + "' in material: " + material->materialName);
+        allTexturesValid = false;
+        break;
+      }
+
+      descriptorSet->setTexture(binding, texture);
+      binding++;
     }
 
-    if (!texture) {
-      GlobalLogger::Log(
-          LogLevel::Error,
-          "No texture available (including fallback) for '" + textureName + "' in material: " + material->materialName);
-      allTexturesValid = false;
-      break;
+    if (allTexturesValid) {
+      descriptorSetPtr = m_resourceManager->addDescriptorSet(std::move(descriptorSet), materialKey);
+    } else {
+      GlobalLogger::Log(LogLevel::Warning,
+                        "Material descriptor set creation failed due to invalid textures: " + material->materialName);
+      return nullptr;
     }
-
-    descriptorSetPtr->setTexture(binding, texture);
-    binding++;
   }
 
-  if (allTexturesValid) {
-    m_materialCache[material].descriptorSet = descriptorSetPtr;
-    return descriptorSetPtr;
-  } else {
-    GlobalLogger::Log(LogLevel::Warning,
-                      "Material descriptor set creation failed due to invalid textures: " + material->materialName);
-    return nullptr;
-  }
+  m_materialCache[material].descriptorSet = descriptorSetPtr;
+  return descriptorSetPtr;
 }
 }  // namespace renderer
 }  // namespace gfx

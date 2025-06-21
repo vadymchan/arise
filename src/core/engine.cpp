@@ -26,6 +26,7 @@
 #include "scene/scene_manager.h"
 #include "utils/asset/asset_loader.h"
 #include "utils/buffer/buffer_manager.h"
+#include "utils/frame_manager/frame_manager.h"
 #include "utils/hot_reload/hot_reload_manager.h"
 #include "utils/image/image_loader_manager.h"
 #include "utils/image/image_manager.h"
@@ -33,6 +34,7 @@
 #include "utils/logger/file_logger.h"
 #include "utils/logger/global_logger.h"
 #include "utils/logger/memory_logger.h"
+#include "utils/material/material_loader_manager.h"
 #include "utils/material/material_manager.h"
 #include "utils/math/math_util.h"
 #include "utils/model/mesh_manager.h"
@@ -71,6 +73,7 @@ Engine::~Engine() {
   ServiceLocator::s_remove<ApplicationEventManager>();
   ServiceLocator::s_remove<SceneManager>();
   ServiceLocator::s_remove<SystemManager>();
+  ServiceLocator::s_remove<FrameManager>();
   ServiceLocator::s_remove<TimingManager>();
   ServiceLocator::s_remove<AssetLoader>();
   ServiceLocator::s_remove<RenderModelManager>();
@@ -152,6 +155,8 @@ auto Engine::initialize() -> bool {
 
   // service locator
   // ------------------------------------------------------------------------
+  constexpr uint32_t framesInFlight = 2;
+
   ServiceLocator::s_provide<ConfigManager>();
   ServiceLocator::s_provide<FileWatcherManager>();
   ServiceLocator::s_provide<HotReloadManager>();
@@ -162,6 +167,7 @@ auto Engine::initialize() -> bool {
   ServiceLocator::s_provide<SceneManager>();
   ServiceLocator::s_provide<SystemManager>();
   ServiceLocator::s_provide<TimingManager>();
+  ServiceLocator::s_provide<FrameManager>(framesInFlight);
   ServiceLocator::s_provide<ResourceDeletionManager>();
   ServiceLocator::s_provide<AssetLoader>(std::move(assetLoader));
 
@@ -284,7 +290,7 @@ auto Engine::initialize() -> bool {
 
   // CPU
   ServiceLocator::s_provide<MeshManager>();
-  auto modelLoaderManager = std::make_unique<ModelLoaderManager>();
+  auto modelLoaderManager  = std::make_unique<ModelLoaderManager>();
   auto cgltfCpuModelLoader = std::make_shared<CgltfModelLoader>();
   modelLoaderManager->registerLoader(ModelType::GLTF, cgltfCpuModelLoader);
   modelLoaderManager->registerLoader(ModelType::GLB, cgltfCpuModelLoader);
@@ -295,7 +301,7 @@ auto Engine::initialize() -> bool {
   ServiceLocator::s_provide<RenderMeshManager>();
   ServiceLocator::s_provide<RenderGeometryMeshManager>();
   auto renderModelLoaderManager = std::make_unique<RenderModelLoaderManager>();
-  auto cgltfModelLoader = std::make_shared<CgltfRenderModelLoader>();
+  auto cgltfModelLoader         = std::make_shared<CgltfRenderModelLoader>();
   renderModelLoaderManager->registerLoader(ModelType::GLTF, cgltfModelLoader);
   renderModelLoaderManager->registerLoader(ModelType::GLB, cgltfModelLoader);
   ServiceLocator::s_provide<RenderModelLoaderManager>(std::move(renderModelLoaderManager));
@@ -305,7 +311,7 @@ auto Engine::initialize() -> bool {
   // Materials
   ServiceLocator::s_provide<MaterialManager>();
   auto materialLoaderManager = std::make_unique<MaterialLoaderManager>();
-  auto cgltfMaterialLoader = std::make_shared<CgltfMaterialLoader>();
+  auto cgltfMaterialLoader   = std::make_shared<CgltfMaterialLoader>();
   materialLoaderManager->registerLoader(MaterialType::GLTF, cgltfMaterialLoader);
   ServiceLocator::s_provide<MaterialLoaderManager>(std::move(materialLoaderManager));
   // editor
@@ -321,8 +327,11 @@ auto Engine::initialize() -> bool {
   m_editor_ = std::make_unique<Editor>();
   switch (m_applicationMode) {
     case gfx::renderer::ApplicationRenderMode::Editor:
-      if (!m_editor_->initialize(
-              m_window_.get(), renderingApi, m_renderer_->getDevice(), m_renderer_->getFrameResources(), m_renderer_.get())) {
+      if (!m_editor_->initialize(m_window_.get(),
+                                 renderingApi,
+                                 m_renderer_->getDevice(),
+                                 m_renderer_->getFrameResources(),
+                                 m_renderer_.get())) {
         GlobalLogger::Log(LogLevel::Error, "Failed to initialize Editor");
         successfullyInitialized = false;
       }
@@ -365,6 +374,13 @@ void Engine::render() {
 
 void Engine::run() {
   CPU_ZONE_NC("Engine Main Loop", color::BLACK);
+  
+  auto frameManager = ServiceLocator::s_get<FrameManager>();
+  if (!frameManager) {
+    GlobalLogger::Log(LogLevel::Error, "FrameManager not found");
+    return;
+  }
+  
   m_isRunning_ = true;
 
   while (m_isRunning_) {
@@ -393,6 +409,8 @@ void Engine::run() {
 
     render();
 
+    frameManager->advanceFrame();
+
     PROFILE_PLOT("FPS", timingManager->getFPS());
     PROFILE_PLOT("Frame Time (ms)", timingManager->getFrameTime());
   }
@@ -411,11 +429,16 @@ void Engine::processEvents_() {
 }
 
 void Engine::update_(float deltaTime) {
+  if (m_applicationMode == gfx::renderer::ApplicationRenderMode::Editor) {
+    m_editor_->update(deltaTime);
+  }
+
+  m_application_->update(deltaTime);
+
   auto systemManager = ServiceLocator::s_get<SystemManager>();
   auto scene         = ServiceLocator::s_get<SceneManager>()->getCurrentScene();
   systemManager->updateSystems(scene, deltaTime);
 
-  m_application_->update(deltaTime);
 }
 
 void Engine::setGame(Application* game) {

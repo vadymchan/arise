@@ -7,6 +7,7 @@
 #include "ecs/components/render_model.h"
 #include "ecs/components/selected.h"
 #include "ecs/components/tags.h"
+#include "gfx/renderer/renderer.h"
 #include "input/input_manager.h"
 #include "profiler/profiler.h"
 #include "scene/scene_loader.h"
@@ -17,7 +18,6 @@
 #include "utils/path_manager/path_manager.h"
 #include "utils/service/service_locator.h"
 #include "utils/time/timing_manager.h"
-#include "gfx/renderer/renderer.h"
 
 #include <ImGuiFileDialog.h>
 
@@ -121,6 +121,7 @@ void Editor::render(gfx::renderer::RenderContext& context) {
     renderInspectorWindow();
     renderGizmoControlsWindow();
     renderControlsWindow();
+    renderApiWindow();
 
     renderNotifications();
   }
@@ -129,6 +130,10 @@ void Editor::render(gfx::renderer::RenderContext& context) {
 
   m_imguiContext->endFrame(
       context.commandBuffer.get(), backBufferTexture, m_window->getSize(), context.currentImageIndex);
+}
+
+void Editor::update(float deltaTime) {
+  processPendingApiSwitch_();
 }
 
 void Editor::onWindowResize(uint32_t width, uint32_t height) {
@@ -348,9 +353,9 @@ void Editor::renderModeSelectionWindow() {
     m_renderParams.renderMode = gfx::renderer::RenderMode::LightVisualization;
   }
 
-   if (ImGui::RadioButton("World Grid", m_renderParams.renderMode == gfx::renderer::RenderMode::WorldGrid)) {
-     m_renderParams.renderMode = gfx::renderer::RenderMode::WorldGrid;
-   }
+  if (ImGui::RadioButton("World Grid", m_renderParams.renderMode == gfx::renderer::RenderMode::WorldGrid)) {
+    m_renderParams.renderMode = gfx::renderer::RenderMode::WorldGrid;
+  }
 
   ImGui::End();
 }
@@ -801,6 +806,48 @@ void Editor::renderControlsWindow() {
     ImGui::BulletText("I: Focus Inspector window");
     ImGui::BulletText("F1: Show this help window");
   }
+  ImGui::End();
+}
+
+void Editor::renderApiWindow() {
+  ImGui::Begin("Rendering API");
+
+  auto        currentApi    = m_renderer->getCurrentApi();
+  std::string currentApiStr = (currentApi == gfx::rhi::RenderingApi::Vulkan) ? "Vulkan" : "DirectX 12";
+  ImGui::Text("Current API: %s", currentApiStr.c_str());
+
+  bool isSwitchPending = m_pendingApiSwitch;
+
+  if (isSwitchPending) {
+    std::string pendingApiStr = (m_pendingApi == gfx::rhi::RenderingApi::Vulkan) ? "Vulkan" : "DirectX 12";
+    ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "Switching to %s...", pendingApiStr.c_str());
+  }
+
+  ImGui::Separator();
+
+  bool vulkanSelected = (currentApi == gfx::rhi::RenderingApi::Vulkan);
+  bool dx12Selected   = (currentApi == gfx::rhi::RenderingApi::Dx12);
+
+  if (isSwitchPending) {
+    ImGui::BeginDisabled();
+  }
+
+  if (ImGui::RadioButton("Vulkan", vulkanSelected)) {
+    if (!vulkanSelected && !isSwitchPending) {
+      scheduleApiSwitch_(gfx::rhi::RenderingApi::Vulkan);
+    }
+  }
+
+  if (ImGui::RadioButton("DirectX 12", dx12Selected)) {
+    if (!dx12Selected && !isSwitchPending) {
+      scheduleApiSwitch_(gfx::rhi::RenderingApi::Dx12);
+    }
+  }
+
+  if (isSwitchPending) {
+    ImGui::EndDisabled();
+  }
+
   ImGui::End();
 }
 
@@ -2085,34 +2132,84 @@ bool Editor::hasLoadingModels_() const {
   return !loadingView.empty();
 }
 
-void Editor::checkPendingSceneSwitch_() {
-  if (m_pendingSceneSwitch.empty()) {
-    return;
+bool Editor::switchRenderingApi_(gfx::rhi::RenderingApi newApi) {
+  if (!m_renderer) {
+    GlobalLogger::Log(LogLevel::Error, "Renderer not available for API switch");
+    return false;
   }
 
-  if (hasLoadingModels_()) {
-    return;
+  std::string apiName = (newApi == gfx::rhi::RenderingApi::Vulkan) ? "Vulkan" : "DirectX 12";
+  GlobalLogger::Log(LogLevel::Info, "Starting seamless API switch to " + apiName);
+
+  if (m_device) {
+    m_device->waitIdle();
   }
 
-  std::string pendingOperation = m_pendingSceneSwitch;
-  m_pendingSceneSwitch.clear();
+  if (m_imguiContext) {
+    m_imguiContext->shutdown();
+    m_imguiContext.reset();
+  }
 
-  if (pendingOperation.starts_with("CREATE:")) {
-    std::string sceneName = pendingOperation.substr(7);
+  for (auto& textureID : m_viewportTextureIDs) {
+    textureID = 0;
+  }
 
-    auto     sceneManager = ServiceLocator::s_get<SceneManager>();
-    Registry emptyRegistry;
-    sceneManager->addScene(sceneName, std::move(emptyRegistry));
-
-    if (sceneManager->switchToScene(sceneName)) {
-      GlobalLogger::Log(LogLevel::Info, "Created and switched to new scene: " + sceneName);
-      saveCurrentScene_();
-    } else {
-      GlobalLogger::Log(LogLevel::Error, "Failed to switch to new scene: " + sceneName);
-    }
+  bool success = m_renderer->switchRenderingApi(newApi);
+  if (success) {
+    m_frameResources = m_renderer->getFrameResources();
+    GlobalLogger::Log(LogLevel::Info, "Renderer API switch completed successfully");
   } else {
-    switchToScene_(pendingOperation);
+    GlobalLogger::Log(LogLevel::Error, "Renderer API switch failed");
+    return false;
   }
+
+  return recreateImGuiContext_();
+}
+
+void Editor::scheduleApiSwitch_(gfx::rhi::RenderingApi newApi) {
+  std::string apiName = (newApi == gfx::rhi::RenderingApi::Vulkan) ? "Vulkan" : "DirectX 12";
+  GlobalLogger::Log(LogLevel::Info, "Scheduling API switch to " + apiName);
+
+  m_pendingApiSwitch = true;
+  m_pendingApi       = newApi;
+}
+
+void Editor::processPendingApiSwitch_() {
+  if (!m_pendingApiSwitch) {
+    return;
+  }
+
+  std::string apiName = (m_pendingApi == gfx::rhi::RenderingApi::Vulkan) ? "Vulkan" : "DirectX 12";
+  GlobalLogger::Log(LogLevel::Info, "Processing API switch to " + apiName);
+
+  if (switchRenderingApi_(m_pendingApi)) {
+    GlobalLogger::Log(LogLevel::Info, "API switch to " + apiName + " completed successfully");
+  } else {
+    GlobalLogger::Log(LogLevel::Error, "API switch to " + apiName + " failed");
+  }
+
+  m_pendingApiSwitch = false;
+}
+
+bool Editor::recreateImGuiContext_() {
+  auto newDevice = m_renderer->getDevice();
+  if (!newDevice) {
+    GlobalLogger::Log(LogLevel::Error, "Failed to get new device after API switch");
+    return false;
+  }
+
+  m_device = newDevice;
+
+  m_imguiContext = std::make_unique<gfx::ImGuiRHIContext>();
+  if (!m_imguiContext->initialize(m_window, newDevice, m_frameResources->getFramesCount())) {
+    GlobalLogger::Log(LogLevel::Error, "Failed to recreate ImGui context");
+    m_imguiContext.reset();
+    return false;
+  }
+
+  ImGuizmo::SetImGuiContext(ImGui::GetCurrentContext());
+  GlobalLogger::Log(LogLevel::Info, "ImGui context recreated successfully");
+  return true;
 }
 
 }  // namespace arise

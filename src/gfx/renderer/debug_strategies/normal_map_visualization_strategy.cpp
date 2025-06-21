@@ -454,20 +454,22 @@ rhi::DescriptorSet* NormalMapVisualizationStrategy::getOrCreateMaterialDescripto
   auto descriptorSetPtr = m_resourceManager->getDescriptorSet(descriptorKey);
   if (!descriptorSetPtr) {
     auto descriptorSet = m_device->createDescriptorSet(m_materialDescriptorSetLayout);
-    descriptorSetPtr   = m_resourceManager->addDescriptorSet(std::move(descriptorSet), descriptorKey);
+    
+    // Update the descriptor set BEFORE adding it to the resource manager
+    rhi::Texture* normalMapTexture = nullptr;
+    auto          normalMapIt      = material->textures.find("normal_map");
+    if (normalMapIt != material->textures.end() && normalMapIt->second) {
+      normalMapTexture = normalMapIt->second;
+    } else {
+      normalMapTexture = m_frameResources->getDefaultNormalTexture();
+
+      GlobalLogger::Log(LogLevel::Debug, "Using fallback normal map texture for material: " + material->materialName);
+    }
+
+    descriptorSet->setTexture(0, normalMapTexture);
+    
+    descriptorSetPtr = m_resourceManager->addDescriptorSet(std::move(descriptorSet), descriptorKey);
   }
-
-  rhi::Texture* normalMapTexture = nullptr;
-  auto          normalMapIt      = material->textures.find("normal_map");
-  if (normalMapIt != material->textures.end() && normalMapIt->second) {
-    normalMapTexture = normalMapIt->second;
-  } else {
-    normalMapTexture = m_frameResources->getDefaultNormalTexture();
-
-    GlobalLogger::Log(LogLevel::Debug, "Using fallback normal map texture for material: " + material->materialName);
-  }
-
-  descriptorSetPtr->setTexture(0, normalMapTexture);
 
   m_materialCache[material].descriptorSet = descriptorSetPtr;
 

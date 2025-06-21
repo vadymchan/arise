@@ -7,6 +7,17 @@
 #include "utils/service/service_locator.h"
 
 namespace arise {
+RenderMeshManager::~RenderMeshManager() {
+  if (!m_renderMeshes.empty()) {
+    GlobalLogger::Log(
+        LogLevel::Info,
+        "RenderMeshManager destroyed, releasing " + std::to_string(m_renderMeshes.size()) + " render meshes");
+
+    for (const auto& [mesh, renderMesh] : m_renderMeshes) {
+      GlobalLogger::Log(LogLevel::Info, "Released render mesh for: " + mesh->meshName);
+    }
+  }
+}
 
 RenderMesh* RenderMeshManager::addRenderMesh(RenderGeometryMesh* gpuMesh, Material* material, Mesh* sourceMesh) {
   std::lock_guard<std::mutex> lock(m_mutex);

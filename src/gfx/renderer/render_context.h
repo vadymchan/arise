@@ -18,7 +18,7 @@ namespace renderer {
 struct RenderContext {
   Scene*                              scene = nullptr;
   std::unique_ptr<rhi::CommandBuffer> commandBuffer;
-  math::Dimension2i                  viewportDimension;
+  math::Dimension2i                   viewportDimension;
   RenderSettings                      renderSettings;
   uint32_t                            currentImageIndex = 0;
 };

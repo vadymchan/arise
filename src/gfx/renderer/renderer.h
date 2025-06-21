@@ -43,10 +43,12 @@ class Renderer {
   void onSceneSwitch();
 
   rhi::Device*           getDevice() const { return m_device.get(); }
-  uint32_t               getFrameIndex() const { return m_frameIndex; }
   rhi::ShaderManager*    getShaderManager() const { return m_shaderManager.get(); }
   FrameResources*        getFrameResources() const { return m_frameResources.get(); }
   RenderResourceManager* getResourceManager() const { return m_resourceManager.get(); }
+  gfx::rhi::RenderingApi getCurrentApi() const;
+
+  bool switchRenderingApi(gfx::rhi::RenderingApi newApi);
 
   private:
   void initializeGpuProfiler_();
@@ -59,7 +61,11 @@ class Renderer {
 
   void setupRenderPasses_();
 
-  static constexpr uint32_t MAX_FRAMES_IN_FLIGHT      = 2;
+  void cleanupResources_();
+  bool recreateResources_(gfx::rhi::RenderingApi newApi);
+  void recreateResourceManagers_();
+  void reloadSceneModels_();
+
   static constexpr uint32_t COMMAND_BUFFERS_PER_FRAME = 8;
   static constexpr uint32_t INITIAL_COMMAND_BUFFERS   = 2;
 
@@ -75,15 +81,13 @@ class Renderer {
   std::unique_ptr<DebugPass> m_debugPass;
 
   // one pool per frame in flight
-  std::array<std::vector<std::unique_ptr<rhi::CommandBuffer>>, MAX_FRAMES_IN_FLIGHT> m_commandBufferPools;
+  std::vector<std::vector<std::unique_ptr<rhi::CommandBuffer>>> m_commandBufferPools;
 
-  std::array<std::unique_ptr<rhi::Fence>, MAX_FRAMES_IN_FLIGHT>     m_frameFences;
-  std::array<std::unique_ptr<rhi::Semaphore>, MAX_FRAMES_IN_FLIGHT> m_imageAvailableSemaphores;
-  std::array<std::unique_ptr<rhi::Semaphore>, MAX_FRAMES_IN_FLIGHT> m_renderFinishedSemaphores;
+  std::vector<std::unique_ptr<rhi::Fence>>     m_frameFences;
+  std::vector<std::unique_ptr<rhi::Semaphore>> m_imageAvailableSemaphores;
+  std::vector<std::unique_ptr<rhi::Semaphore>> m_renderFinishedSemaphores;
 
-  uint32_t m_currentFrame = 0;
-  uint32_t m_frameIndex   = 0;
-  bool     m_initialized  = false;
+  bool m_initialized = false;
 };
 
 }  // namespace renderer

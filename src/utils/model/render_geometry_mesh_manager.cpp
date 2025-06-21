@@ -5,6 +5,17 @@
 #include "utils/service/service_locator.h"
 
 namespace arise {
+RenderGeometryMeshManager::~RenderGeometryMeshManager() {
+  if (!m_renderGeometryMeshes.empty()) {
+    GlobalLogger::Log(LogLevel::Info,
+                      "RenderGeometryMeshManager destroyed, releasing " + std::to_string(m_renderGeometryMeshes.size())
+                          + " geometry meshes");
+
+    for (const auto& [mesh, geometryMesh] : m_renderGeometryMeshes) {
+      GlobalLogger::Log(LogLevel::Info, "Released geometry mesh for: " + mesh->meshName);
+    }
+  }
+}
 
 RenderGeometryMesh* RenderGeometryMeshManager::addRenderGeometryMesh(
     std::unique_ptr<RenderGeometryMesh> renderGeometryMesh, Mesh* sourceMesh) {

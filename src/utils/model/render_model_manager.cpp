@@ -6,6 +6,18 @@
 #include <shared_mutex>
 
 namespace arise {
+RenderModelManager::~RenderModelManager() {
+  if (!renderModelCache_.empty()) {
+    GlobalLogger::Log(
+        LogLevel::Info,
+        "RenderModelManager destroyed, releasing " + std::to_string(renderModelCache_.size()) + " render models");
+
+    for (const auto& [path, renderModel] : renderModelCache_) {
+      GlobalLogger::Log(LogLevel::Info, "Released render model: " + path.string());
+    }
+  }
+}
+
 RenderModel* RenderModelManager::getRenderModel(const std::filesystem::path& filepath, Model** outModel) {
   {
     std::shared_lock<std::shared_mutex> readLock(mutex_);

@@ -1,6 +1,8 @@
 #include "gfx/renderer/renderer.h"
 
 #include "ecs/components/camera.h"
+#include "ecs/systems/light_system.h"
+#include "ecs/systems/system_manager.h"
 #include "gfx/rhi/backends/dx12/command_buffer_dx12.h"
 #include "gfx/rhi/backends/dx12/device_dx12.h"
 #include "gfx/rhi/backends/vulkan/command_buffer_vk.h"
@@ -9,7 +11,14 @@
 #include "platform/common/window.h"
 #include "profiler/profiler.h"
 #include "scene/scene_manager.h"
+#include "utils/buffer/buffer_manager.h"
+#include "utils/frame_manager/frame_manager.h"
+#include "utils/material/material_manager.h"
+#include "utils/model/render_geometry_mesh_manager.h"
+#include "utils/model/render_mesh_manager.h"
+#include "utils/model/render_model_manager.h"
 #include "utils/resource/resource_deletion_manager.h"
+#include "utils/texture/texture_manager.h"
 
 namespace arise {
 namespace gfx {
@@ -26,12 +35,20 @@ bool Renderer::initialize(Window* window, rhi::RenderingApi api) {
     return false;
   }
 
+  auto     frameManager   = ServiceLocator::s_get<FrameManager>();
+  uint32_t framesInFlight = frameManager->getMaxFramesInFlight();
+
+  m_commandBufferPools.resize(framesInFlight);
+  m_frameFences.resize(framesInFlight);
+  m_imageAvailableSemaphores.resize(framesInFlight);
+  m_renderFinishedSemaphores.resize(framesInFlight);
+
   // TODO: move to a separate function
   rhi::SwapchainDesc swapchainDesc;
   swapchainDesc.width       = window->getSize().width();
   swapchainDesc.height      = window->getSize().height();
   swapchainDesc.format      = rhi::TextureFormat::Bgra8;
-  swapchainDesc.bufferCount = MAX_FRAMES_IN_FLIGHT;
+  swapchainDesc.bufferCount = framesInFlight;
 
   m_swapChain = m_device->createSwapChain(swapchainDesc);
   if (!m_swapChain) {
@@ -39,15 +56,15 @@ bool Renderer::initialize(Window* window, rhi::RenderingApi api) {
     return false;
   }
 
-  m_shaderManager   = std::make_unique<rhi::ShaderManager>(m_device.get(), MAX_FRAMES_IN_FLIGHT, true);
+  m_shaderManager   = std::make_unique<rhi::ShaderManager>(m_device.get(), framesInFlight, true);
   m_resourceManager = std::make_unique<RenderResourceManager>();
 
   m_frameResources = std::make_unique<FrameResources>(m_device.get(), getResourceManager());
-  m_frameResources->initialize(MAX_FRAMES_IN_FLIGHT);
+  m_frameResources->initialize(framesInFlight);
   m_frameResources->resize(window->getSize());
 
   // synchronization (move to a separate function)
-  for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+  for (uint32_t i = 0; i < framesInFlight; ++i) {
     rhi::FenceDesc fenceDesc;
     fenceDesc.signaled = true;
     m_frameFences[i]   = m_device->createFence(fenceDesc);
@@ -71,7 +88,7 @@ bool Renderer::initialize(Window* window, rhi::RenderingApi api) {
 
   auto deletionManager = ServiceLocator::s_get<ResourceDeletionManager>();
   if (deletionManager) {
-    deletionManager->setDefaultFrameDelay(MAX_FRAMES_IN_FLIGHT);
+    deletionManager->setDefaultFrameDelay(framesInFlight);
   }
 
   initializeGpuProfiler_();
@@ -89,10 +106,12 @@ RenderContext Renderer::beginFrame(Scene* scene, const RenderSettings& renderSet
     return RenderContext();
   }
 
+  auto frameManager = ServiceLocator::s_get<FrameManager>();
+
   {
     CPU_ZONE_NC("Frame Synchronization", color::PURPLE);
-    m_currentFrame = (m_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
-    auto& fence    = m_frameFences[m_currentFrame];
+    auto  currentFrameIndex = frameManager->getCurrentFrameIndex();
+    auto& fence             = m_frameFences[currentFrameIndex];
 
     fence->wait();
     fence->reset();
@@ -106,7 +125,8 @@ RenderContext Renderer::beginFrame(Scene* scene, const RenderSettings& renderSet
 
     auto deletionManager = ServiceLocator::s_get<ResourceDeletionManager>();
     if (deletionManager) {
-      deletionManager->setCurrentFrame(m_frameIndex);
+      auto frameIndex = frameManager->getTotalFrameCount();
+      deletionManager->setCurrentFrame(frameIndex);
     }
   }
 
@@ -117,7 +137,8 @@ RenderContext Renderer::beginFrame(Scene* scene, const RenderSettings& renderSet
 
   {
     CPU_ZONE_NC("Swapchain Acquisition", color::PURPLE);
-    if (!m_swapChain->acquireNextImage(m_imageAvailableSemaphores[m_currentFrame].get())) {
+    auto currentFrameIndex = frameManager->getCurrentFrameIndex();
+    if (!m_swapChain->acquireNextImage(m_imageAvailableSemaphores[currentFrameIndex].get())) {
       GlobalLogger::Log(LogLevel::Error, "Failed to acquire next swapchain image");
       return RenderContext();
     }
@@ -251,11 +272,13 @@ void Renderer::endFrame(RenderContext& context) {
     context.commandBuffer->end();
   }
 
-  auto& renderFinishedSemaphore = m_renderFinishedSemaphores[m_currentFrame];
+  auto     frameManager            = ServiceLocator::s_get<FrameManager>();
+  uint32_t currentFrameIndex       = frameManager->getCurrentFrameIndex();
+  auto&    renderFinishedSemaphore = m_renderFinishedSemaphores[currentFrameIndex];
   {
     CPU_ZONE_NC("Prepare Semaphores", color::PURPLE);
     std::vector<rhi::Semaphore*> waitSemaphores;
-    auto&                        imageAvailableSemaphore = m_imageAvailableSemaphores[m_currentFrame];
+    auto&                        imageAvailableSemaphore = m_imageAvailableSemaphores[currentFrameIndex];
     if (imageAvailableSemaphore.get()) {
       waitSemaphores.push_back(imageAvailableSemaphore.get());
     }
@@ -267,7 +290,7 @@ void Renderer::endFrame(RenderContext& context) {
     }
 
     m_device->submitCommandBuffer(
-        context.commandBuffer.get(), m_frameFences[m_currentFrame].get(), waitSemaphores, signalSemaphores);
+        context.commandBuffer.get(), m_frameFences[currentFrameIndex].get(), waitSemaphores, signalSemaphores);
   }
 
   {
@@ -277,7 +300,6 @@ void Renderer::endFrame(RenderContext& context) {
   {
     CPU_ZONE_NC("Cleanup", color::PURPLE);
     recycleCommandBuffer_(std::move(context.commandBuffer));
-    m_frameIndex++;
   }
 }
 
@@ -367,6 +389,40 @@ void Renderer::onSceneSwitch() {
   GlobalLogger::Log(LogLevel::Info, "Renderer resources cleared for scene switch");
 }
 
+gfx::rhi::RenderingApi Renderer::getCurrentApi() const {
+  return m_device ? m_device->getApiType() : gfx::rhi::RenderingApi::Count;
+}
+
+bool Renderer::switchRenderingApi(gfx::rhi::RenderingApi newApi) {
+  if (!m_initialized) {
+    GlobalLogger::Log(LogLevel::Error, "Cannot switch API - renderer not initialized");
+    return false;
+  }
+
+  if (getCurrentApi() == newApi) {
+    GlobalLogger::Log(LogLevel::Info, "Already using requested API, no switch needed");
+    return true;
+  }
+
+  GlobalLogger::Log(LogLevel::Info, "Starting API switch to " + std::to_string(static_cast<int>(newApi)));
+
+  waitForAllFrames_();
+
+  cleanupResources_();
+
+  if (!recreateResources_(newApi)) {
+    GlobalLogger::Log(LogLevel::Error, "Failed to recreate resources with new API");
+    return false;
+  }
+
+  recreateResourceManagers_();
+
+  reloadSceneModels_();
+
+  GlobalLogger::Log(LogLevel::Info, "Successfully switched to new rendering API");
+  return true;
+}
+
 void Renderer::initializeGpuProfiler_() {
   if (auto* profiler = ServiceLocator::s_get<gpu::GpuProfiler>()) {
     if (profiler->initialize(m_device.get())) {
@@ -378,7 +434,9 @@ void Renderer::initializeGpuProfiler_() {
 }
 
 std::unique_ptr<rhi::CommandBuffer> Renderer::acquireCommandBuffer_() {
-  auto& pool = m_commandBufferPools[m_currentFrame];
+  auto     frameManager      = ServiceLocator::s_get<FrameManager>();
+  uint32_t currentFrameIndex = frameManager->getCurrentFrameIndex();
+  auto&    pool              = m_commandBufferPools[currentFrameIndex];
 
   if (!pool.empty()) {
     auto cmdBuffer = std::move(pool.back());
@@ -395,7 +453,9 @@ std::unique_ptr<rhi::CommandBuffer> Renderer::acquireCommandBuffer_() {
 
 void Renderer::recycleCommandBuffer_(std::unique_ptr<rhi::CommandBuffer> cmdBuffer) {
   if (cmdBuffer) {
-    auto& pool = m_commandBufferPools[m_currentFrame];
+    auto     frameManager      = ServiceLocator::s_get<FrameManager>();
+    uint32_t currentFrameIndex = frameManager->getCurrentFrameIndex();
+    auto&    pool              = m_commandBufferPools[currentFrameIndex];
 
     if (pool.size() < COMMAND_BUFFERS_PER_FRAME) {
       pool.push_back(std::move(cmdBuffer));
@@ -419,6 +479,218 @@ void Renderer::setupRenderPasses_() {
   m_finalPass = std::make_unique<FinalPass>();
   m_finalPass->initialize(m_device.get(), getResourceManager(), m_frameResources.get(), m_shaderManager.get());
 }
+
+void Renderer::cleanupResources_() {
+  GlobalLogger::Log(LogLevel::Info, "Cleaning up all rendering resources");
+
+  if (m_finalPass) {
+    m_finalPass->cleanup();
+    m_finalPass.reset();
+  }
+
+  if (m_debugPass) {
+    m_debugPass->cleanup();
+    m_debugPass.reset();
+  }
+
+  if (m_basePass) {
+    m_basePass->cleanup();
+    m_basePass.reset();
+  }
+
+  if (m_frameResources) {
+    m_frameResources->cleanup();
+    m_frameResources.reset();
+  }
+
+  if (m_resourceManager) {
+    m_resourceManager->clear();
+    m_resourceManager.reset();
+  }
+
+  if (m_shaderManager) {
+    m_shaderManager->release();
+    m_shaderManager.reset();
+  }
+
+  ServiceLocator::s_remove<BufferManager>();
+  ServiceLocator::s_remove<TextureManager>();
+  ServiceLocator::s_remove<RenderModelManager>();
+  ServiceLocator::s_remove<RenderMeshManager>();
+  ServiceLocator::s_remove<RenderGeometryMeshManager>();
+  ServiceLocator::s_remove<MaterialManager>();
+
+  for (auto& fence : m_frameFences) {
+    fence.reset();
+  }
+
+  for (auto& semaphore : m_imageAvailableSemaphores) {
+    semaphore.reset();
+  }
+
+  for (auto& semaphore : m_renderFinishedSemaphores) {
+    semaphore.reset();
+  }
+
+  for (auto& pool : m_commandBufferPools) {
+    pool.clear();
+  }
+
+  if (m_swapChain) {
+    m_swapChain.reset();
+  }
+
+  if (m_device) {
+    m_device.reset();
+  }
+
+  GlobalLogger::Log(LogLevel::Info, "Resource cleanup completed");
+}
+
+// TODO: consider making one method (init and this method) that will have the same logic
+bool Renderer::recreateResources_(gfx::rhi::RenderingApi newApi) {
+  GlobalLogger::Log(LogLevel::Info, "Recreating resources with new API");
+
+  rhi::DeviceDesc deviceDesc;
+  deviceDesc.window = m_window;
+  m_device          = g_createDevice(newApi, deviceDesc);
+
+  if (!m_device) {
+    GlobalLogger::Log(LogLevel::Error, "Failed to create device with new API");
+    return false;
+  }
+
+  auto     frameManager   = ServiceLocator::s_get<FrameManager>();
+  uint32_t framesInFlight = frameManager->getMaxFramesInFlight();
+
+  rhi::SwapchainDesc swapchainDesc;
+  swapchainDesc.width       = m_window->getSize().width();
+  swapchainDesc.height      = m_window->getSize().height();
+  swapchainDesc.format      = rhi::TextureFormat::Bgra8;
+  swapchainDesc.bufferCount = framesInFlight;
+  m_swapChain               = m_device->createSwapChain(swapchainDesc);
+
+  if (!m_swapChain) {
+    GlobalLogger::Log(LogLevel::Error, "Failed to create swap chain with new API");
+    return false;
+  }
+
+  for (uint32_t i = 0; i < framesInFlight; ++i) {
+    rhi::FenceDesc fenceDesc;
+    fenceDesc.signaled = true;
+    m_frameFences[i]   = m_device->createFence(fenceDesc);
+
+    m_imageAvailableSemaphores[i] = m_device->createSemaphore();
+    m_renderFinishedSemaphores[i] = m_device->createSemaphore();
+
+    m_commandBufferPools[i].clear();
+    m_commandBufferPools[i].reserve(COMMAND_BUFFERS_PER_FRAME);
+    for (uint32_t j = 0; j < INITIAL_COMMAND_BUFFERS; ++j) {
+      rhi::CommandBufferDesc cmdDesc;
+      auto                   cmdBuffer = m_device->createCommandBuffer(cmdDesc);
+      if (cmdBuffer) {
+        m_commandBufferPools[i].emplace_back(std::move(cmdBuffer));
+      }
+    }
+  }
+
+  m_shaderManager   = std::make_unique<rhi::ShaderManager>(m_device.get(), framesInFlight, true);
+  m_resourceManager = std::make_unique<RenderResourceManager>();
+  m_frameResources  = std::make_unique<FrameResources>(m_device.get(), getResourceManager());
+
+  m_frameResources->initialize(framesInFlight);
+  m_frameResources->resize(m_window->getSize());
+
+  setupRenderPasses_();
+
+  initializeGpuProfiler_();
+
+  GlobalLogger::Log(LogLevel::Info, "Resource recreation completed");
+  return true;
+}
+
+void Renderer::recreateResourceManagers_() {
+  GlobalLogger::Log(LogLevel::Info, "Recreating resource managers with new device");
+
+  ServiceLocator::s_provide<BufferManager>(m_device.get());
+  ServiceLocator::s_provide<TextureManager>(m_device.get());
+  ServiceLocator::s_provide<RenderModelManager>();
+  ServiceLocator::s_provide<RenderMeshManager>();
+  ServiceLocator::s_provide<RenderGeometryMeshManager>();
+  ServiceLocator::s_provide<MaterialManager>();
+
+  auto systemManager = ServiceLocator::s_get<SystemManager>();
+  if (systemManager) {
+    auto existingLightSystem = systemManager->getSystem<LightSystem>();
+    if (existingLightSystem) {
+      systemManager->replaceSystem<LightSystem>(m_device.get(), m_resourceManager.get());
+    }
+  }
+
+  GlobalLogger::Log(LogLevel::Info, "Resource managers recreated with new device");
+}
+
+void Renderer::reloadSceneModels_() {
+  auto sceneManager = ServiceLocator::s_get<SceneManager>();
+  if (!sceneManager) {
+    return;
+  }
+
+  auto scene = sceneManager->getCurrentScene();
+  if (!scene) {
+    return;
+  }
+
+  auto& registry = scene->getEntityRegistry();
+
+  auto view = registry.view<Model*, RenderModel*>();
+
+  std::vector<std::pair<entt::entity, std::filesystem::path>> entitiesToUpdate;
+
+  for (auto entity : view) {
+    auto* cpuModel = registry.get<Model*>(entity);
+    if (cpuModel && !cpuModel->filePath.empty()) {
+      entitiesToUpdate.emplace_back(entity, cpuModel->filePath);
+      GlobalLogger::Log(LogLevel::Info,
+                        "Entity " + std::to_string(static_cast<uint32_t>(entity))
+                            + " scheduled for GPU model reload: " + cpuModel->filePath.string());
+    }
+  }
+
+  registry.clear<RenderModel*>();
+
+  auto renderModelManager = ServiceLocator::s_get<RenderModelManager>();
+  if (!renderModelManager) {
+    GlobalLogger::Log(LogLevel::Error, "RenderModelManager not available for model reload");
+    return;
+  }
+
+  for (const auto& [entity, modelPath] : entitiesToUpdate) {
+    if (!registry.valid(entity)) {
+      GlobalLogger::Log(LogLevel::Warning,
+                        "Entity " + std::to_string(static_cast<uint32_t>(entity)) + " no longer valid during reload");
+      continue;
+    }
+
+    Model* cpuModel       = nullptr;
+    auto*  newRenderModel = renderModelManager->getRenderModel(modelPath.string(), &cpuModel);
+
+    if (newRenderModel) {
+      registry.emplace<RenderModel*>(entity, newRenderModel);
+
+      GlobalLogger::Log(LogLevel::Info,
+                        "Entity " + std::to_string(static_cast<uint32_t>(entity))
+                            + " GPU model successfully reloaded: " + modelPath.string());
+    } else {
+      GlobalLogger::Log(LogLevel::Error,
+                        "Failed to reload GPU model for entity " + std::to_string(static_cast<uint32_t>(entity)) + ": "
+                            + modelPath.string());
+    }
+  }
+
+  GlobalLogger::Log(LogLevel::Info, "Reloaded GPU models for " + std::to_string(entitiesToUpdate.size()) + " entities");
+}
+
 }  // namespace renderer
 }  // namespace gfx
 }  // namespace arise

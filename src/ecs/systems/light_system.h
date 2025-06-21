@@ -79,11 +79,14 @@ class LightSystem : public IUpdatableSystem {
   void createOrUpdateDescriptorSet_();
 
   void createDescriptorSetLayout_();
+  void createEmptyBuffers_();
   void createOrResizeBuffer_(size_t             requiredSize,
                              gfx::rhi::Buffer*& buffer,
                              const std::string& debugName,
                              uint32_t&          currentCapacity,
                              uint32_t           stride);
+
+  void ensureAllBuffersExist_();
 
   gfx::rhi::Device*                     m_device;
   gfx::renderer::RenderResourceManager* m_resourceManager;

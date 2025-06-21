@@ -13,7 +13,7 @@ namespace arise {
 class RenderGeometryMeshManager {
   public:
   RenderGeometryMeshManager()  = default;
-  ~RenderGeometryMeshManager() = default;
+  ~RenderGeometryMeshManager();
 
   /**
    * @param sourceMesh Associated CPU mesh for identification

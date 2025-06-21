@@ -22,8 +22,6 @@ class Engine {
   void render();
   void run();
 
-  Window* getWindow() const { return m_window_.get(); }
-
   void setGame(Application* game);
 
   void onClose(const ApplicationEvent& event) { m_isRunning_ = false; }

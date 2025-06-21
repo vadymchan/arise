@@ -37,8 +37,6 @@ class Application {
 
   void update(float deltaTime);
 
-  void linkWithEngine(const Engine& engine);
-
   void onMouseMove(int32_t xOffset, int32_t yOffset);
 
   void release();
@@ -48,8 +46,6 @@ class Application {
 
   static constexpr float s_speedChangeStep = 0.5f;
   static constexpr float s_minMovingSpeed  = 0.1f;
-
-  Window* m_window_ = nullptr;
 
   float m_movingSpeed_ = 10.0f;
   // TODO: add key bindings for sensitivity change

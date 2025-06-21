@@ -443,9 +443,6 @@ void Engine::update_(float deltaTime) {
 
 void Engine::setGame(Application* game) {
   m_application_ = game;
-  if (m_application_) {
-    m_application_->linkWithEngine(*this);
-  }
 }
 
 }  // namespace arise

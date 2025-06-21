@@ -119,10 +119,6 @@ void Application::update(float deltaTime) {
   }
 }
 
-void Application::linkWithEngine(const Engine& engine) {
-  m_window_ = engine.getWindow();
-}
-
 void Application::release() {
 }
 

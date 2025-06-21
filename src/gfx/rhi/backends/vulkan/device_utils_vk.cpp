@@ -104,6 +104,9 @@ QueueFamilyIndices g_findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR sur
 
     if (presentSupport) {
       indices.presentFamily = i;
+    } else {
+      GlobalLogger::Log(LogLevel::Debug,
+                        "Queue family " + std::to_string(i) + " does not support surface presentation.");
     }
 
     if (indices.isComplete()) {

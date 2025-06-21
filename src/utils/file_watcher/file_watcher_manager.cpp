@@ -10,9 +10,8 @@ void FileWatcherManager::addWatcher(const std::filesystem::path& dirPath,
 
   if (m_watchers_.contains(modifiedDirPath)) {
     GlobalLogger::Log(
-        LogLevel::Error,
-        "Watcher for path " + modifiedDirPath.string() + " already exists!");
-    return;
+        LogLevel::Warning,
+                      "Watcher for path " + modifiedDirPath.string() + " already exists! Overriding previous watcher.");
   }
 
   m_watchers_[modifiedDirPath]

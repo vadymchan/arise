@@ -336,11 +336,11 @@ std::unique_ptr<Semaphore> DeviceDx12::createSemaphore() {
 }
 
 std::unique_ptr<SwapChain> DeviceDx12::createSwapChain(const SwapchainDesc& desc) {
-  if (desc.bufferCount != m_frameResourcesManager.getCurrentFrameIndex()) {
-    m_frameResourcesManager.release();
-    m_frameResourcesManager.initialize(this, desc.bufferCount);
+  m_frameResourcesManager.release();
+  if (!m_frameResourcesManager.initialize(this, desc.bufferCount)) {
+    GlobalLogger::Log(LogLevel::Error, "Failed to initialize frame resources manager for DX12");
+    return nullptr;
   }
-
   return std::make_unique<SwapChainDx12>(desc, this);
 }
 

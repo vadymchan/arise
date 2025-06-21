@@ -331,8 +331,6 @@ auto Engine::initialize() -> bool {
   auto cgltfMaterialLoader   = std::make_shared<CgltfMaterialLoader>();
   materialLoaderManager->registerLoader(MaterialType::GLTF, cgltfMaterialLoader);
   ServiceLocator::s_provide<MaterialLoaderManager>(std::move(materialLoaderManager));
-  // editor
-  // ------------------------------------------------------------------------
 
   gfx::renderer::ApplicationRenderMode applicationMode = gfx::renderer::ApplicationRenderMode::Game;
   if (applicationModeStr == "editor") {
@@ -341,6 +339,8 @@ auto Engine::initialize() -> bool {
     m_applicationMode = gfx::renderer::ApplicationRenderMode::Game;
   }
 
+  // editor
+  // ------------------------------------------------------------------------
   m_editor_ = std::make_unique<Editor>();
   switch (m_applicationMode) {
     case gfx::renderer::ApplicationRenderMode::Editor:
@@ -361,6 +361,12 @@ auto Engine::initialize() -> bool {
       GlobalLogger::Log(LogLevel::Error, "Unknown application mode");
       successfullyInitialized = false;
       break;
+  }
+
+  if (m_editor_) {
+    m_editor_->setWindowRecreationCallback(
+        [this](gfx::rhi::RenderingApi newApi) -> Window* { return this->recreateWindow_(newApi); });
+    GlobalLogger::Log(LogLevel::Info, "Window recreation callback set for Editor");
   }
 
   if (successfullyInitialized) {
@@ -391,13 +397,13 @@ void Engine::render() {
 
 void Engine::run() {
   CPU_ZONE_NC("Engine Main Loop", color::BLACK);
-  
+
   auto frameManager = ServiceLocator::s_get<FrameManager>();
   if (!frameManager) {
     GlobalLogger::Log(LogLevel::Error, "FrameManager not found");
     return;
   }
-  
+
   m_isRunning_ = true;
 
   while (m_isRunning_) {
@@ -455,7 +461,59 @@ void Engine::update_(float deltaTime) {
   auto systemManager = ServiceLocator::s_get<SystemManager>();
   auto scene         = ServiceLocator::s_get<SceneManager>()->getCurrentScene();
   systemManager->updateSystems(scene, deltaTime);
+}
 
+Window* Engine::recreateWindow_(gfx::rhi::RenderingApi newApi) {
+  if (!m_window_) {
+    GlobalLogger::Log(LogLevel::Error, "Cannot recreate null window");
+    return nullptr;
+  }
+
+  GlobalLogger::Log(LogLevel::Info, "Recreating window for API switch");
+
+  auto currentSize  = m_window_->getSize();
+  auto currentPos   = m_window_->getPosition();
+  auto currentTitle = m_window_->getTitle();
+
+  Window::Flags newFlags = Window::Flags::Resizable | Window::Flags::Maximized;
+  if (newApi == gfx::rhi::RenderingApi::Vulkan) {
+    newFlags = newFlags | Window::Flags::Vulkan;
+  }
+
+  m_window_.reset();
+
+  m_window_ = std::make_unique<Window>(currentTitle, currentSize, currentPos, newFlags);
+
+  if (!m_window_) {
+    GlobalLogger::Log(LogLevel::Error, "Failed to recreate window");
+    return nullptr;
+  }
+
+  // Set window icon after recreation
+  auto configManager = ServiceLocator::s_get<ConfigManager>();
+  if (configManager) {
+    auto configPath = PathManager::s_getEngineSettingsPath() / "settings.json";
+    auto config = configManager->getConfig(configPath);
+    if (config) {
+      auto logoEnabled = config->get<bool>("logo.enabled");
+      if (logoEnabled) {
+        auto logoFilename = config->get<std::string>("logo.filename");
+        auto logoPath = PathManager::s_getLogoPath() / logoFilename;
+        
+        if (!m_window_->setWindowIcon(logoPath)) {
+          GlobalLogger::Log(LogLevel::Warning, "Failed to set window icon after recreation: " + logoPath.string());
+        }
+      }
+    }
+  }
+
+  if (m_renderer_) {
+    m_renderer_->updateWindow(m_window_.get());
+    GlobalLogger::Log(LogLevel::Info, "Updated window reference in renderer");
+  }
+
+  GlobalLogger::Log(LogLevel::Info, "Window recreated successfully");
+  return m_window_.get();
 }
 
 void Engine::setGame(Application* game) {

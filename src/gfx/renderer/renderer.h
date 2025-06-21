@@ -48,6 +48,8 @@ class Renderer {
   RenderResourceManager* getResourceManager() const { return m_resourceManager.get(); }
   gfx::rhi::RenderingApi getCurrentApi() const;
 
+  void updateWindow(Window* window);
+
   bool switchRenderingApi(gfx::rhi::RenderingApi newApi);
 
   private:

@@ -10,6 +10,8 @@
 #include <ImGuiFileDialog.h>
 #include <ImGuizmo.h>
 
+#include <functional>
+
 namespace arise {
 
 class Window;
@@ -44,6 +46,10 @@ class Editor {
   const gfx::renderer::RenderSettings& getRenderParams() const { return m_renderParams; }
 
   void onWindowResize(uint32_t width, uint32_t height);
+
+  void setWindowRecreationCallback(std::function<Window*(gfx::rhi::RenderingApi)> callback) {
+    m_windowRecreationCallback = std::move(callback);
+  }
 
   private:
   void resizeViewport(const gfx::renderer::RenderContext& context);
@@ -158,6 +164,8 @@ class Editor {
 
   bool                   m_pendingApiSwitch = false;
   gfx::rhi::RenderingApi m_pendingApi;
+
+  std::function<Window*(gfx::rhi::RenderingApi)> m_windowRecreationCallback;
 };
 
 }  // namespace arise

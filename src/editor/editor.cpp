@@ -2145,25 +2145,47 @@ bool Editor::switchRenderingApi_(gfx::rhi::RenderingApi newApi) {
     m_device->waitIdle();
   }
 
+  for (auto& textureID : m_viewportTextureIDs) {
+    if (textureID && m_imguiContext) {
+      m_imguiContext->releaseTextureID(textureID);
+    }
+    textureID = 0;
+  }
+
   if (m_imguiContext) {
     m_imguiContext->shutdown();
     m_imguiContext.reset();
   }
 
-  for (auto& textureID : m_viewportTextureIDs) {
-    textureID = 0;
+  Window* newWindow = nullptr;
+  if (m_windowRecreationCallback) {
+    GlobalLogger::Log(LogLevel::Info, "Recreating window for API compatibility");
+    newWindow = m_windowRecreationCallback(newApi);
+    if (!newWindow) {
+      GlobalLogger::Log(LogLevel::Error, "Failed to recreate window for API switch");
+      return false;
+    }
+
+    m_window = newWindow;
+    GlobalLogger::Log(LogLevel::Info, "Window reference updated");
   }
 
   bool success = m_renderer->switchRenderingApi(newApi);
-  if (success) {
-    m_frameResources = m_renderer->getFrameResources();
-    GlobalLogger::Log(LogLevel::Info, "Renderer API switch completed successfully");
-  } else {
+  if (!success) {
     GlobalLogger::Log(LogLevel::Error, "Renderer API switch failed");
     return false;
   }
 
-  return recreateImGuiContext_();
+  m_frameResources = m_renderer->getFrameResources();
+
+  bool imguiSuccess = recreateImGuiContext_();
+  if (imguiSuccess) {
+    GlobalLogger::Log(LogLevel::Info, "API switch to " + apiName + " completed successfully");
+  } else {
+    GlobalLogger::Log(LogLevel::Error, "Failed to recreate ImGui context after API switch");
+  }
+
+  return imguiSuccess;
 }
 
 void Editor::scheduleApiSwitch_(gfx::rhi::RenderingApi newApi) {
@@ -2198,7 +2220,13 @@ bool Editor::recreateImGuiContext_() {
     return false;
   }
 
-  m_device = newDevice;
+  m_device         = newDevice;
+  m_frameResources = m_renderer->getFrameResources();
+
+  if (!m_frameResources) {
+    GlobalLogger::Log(LogLevel::Error, "Failed to get frame resources after API switch");
+    return false;
+  }
 
   m_imguiContext = std::make_unique<gfx::ImGuiRHIContext>();
   if (!m_imguiContext->initialize(m_window, newDevice, m_frameResources->getFramesCount())) {

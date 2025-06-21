@@ -31,6 +31,7 @@ class Engine {
 
   private:
   void processEvents_();
+  auto recreateWindow_(gfx::rhi::RenderingApi newApi) -> Window*;
 
   void update_(float deltaTime);
 

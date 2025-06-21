@@ -393,6 +393,15 @@ gfx::rhi::RenderingApi Renderer::getCurrentApi() const {
   return m_device ? m_device->getApiType() : gfx::rhi::RenderingApi::Count;
 }
 
+void Renderer::updateWindow(Window* window) {
+  if (!window) {
+    GlobalLogger::Log(LogLevel::Error, "Cannot update with null window");
+    return;
+  }
+  m_window = window;
+  GlobalLogger::Log(LogLevel::Info, "Window pointer updated successfully");
+}
+
 bool Renderer::switchRenderingApi(gfx::rhi::RenderingApi newApi) {
   if (!m_initialized) {
     GlobalLogger::Log(LogLevel::Error, "Cannot switch API - renderer not initialized");
@@ -544,6 +553,8 @@ void Renderer::cleanupResources_() {
     m_device.reset();
   }
 
+  m_initialized = false;
+
   GlobalLogger::Log(LogLevel::Info, "Resource cleanup completed");
 }
 
@@ -562,6 +573,11 @@ bool Renderer::recreateResources_(gfx::rhi::RenderingApi newApi) {
 
   auto     frameManager   = ServiceLocator::s_get<FrameManager>();
   uint32_t framesInFlight = frameManager->getMaxFramesInFlight();
+
+  m_commandBufferPools.resize(framesInFlight);
+  m_frameFences.resize(framesInFlight);
+  m_imageAvailableSemaphores.resize(framesInFlight);
+  m_renderFinishedSemaphores.resize(framesInFlight);
 
   rhi::SwapchainDesc swapchainDesc;
   swapchainDesc.width       = m_window->getSize().width();
@@ -603,7 +619,14 @@ bool Renderer::recreateResources_(gfx::rhi::RenderingApi newApi) {
 
   setupRenderPasses_();
 
+  auto deletionManager = ServiceLocator::s_get<ResourceDeletionManager>();
+  if (deletionManager) {
+    deletionManager->setDefaultFrameDelay(framesInFlight);
+  }
+
   initializeGpuProfiler_();
+
+  m_initialized = true;
 
   GlobalLogger::Log(LogLevel::Info, "Resource recreation completed");
   return true;

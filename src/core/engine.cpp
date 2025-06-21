@@ -54,6 +54,7 @@
 #include "utils/time/timing_manager.h"
 
 #include <imgui_impl_sdl2.h>
+#include <filesystem>
 
 namespace arise {
 
@@ -284,6 +285,22 @@ auto Engine::initialize() -> bool {
 
   auto imageManager = std::make_unique<ImageManager>();
   ServiceLocator::s_provide<ImageManager>(std::move(imageManager));
+
+  // Set window icon
+  // ------------------------------------------------------------------------
+  auto logoEnabled = config->get<bool>("logo.enabled");
+  if (logoEnabled) {
+    auto logoFilename = config->get<std::string>("logo.filename");
+    auto logoPath = PathManager::s_getLogoPath() / logoFilename;
+    
+    if (!m_window_->setWindowIcon(logoPath)) {
+      GlobalLogger::Log(LogLevel::Warning, "Failed to set window icon from: " + logoPath.string());
+    } else {
+      GlobalLogger::Log(LogLevel::Info, "Window icon set successfully from: " + logoPath.string());
+    }
+  } else {
+    GlobalLogger::Log(LogLevel::Info, "Window icon disabled in settings");
+  }
 
   // mesh / model / material loader
   // ------------------------------------------------------------------------

@@ -15,6 +15,7 @@ class PathManager {
   static std::filesystem::path s_getDebugPath();
   static std::filesystem::path s_getScenesPath();
   static std::filesystem::path s_getEngineSettingsPath();
+  static std::filesystem::path s_getLogoPath();
 
   private:
   static constexpr std::string_view s_assetPath          = "assetPath";
@@ -23,6 +24,7 @@ class PathManager {
   static constexpr std::string_view s_debugPath          = "debugPath";
   static constexpr std::string_view s_scenesPath         = "scenesPath";
   static constexpr std::string_view s_engineSettingsPath = "engineSettingsPath";
+  static constexpr std::string_view s_logoPath           = "logoPath";
 
   static constexpr std::string_view s_configFile = "config/resources/paths.json";
 

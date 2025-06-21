@@ -30,6 +30,10 @@ std::filesystem::path PathManager::s_getEngineSettingsPath() {
   return s_getPath(s_engineSettingsPath);
 }
 
+std::filesystem::path PathManager::s_getLogoPath() {
+  return s_getPath(s_logoPath);
+}
+
 bool PathManager::s_isConfigAvailable() {
   if (!s_config_) {
     auto configManager = ServiceLocator::s_get<ConfigManager>();

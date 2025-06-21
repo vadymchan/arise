@@ -4,5 +4,6 @@
   "shaderPath": "assets/shaders",
   "debugPath": "config/debug",
   "scenesPath": "assets/scenes",
-  "engineSettingsPath": "config/engine"
+  "engineSettingsPath": "config/engine",
+  "logoPath": "assets/logo"
 }

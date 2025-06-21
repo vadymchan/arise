@@ -11,6 +11,7 @@
 
 #include <string>
 #include <utility>
+#include <filesystem>
 
 namespace arise {
 
@@ -81,6 +82,13 @@ class Window {
     m_size_ = math::Dimension2i(event.data1, event.data2);
     SDL_SetWindowSize(m_window_, event.data1, event.data2);
   }
+
+  /**
+   * Sets the window icon from an image file
+   * @param iconPath Path to the icon image file (supports PNG, JPG, etc.)
+   * @return true if the icon was successfully set, false otherwise
+   */
+  bool setWindowIcon(const std::filesystem::path& iconPath);
 
   auto operator=(const Window&) -> Window& = delete;
   auto operator=(Window&&) -> Window&      = delete;

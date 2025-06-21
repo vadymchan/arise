@@ -66,6 +66,35 @@ void Config::asyncLoadComplete_() const {
 }
 
 const ConfigValue& Config::getMember_(const std::string& key) const {
+  if (key.find('.') != std::string::npos) {
+    std::string currentKey = key;
+    const ConfigValue* currentValue = &m_root_;
+    
+    while (!currentKey.empty()) {
+      size_t dotPos = currentKey.find('.');
+      std::string keyPart = (dotPos != std::string::npos) ? 
+                           currentKey.substr(0, dotPos) : currentKey;
+      
+      if (!currentValue->IsObject() || !currentValue->HasMember(keyPart.c_str())) {
+        static ConfigValue nullValue(rapidjson::kNullType);
+        GlobalLogger::Log(LogLevel::Error,
+                          "Key \"" + key + "\" not found in config (failed at \"" + keyPart + "\").");
+        return nullValue;
+      }
+      
+      currentValue = &(*currentValue)[keyPart.c_str()];
+      
+      if (dotPos != std::string::npos) {
+        currentKey = currentKey.substr(dotPos + 1);
+      } else {
+        currentKey.clear();
+      }
+    }
+    
+    return *currentValue;
+  }
+  
+  // Handle direct key access (original behavior)
   if (!m_root_.HasMember(key.c_str())) {
     static ConfigValue nullValue(rapidjson::kNullType);
     GlobalLogger::Log(LogLevel::Error,

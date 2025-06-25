@@ -89,9 +89,9 @@ DeviceVk::~DeviceVk() {
 bool DeviceVk::createInstance_() {
   VkApplicationInfo appInfo  = {};
   appInfo.sType              = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-  appInfo.pApplicationName   = "Game Engine";
+  appInfo.pApplicationName   = "arise";
   appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-  appInfo.pEngineName        = "Game Engine";
+  appInfo.pEngineName        = "arise";
   appInfo.engineVersion      = VK_MAKE_VERSION(1, 0, 0);
   appInfo.apiVersion         = VK_API_VERSION_1_3;
 

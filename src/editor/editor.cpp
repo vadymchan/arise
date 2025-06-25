@@ -51,7 +51,7 @@ bool Editor::initialize(Window*                        window,
 
   m_renderParams.renderMode              = gfx::renderer::RenderMode::Solid;
   m_renderParams.postProcessMode         = gfx::renderer::PostProcessMode::None;
-  m_renderParams.appMode                 = gfx::renderer::ApplicationRenderMode::Editor;
+  m_renderParams.appMode                 = ApplicationMode::Editor;
   m_renderParams.renderViewportDimension = window->getSize();
 
   m_notificationTimer.stop();
@@ -137,7 +137,7 @@ void Editor::update(float deltaTime) {
 }
 
 void Editor::onWindowResize(uint32_t width, uint32_t height) {
-  if (m_renderParams.appMode == gfx::renderer::ApplicationRenderMode::Editor) {
+  if (m_renderParams.appMode == ApplicationMode::Editor) {
     if (width <= 0 || height <= 0) {
       GlobalLogger::Log(LogLevel::Error, "Invalid window dimensions");
       return;

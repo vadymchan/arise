@@ -36,7 +36,7 @@ class Engine {
   void update_(float deltaTime);
 
   bool                                     m_isRunning_{false};
-  gfx::renderer::ApplicationRenderMode     m_applicationMode = gfx::renderer::ApplicationRenderMode::Game;
+  ApplicationMode                          m_applicationMode = ApplicationMode::Standalone;
   std::unique_ptr<Window>                  m_window_;
   std::unique_ptr<gfx::renderer::Renderer> m_renderer_;
   std::unique_ptr<Editor>                  m_editor_;

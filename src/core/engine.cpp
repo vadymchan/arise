@@ -54,6 +54,7 @@
 #include "utils/time/timing_manager.h"
 
 #include <imgui_impl_sdl2.h>
+
 #include <filesystem>
 
 namespace arise {
@@ -121,7 +122,7 @@ auto Engine::initialize() -> bool {
       device->waitIdle();
     }
 
-    if (renderMode == gfx::renderer::ApplicationRenderMode::Game) {
+    if (renderMode == ApplicationMode::Standalone) {
       this->m_window_->onResize(event);
 
       auto  scene    = ServiceLocator::s_get<SceneManager>()->getCurrentScene();
@@ -135,7 +136,7 @@ auto Engine::initialize() -> bool {
       }
 
       m_renderer_->onWindowResize(event.data1, event.data2);
-    } else if (renderMode == gfx::renderer::ApplicationRenderMode::Editor) {
+    } else if (renderMode == ApplicationMode::Editor) {
       this->m_window_->onResize(event);
       m_renderer_->onWindowResize(event.data1, event.data2);
       m_editor_->onWindowResize(event.data1, event.data2);
@@ -291,8 +292,8 @@ auto Engine::initialize() -> bool {
   auto logoEnabled = config->get<bool>("logo.enabled");
   if (logoEnabled) {
     auto logoFilename = config->get<std::string>("logo.filename");
-    auto logoPath = PathManager::s_getLogoPath() / logoFilename;
-    
+    auto logoPath     = PathManager::s_getLogoPath() / logoFilename;
+
     if (!m_window_->setWindowIcon(logoPath)) {
       GlobalLogger::Log(LogLevel::Warning, "Failed to set window icon from: " + logoPath.string());
     } else {
@@ -332,18 +333,18 @@ auto Engine::initialize() -> bool {
   materialLoaderManager->registerLoader(MaterialType::GLTF, cgltfMaterialLoader);
   ServiceLocator::s_provide<MaterialLoaderManager>(std::move(materialLoaderManager));
 
-  gfx::renderer::ApplicationRenderMode applicationMode = gfx::renderer::ApplicationRenderMode::Game;
+  ApplicationMode applicationMode = ApplicationMode::Standalone;
   if (applicationModeStr == "editor") {
-    m_applicationMode = gfx::renderer::ApplicationRenderMode::Editor;
+    m_applicationMode = ApplicationMode::Editor;
   } else if (applicationModeStr == "game") {
-    m_applicationMode = gfx::renderer::ApplicationRenderMode::Game;
+    m_applicationMode = ApplicationMode::Standalone;
   }
 
   // editor
   // ------------------------------------------------------------------------
   m_editor_ = std::make_unique<Editor>();
   switch (m_applicationMode) {
-    case gfx::renderer::ApplicationRenderMode::Editor:
+    case ApplicationMode::Editor:
       if (!m_editor_->initialize(m_window_.get(),
                                  renderingApi,
                                  m_renderer_->getDevice(),
@@ -354,7 +355,7 @@ auto Engine::initialize() -> bool {
       }
       GlobalLogger::Log(LogLevel::Info, "Editor initialized successfully");
       break;
-    case gfx::renderer::ApplicationRenderMode::Game:
+    case ApplicationMode::Standalone:
       GlobalLogger::Log(LogLevel::Info, "Running in Application mode, Editor not initialized");
       break;
     default:
@@ -442,7 +443,7 @@ void Engine::run() {
 void Engine::processEvents_() {
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
-    if (m_applicationMode == gfx::renderer::ApplicationRenderMode::Editor) {
+    if (m_applicationMode == ApplicationMode::Editor) {
       ImGui_ImplSDL2_ProcessEvent(&event);
     }
     ServiceLocator::s_get<InputManager>()->routeEvent(event);
@@ -452,7 +453,7 @@ void Engine::processEvents_() {
 }
 
 void Engine::update_(float deltaTime) {
-  if (m_applicationMode == gfx::renderer::ApplicationRenderMode::Editor) {
+  if (m_applicationMode == ApplicationMode::Editor) {
     m_editor_->update(deltaTime);
   }
 
@@ -493,13 +494,13 @@ Window* Engine::recreateWindow_(gfx::rhi::RenderingApi newApi) {
   auto configManager = ServiceLocator::s_get<ConfigManager>();
   if (configManager) {
     auto configPath = PathManager::s_getEngineSettingsPath() / "settings.json";
-    auto config = configManager->getConfig(configPath);
+    auto config     = configManager->getConfig(configPath);
     if (config) {
       auto logoEnabled = config->get<bool>("logo.enabled");
       if (logoEnabled) {
         auto logoFilename = config->get<std::string>("logo.filename");
-        auto logoPath = PathManager::s_getLogoPath() / logoFilename;
-        
+        auto logoPath     = PathManager::s_getLogoPath() / logoFilename;
+
         if (!m_window_->setWindowIcon(logoPath)) {
           GlobalLogger::Log(LogLevel::Warning, "Failed to set window icon after recreation: " + logoPath.string());
         }

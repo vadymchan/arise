@@ -163,10 +163,10 @@ RenderContext Renderer::beginFrame(Scene* scene, const RenderSettings& renderSet
     CPU_ZONE_NC("Viewport Setup", color::PURPLE);
     math::Dimension2i viewportDimension;
     switch (renderSettings.appMode) {
-      case ApplicationRenderMode::Game:
+      case ApplicationMode::Standalone:
         viewportDimension = m_window->getSize();
         break;
-      case ApplicationRenderMode::Editor:
+      case ApplicationMode::Editor:
         viewportDimension = renderSettings.renderViewportDimension;
         onViewportResize(viewportDimension);
         break;
@@ -235,7 +235,7 @@ void Renderer::renderFrame(RenderContext& context) {
     m_debugPass->render(context);
   }
 
-  if (m_finalPass && context.renderSettings.appMode == ApplicationRenderMode::Game) {
+  if (m_finalPass && context.renderSettings.appMode == ApplicationMode::Standalone) {
     m_finalPass->render(context);
   }
 

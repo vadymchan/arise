@@ -1,16 +1,13 @@
 #ifndef ARISE_RENDER_SETTINGS_H
 #define ARISE_RENDER_SETTINGS_H
 
+#include "core/application_mode.h"
+
 #include <math_library/dimension.h>
 
 namespace arise {
 namespace gfx {
 namespace renderer {
-
-enum class ApplicationRenderMode {
-  Editor,
-  Game
-};
 
 enum class RenderMode {
   Solid,
@@ -30,10 +27,10 @@ enum class PostProcessMode {
 };
 
 struct RenderSettings {
-  RenderMode            renderMode              = RenderMode::Solid;
-  PostProcessMode       postProcessMode         = PostProcessMode::None;
-  math::Dimension2i    renderViewportDimension = math::Dimension2i(1, 1);
-  ApplicationRenderMode appMode                 = ApplicationRenderMode::Game;
+  RenderMode             renderMode              = RenderMode::Solid;
+  PostProcessMode        postProcessMode         = PostProcessMode::None;
+  math::Dimension2i      renderViewportDimension = math::Dimension2i(1, 1);
+  arise::ApplicationMode appMode                 = arise::ApplicationMode::Standalone;
 };
 
 }  // namespace renderer

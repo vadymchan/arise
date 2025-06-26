@@ -254,7 +254,7 @@ class DxcUtil {
   }
 
   std::wstring getTargetProfile_(gfx::rhi::ShaderStageFlag stage) {
-    static const std::wstring suffix = L"_6_6";
+    static const std::wstring suffix = L"_6_7";
     switch (stage) {
       case gfx::rhi::ShaderStageFlag::Vertex:
         return L"vs" + suffix;

@@ -215,38 +215,6 @@ void WorldGridStrategy::createPipeline_() {
   m_shaderManager->registerPipelineForShader(m_pipeline, m_pixelShaderPath_);
 }
 
-//void WorldGridStrategy::updateGridParameters_(const RenderContext& context) {
-//  if (!context.scene) {
-//    return;
-//  }
-//
-//  auto& registry = context.scene->getEntityRegistry();
-//  auto  view     = registry.view<Transform, Camera, CameraMatrices>();
-//
-//  if (view.begin() == view.end()) {
-//    GlobalLogger::Log(LogLevel::Warning, "No camera found for world grid");
-//    return;
-//  }
-//
-//  auto  entity         = *view.begin();
-//  auto& transform      = view.get<Transform>(entity);
-//  auto& cameraMatrices = view.get<CameraMatrices>(entity);
-//
-//  GridParameters params;
-//
-//  // Calculate inverse view-projection matrix on CPU
-//  // For left-handed system: VP = V * P
-//  math::Matrix4f<> viewProjection = cameraMatrices.view * cameraMatrices.projection;
-//  params.invViewProjection        = viewProjection.inverse();
-//
-//  params.cameraPosition = transform.translation;
-//  params.gridSize       = 1.0f;    // 1 unit grid
-//  params.fadeDistance   = 100.0f;  // Fade out at 100 units
-//  params.padding[0]     = 0.0f;
-//  params.padding[1]     = 0.0f;
-//
-//  m_device->updateBuffer(m_gridParametersBuffer, &params, sizeof(params));
-//}
 
 }  // namespace renderer
 }  // namespace gfx

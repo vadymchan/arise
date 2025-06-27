@@ -2,12 +2,16 @@
 
 #include "config/config_manager.h"
 #include "ecs/components/camera.h"
+#include "ecs/components/input_components.h"
 #include "ecs/components/light.h"
 #include "ecs/components/movement.h"
 #include "ecs/components/render_model.h"
 #include "ecs/components/selected.h"
 #include "ecs/components/tags.h"
+#include "ecs/components/viewport_tag.h"
 #include "gfx/renderer/renderer.h"
+#include "input/actions.h"
+#include "input/editor_input_processor.h"
 #include "input/input_manager.h"
 #include "profiler/profiler.h"
 #include "scene/scene_loader.h"
@@ -69,19 +73,6 @@ void Editor::render(gfx::renderer::RenderContext& context) {
   if (!m_imguiContext) {
     return;
   }
-
-  auto     contextManager = ServiceLocator::s_get<InputContextManager>();
-  ImGuiIO& io             = ImGui::GetIO();
-
-  static bool wasUIActive = false;
-  bool        isUIActive  = io.WantCaptureKeyboard;
-
-  if (isUIActive && !wasUIActive) {
-    contextManager->pushContext(InputContext::UI);
-  } else if (!isUIActive && wasUIActive) {
-    contextManager->popContext();
-  }
-  wasUIActive = isUIActive;
 
   if (m_pendingViewportResize) {
     resizeViewport(context);
@@ -298,10 +289,21 @@ void Editor::renderViewportWindow(gfx::renderer::RenderContext& context) {
 
   ImVec2 viewportPos = ImGui::GetCursorScreenPos();
 
+  auto inputManager = ServiceLocator::s_get<InputManager>();
+  if (inputManager) {
+    auto& viewportContext = inputManager->getViewportContext();
+    viewportContext.updateViewport(static_cast<int>(viewportPos.x),
+                                   static_cast<int>(viewportPos.y),
+                                   static_cast<int>(renderWindow.x),
+                                   static_cast<int>(renderWindow.y));
+
+    ImVec2 mousePos = ImGui::GetMousePos();
+    viewportContext.updateMousePosition(static_cast<int>(mousePos.x), static_cast<int>(mousePos.y));
+  }
+
   if (currentTextureID) {
     ImGui::Image(currentTextureID, renderWindow);
 
-    handleGizmoInput();
     renderGizmo(newDimension, viewportPos);
 
     bool leftClicked  = ImGui::IsItemClicked(ImGuiMouseButton_Left);
@@ -311,6 +313,12 @@ void Editor::renderViewportWindow(gfx::renderer::RenderContext& context) {
       clearUIFocus_();
 
       ImGui::SetWindowFocus("Render Window");
+
+      auto inputManager = ServiceLocator::s_get<InputManager>();
+      if (inputManager) {
+        auto& viewportContext = inputManager->getViewportContext();
+        viewportContext.focusViewport("Render Window");
+      }
 
       const char* buttonName = leftClicked ? "Left" : "Right";
       GlobalLogger::Log(LogLevel::Info,
@@ -785,8 +793,8 @@ void Editor::renderControlsWindow() {
 
   if (ImGui::Begin("Controls", &m_showControlsWindow)) {
     ImGui::Text("Camera Controls:");
-    ImGui::BulletText("Right Mouse Button: Enable camera look");
-    ImGui::BulletText("W/A/S/D: Move camera");
+    ImGui::BulletText("Right Mouse Button: Enable camera look (only in \"Render Window\" viewport)");
+    ImGui::BulletText("W/A/S/D (whilde RMB): Move camera");
     ImGui::BulletText("E/Q: Move up/down");
     ImGui::BulletText("Mouse Wheel (while RMB): Change movement speed");
 
@@ -874,45 +882,54 @@ void Editor::renderGizmo(const math::Dimension2i& viewportSize, const ImVec2& vi
   }
 }
 
-void Editor::handleGizmoInput() {
+void Editor::handleGizmoInput(EditorAction action) {
   ImGuiIO& io = ImGui::GetIO();
   if (io.WantCaptureKeyboard) {
     return;
   }
 
-  if (ImGui::IsKeyPressed(ImGuiKey_1)) {
-    if (isOperationAllowedForEntity(ImGuizmo::TRANSLATE)) {
-      m_currentGizmoOperation = ImGuizmo::TRANSLATE;
-      GlobalLogger::Log(LogLevel::Info, "Gizmo: Switched to Translate mode");
-    } else {
-      GlobalLogger::Log(LogLevel::Info, "Translate operation not allowed for this entity type");
-    }
-  } else if (ImGui::IsKeyPressed(ImGuiKey_2)) {
-    if (isOperationAllowedForEntity(ImGuizmo::ROTATE)) {
-      m_currentGizmoOperation = ImGuizmo::ROTATE;
-      GlobalLogger::Log(LogLevel::Info, "Gizmo: Switched to Rotate mode");
-    } else {
-      GlobalLogger::Log(LogLevel::Info, "Rotate operation not allowed for this entity type");
-    }
-  } else if (ImGui::IsKeyPressed(ImGuiKey_3)) {
-    if (isOperationAllowedForEntity(ImGuizmo::SCALE)) {
-      m_currentGizmoOperation = ImGuizmo::SCALE;
-      GlobalLogger::Log(LogLevel::Info, "Gizmo: Switched to Scale mode");
-    } else {
-      GlobalLogger::Log(LogLevel::Info, "Scale operation not allowed for this entity type");
-    }
-  }
+  switch (action) {
+    case EditorAction::GizmoTranslate:
+      if (isOperationAllowedForEntity(ImGuizmo::TRANSLATE)) {
+        m_currentGizmoOperation = ImGuizmo::TRANSLATE;
+        GlobalLogger::Log(LogLevel::Info, "Gizmo: Switched to Translate operation");
+      } else {
+        GlobalLogger::Log(LogLevel::Info, "Translate operation not allowed for this entity type");
+      }
+      break;
 
-  if (ImGui::IsKeyPressed(ImGuiKey_4)) {
-    m_currentGizmoMode = (m_currentGizmoMode == ImGuizmo::WORLD) ? ImGuizmo::LOCAL : ImGuizmo::WORLD;
-    GlobalLogger::Log(
-        LogLevel::Info,
-        m_currentGizmoMode == ImGuizmo::WORLD ? "Gizmo: Switched to World space" : "Gizmo: Switched to Local space");
-  }
+    case EditorAction::GizmoRotate:
+      if (isOperationAllowedForEntity(ImGuizmo::ROTATE)) {
+        m_currentGizmoOperation = ImGuizmo::ROTATE;
+        GlobalLogger::Log(LogLevel::Info, "Gizmo: Switched to Rotate operation");
+      } else {
+        GlobalLogger::Log(LogLevel::Info, "Rotate operation not allowed for this entity type");
+      }
+      break;
 
-  if (ImGui::IsKeyPressed(ImGuiKey_5)) {
-    m_showGizmo = !m_showGizmo;
-    GlobalLogger::Log(LogLevel::Info, m_showGizmo ? "Gizmo: Enabled" : "Gizmo: Disabled");
+    case EditorAction::GizmoScale:
+      if (isOperationAllowedForEntity(ImGuizmo::SCALE)) {
+        m_currentGizmoOperation = ImGuizmo::SCALE;
+        GlobalLogger::Log(LogLevel::Info, "Gizmo: Switched to Scale operation");
+      } else {
+        GlobalLogger::Log(LogLevel::Info, "Scale operation not allowed for this entity type");
+      }
+      break;
+
+    case EditorAction::GizmoToggleSpace:
+      m_currentGizmoMode = (m_currentGizmoMode == ImGuizmo::WORLD) ? ImGuizmo::LOCAL : ImGuizmo::WORLD;
+      GlobalLogger::Log(
+          LogLevel::Info,
+          m_currentGizmoMode == ImGuizmo::WORLD ? "Gizmo: Switched to World space" : "Gizmo: Switched to Local space");
+      break;
+
+    case EditorAction::GizmoToggleVisibility:
+      m_showGizmo = !m_showGizmo;
+      GlobalLogger::Log(LogLevel::Info, m_showGizmo ? "Gizmo: Enabled" : "Gizmo: Disabled");
+      break;
+
+    default:
+      break;
   }
 }
 
@@ -1304,13 +1321,7 @@ bool Editor::performGizmoManipulation_(math::Matrix4f<>& modelMatrix, entt::enti
 
 void Editor::clearUIFocus_() {
   ImGui::SetKeyboardFocusHere(-1);
-
-  auto contextManager = ServiceLocator::s_get<InputContextManager>();
-  while (contextManager->getCurrentContext() != InputContext::Game) {
-    contextManager->popContext();
-  }
-
-  GlobalLogger::Log(LogLevel::Info, "UI focus cleared - returned to Game context");
+  GlobalLogger::Log(LogLevel::Info, "UI focus cleared");
 }
 
 void Editor::saveCurrentScene_() {
@@ -1351,28 +1362,30 @@ void Editor::saveCurrentScene_() {
 }
 
 void Editor::setupInputHandlers_() {
-  auto keyboardEventHandler = ServiceLocator::s_get<InputManager>()->getKeyboardHandler();
+  auto inputManager    = ServiceLocator::s_get<InputManager>();
+  auto editorProcessor = std::make_unique<EditorInputProcessor>(inputManager->getInputMap());
 
-  keyboardEventHandler->subscribe({SDL_KEYDOWN, SDL_SCANCODE_S}, [this](const KeyboardEvent& event) {
-    if ((SDL_GetModState() & KMOD_CTRL) == 0) {
-      return false;
-    }
+  editorProcessor->subscribe(EditorAction::SaveScene, [this](EditorAction) { saveCurrentScene_(); });
 
-    saveCurrentScene_();
-    return true;
-  });
-
-  keyboardEventHandler->subscribe({SDL_KEYDOWN, SDL_SCANCODE_I}, [this](const KeyboardEvent& event) {
+  editorProcessor->subscribe(EditorAction::FocusInspector, [this](EditorAction) {
     m_setInspectorFocus = true;
     GlobalLogger::Log(LogLevel::Info, "Inspector window focused");
-    return true;
   });
 
-  keyboardEventHandler->subscribe({SDL_KEYDOWN, SDL_SCANCODE_F1}, [this](const KeyboardEvent& event) {
+  editorProcessor->subscribe(EditorAction::ShowControls, [this](EditorAction) {
     m_showControlsWindow = !m_showControlsWindow;
     GlobalLogger::Log(LogLevel::Info, "Controls window toggled");
-    return true;
   });
+
+  // Gizmo actions
+  editorProcessor->subscribe(EditorAction::GizmoTranslate, [this](EditorAction a) { handleGizmoInput(a); });
+  editorProcessor->subscribe(EditorAction::GizmoRotate, [this](EditorAction a) { handleGizmoInput(a); });
+  editorProcessor->subscribe(EditorAction::GizmoScale, [this](EditorAction a) { handleGizmoInput(a); });
+  editorProcessor->subscribe(EditorAction::GizmoToggleSpace, [this](EditorAction a) { handleGizmoInput(a); });
+  editorProcessor->subscribe(EditorAction::GizmoToggleVisibility, [this](EditorAction a) { handleGizmoInput(a); });
+
+  inputManager->addProcessor(std::move(editorProcessor));
+  GlobalLogger::Log(LogLevel::Info, "Editor input handlers configured with new architecture");
 }
 
 void Editor::addDirectionalLight() {
@@ -2071,7 +2084,7 @@ void Editor::createDefaultCamera_() {
 
   registry.emplace<Movement>(cameraEntity);
 
-  GlobalLogger::Log(LogLevel::Info, "Created default camera at origin (0,0,0) for new scene");
+  GlobalLogger::Log(LogLevel::Info, "Created default camera with input components");
 }
 
 void Editor::renderNewSceneDialog_() {

@@ -1,11 +1,13 @@
 #ifndef ARISE_INPUT_MANAGER
 #define ARISE_INPUT_MANAGER
 
-#include "event/event.h"
-#include "event/keyboard_event_handler.h"
-#include "event/mouse_event_handler.h"
-#include "input/input_context.h"
-#include "utils/logger/global_logger.h"
+#include "input/game_input_processor.h"
+#include "input/input_map.h"
+#include "input/input_processor.h"
+#include "input/input_router.h"
+#include "input/viewport_context.h"
+
+#include <SDL.h>
 
 #include <memory>
 
@@ -13,61 +15,30 @@ namespace arise {
 
 class InputManager {
   public:
-  InputManager() = default;
+  InputManager();
 
-  InputManager(std::unique_ptr<KeyboardEventHandler> keyboardHandler, std::unique_ptr<MouseEventHandler> mouseHandler)
-      : m_keyboardHandler_(std::move(keyboardHandler))
-      , m_mouseHandler_(std::move(mouseHandler)) {}
+  void routeEvent(const SDL_Event& event);
+  void addProcessor(std::unique_ptr<InputProcessor> processor) { m_router->addProcessor(std::move(processor)); }
 
-  void routeEvent(const Event& event) {
-    switch (event.type) {
-      case SDL_KEYDOWN:
-      case SDL_KEYUP:
-        if (m_keyboardHandler_) {
-          m_keyboardHandler_->dispatch(event.key);
-        }
-        break;
-      case SDL_MOUSEBUTTONDOWN:
-      case SDL_MOUSEBUTTONUP:
-        if (m_mouseHandler_) {
-          m_mouseHandler_->dispatch(event.button);
-        }
-        break;
-      case SDL_MOUSEMOTION:
-        if (m_mouseHandler_) {
-          m_mouseHandler_->dispatch(event.motion);
-        }
-        break;
-      case SDL_MOUSEWHEEL:
-        if (m_mouseHandler_) {
-          m_mouseHandler_->dispatch(event.wheel);
-        }
-        break;
+  InputRouter*     getRouter() const noexcept { return m_router.get(); }
+  ViewportContext& getViewportContext() { return *m_viewportContext; }
+  InputMap*        getInputMap() const { return m_inputMap.get(); }
 
-        // TODO: Add cases for joystick/gamepad events
-
-      default:
-        GlobalLogger::Log(LogLevel::Warning, "Received an unhandled event type.");
-        break;
-    }
-  }
-
-  KeyboardEventHandler* getKeyboardHandler() const { return m_keyboardHandler_.get(); }
-
-  MouseEventHandler* getMouseHandler() const { return m_mouseHandler_.get(); }
-
-  void setContextManager(InputContextManager* contextManager) { m_contextManager = contextManager; }
-
-  bool shouldProcessGameInput() const {
-    return !m_contextManager || m_contextManager->isContextActive(InputContext::Game);
-  }
+  void updateViewport(int32_t width,
+                      int32_t height,
+                      int32_t viewportX      = 0,
+                      int32_t viewportY      = 0,
+                      int32_t viewportWidth  = 0,
+                      int32_t viewportHeight = 0);
 
   private:
-  InputContextManager*                  m_contextManager = nullptr;
-  std::unique_ptr<KeyboardEventHandler> m_keyboardHandler_;
-  std::unique_ptr<MouseEventHandler>    m_mouseHandler_;
+  void createDefault();
+
+  std::unique_ptr<InputRouter>     m_router;
+  std::unique_ptr<InputMap>        m_inputMap;
+  std::unique_ptr<ViewportContext> m_viewportContext;
 };
 
 }  // namespace arise
 
-#endif
+#endif  // ARISE_INPUT_MANAGER

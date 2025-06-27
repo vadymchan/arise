@@ -1,9 +1,9 @@
-// In editor.h
 #ifndef ARISE_EDITOR_H
 #define ARISE_EDITOR_H
 
 #include "gfx/renderer/renderer.h"
 #include "gfx/rhi/common/rhi_enums.h"
+#include "input/actions.h"
 #include "utils/time/stopwatch.h"
 #include "utils/ui/imgui_rhi_context.h"
 
@@ -65,7 +65,7 @@ class Editor {
   void renderApiWindow();
 
   void renderGizmo(const math::Dimension2i& viewportSize, const ImVec2& viewportPos);
-  void handleGizmoInput();
+  void handleGizmoInput(EditorAction action);
   void renderGizmoControlsWindow();
 
   bool           isOperationAllowedForEntity(ImGuizmo::OPERATION operation);

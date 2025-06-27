@@ -6,6 +6,7 @@
 #include "ecs/component_loaders.h"
 #include "ecs/components/camera.h"
 #include "ecs/systems/bounding_volume_system.h"
+#include "ecs/systems/camera_input_system.h"
 #include "ecs/systems/camera_system.h"
 #include "ecs/systems/light_system.h"
 #include "ecs/systems/movement_system.h"
@@ -17,6 +18,7 @@
 #include "gfx/renderer/renderer.h"
 #include "gfx/rhi/shader_manager.h"
 #include "input/input_manager.h"
+#include "input/viewport_context.h"
 #include "profiler/backends/gpu_profiler_factory.h"
 #include "profiler/profiler.h"
 #include "resources/cgltf/cgltf_material_loader.h"
@@ -70,7 +72,6 @@ Engine::~Engine() {
   ServiceLocator::s_remove<FileWatcherManager>();
   ServiceLocator::s_remove<HotReloadManager>();
   ServiceLocator::s_remove<InputManager>();
-  ServiceLocator::s_remove<InputContextManager>();
   ServiceLocator::s_remove<WindowEventManager>();
   ServiceLocator::s_remove<ApplicationEventManager>();
   ServiceLocator::s_remove<SceneManager>();
@@ -106,11 +107,6 @@ auto Engine::initialize() -> bool {
 
   GlobalLogger::Log(LogLevel::Info, "Engine::initialize() started");
 
-  // input event
-  // ------------------------------------------------------------------------
-  auto keyboardEventHandler = std::make_unique<KeyboardEventHandler>();
-  auto mouseEventHandler    = std::make_unique<MouseEventHandler>();
-
   // window event
   // ------------------------------------------------------------------------
   auto windowEventHandler = std::make_unique<WindowEventHandler>();
@@ -141,6 +137,11 @@ auto Engine::initialize() -> bool {
       m_renderer_->onWindowResize(event.data1, event.data2);
       m_editor_->onWindowResize(event.data1, event.data2);
 
+      auto inputManager = ServiceLocator::s_get<InputManager>();
+      if (inputManager) {
+        inputManager->updateViewport(event.data1, event.data2);
+      }
+
       GlobalLogger::Log(LogLevel::Info, "Window resize in editor mode - ignoring renderer resize");
     }
   });
@@ -162,8 +163,7 @@ auto Engine::initialize() -> bool {
   ServiceLocator::s_provide<ConfigManager>();
   ServiceLocator::s_provide<FileWatcherManager>();
   ServiceLocator::s_provide<HotReloadManager>();
-  ServiceLocator::s_provide<InputManager>(std::move(keyboardEventHandler), std::move(mouseEventHandler));
-  ServiceLocator::s_provide<InputContextManager>();
+  ServiceLocator::s_provide<InputManager>();
   ServiceLocator::s_provide<WindowEventManager>(std::move(windowEventHandler));
   ServiceLocator::s_provide<ApplicationEventManager>(std::move(applicationEventHandler));
   ServiceLocator::s_provide<SceneManager>();
@@ -172,10 +172,6 @@ auto Engine::initialize() -> bool {
   ServiceLocator::s_provide<FrameManager>(framesInFlight);
   ServiceLocator::s_provide<ResourceDeletionManager>();
   ServiceLocator::s_provide<AssetLoader>(std::move(assetLoader));
-
-  auto inputManager      = ServiceLocator::s_get<InputManager>();
-  auto contextManagerPtr = ServiceLocator::s_get<InputContextManager>();
-  inputManager->setContextManager(contextManagerPtr);
 
   // config
   // ------------------------------------------------------------------------
@@ -243,9 +239,26 @@ auto Engine::initialize() -> bool {
       math::Point2i{SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED},
       arise::Window::Flags::Resizable | arise::Window::Flags::Vulkan | arise::Window::Flags::Maximized);
 
+  // input manager
+  // ------------------------------------------------------------------------
+  auto inputManager = ServiceLocator::s_get<InputManager>();
+  if (inputManager) {
+    auto windowSize = m_window_->getSize();
+    inputManager->updateViewport(windowSize.width(), windowSize.height());
+  }
+
+  // viewport context
+  // -------------------------------------------------------------------------
+  ViewportContext* viewportContext = nullptr;
+  if (m_applicationMode == ApplicationMode::Editor) {
+    viewportContext = &inputManager->getViewportContext();
+  }
+
   // ecs
   // ------------------------------------------------------------------------
   auto systemManager = ServiceLocator::s_get<SystemManager>();
+
+  systemManager->addSystem(std::make_unique<CameraInputSystem>(viewportContext));
   systemManager->addSystem(std::make_unique<CameraSystem>());
   systemManager->addSystem(std::make_unique<MovementSystem>());
   systemManager->addSystem(std::make_unique<BoundingVolumeSystem>());

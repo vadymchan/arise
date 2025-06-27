@@ -1,5 +1,7 @@
 #include "ecs/component_loaders.h"
 
+#include "components/input_components.h"
+#include "components/viewport_tag.h"
 #include "config/config_manager.h"
 #include "ecs/components/camera.h"
 #include "ecs/components/light.h"
@@ -200,6 +202,9 @@ void g_processEntityComponents(Registry& registry, Entity entity, const ConfigVa
       registry.emplace<Transform>(entity, g_loadTransform(component));
     } else if (componentType == "camera") {
       registry.emplace<Camera>(entity, g_loadCamera(component));
+      registry.emplace<InputActions>(entity);
+      registry.emplace<MouseInput>(entity);
+      registry.emplace<ViewportTag>(entity, "Render Window");
     } else if (componentType == "movement") {
       registry.emplace<Movement>(entity);
     } else if (componentType == "model") {

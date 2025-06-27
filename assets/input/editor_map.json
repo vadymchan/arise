@@ -1,0 +1,10 @@
+{
+  "SaveScene": "Ctrl+S",
+  "FocusInspector": "I",
+  "ShowControls": "F1",
+  "GizmoTranslate": "1",
+  "GizmoRotate": "2",
+  "GizmoScale": "3",
+  "GizmoToggleSpace": "4",
+  "GizmoToggleVisibility": "5"
+} 

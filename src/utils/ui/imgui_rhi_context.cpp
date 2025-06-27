@@ -338,6 +338,7 @@ bool ImGuiRHIContext::initializeDx12(rhi::Device* device, uint32_t swapChainBuff
   // Initialize ImGui DX12
   ImGui_ImplDX12_InitInfo initInfo      = {};
   initInfo.Device                       = deviceDx12->getDevice();
+  initInfo.CommandQueue                 = deviceDx12->getCommandQueue();
   initInfo.NumFramesInFlight            = swapChainBufferCount;
   initInfo.RTVFormat                    = DXGI_FORMAT_B8G8R8A8_UNORM;
   initInfo.SrvDescriptorHeap            = m_dx12ImGuiDescriptorHeap->getHeap();

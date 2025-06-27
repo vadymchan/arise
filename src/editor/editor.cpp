@@ -424,6 +424,22 @@ void Editor::renderSceneHierarchyWindow() {
 
     ImGui::Separator();
 
+    ImGui::Text("Legend:");
+    ImGui::SameLine();
+    ImGui::ColorButton("##CamColor", ImVec4(1.0f, 0.0f, 0.0f, 0.6f), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop, ImVec2(12, 12));
+    ImGui::SameLine();
+    ImGui::TextUnformatted("Camera");
+    ImGui::SameLine();
+    ImGui::ColorButton("##LightColor", ImVec4(1.0f, 1.0f, 0.0f, 0.6f), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop, ImVec2(12, 12));
+    ImGui::SameLine();
+    ImGui::TextUnformatted("Light");
+    ImGui::SameLine();
+    ImGui::ColorButton("##ModelColor", ImVec4(0.0f, 1.0f, 0.0f, 0.6f), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop, ImVec2(12, 12));
+    ImGui::SameLine();
+    ImGui::TextUnformatted("Model");
+
+    ImGui::Separator();
+
     if (ImGui::Button("Add Model")) {
       m_newModelTransform  = Transform();
       m_openAddModelDialog = true;
@@ -1874,6 +1890,19 @@ void Editor::renderEntityList_(Registry& registry) {
 
   std::vector<EntityInfo> entityInfos;
 
+  auto getEntityBgColor = [&registry](entt::entity e) -> ImU32 {
+    if (registry.all_of<Camera>(e)) {
+      return IM_COL32(255, 0, 0, 60); 
+    }
+    if (registry.all_of<Light>(e)) {
+      return IM_COL32(255, 255, 0, 60);
+    }
+    if (registry.all_of<RenderModel*>(e)) {
+      return IM_COL32(0, 255, 0, 60); 
+    }
+    return 0; 
+  };
+
   for (auto entity : entities) {
     EntityInfo info;
     info.entity     = entity;
@@ -1934,6 +1963,17 @@ void Editor::renderEntityList_(Registry& registry) {
 
   for (const auto& info : entityInfos) {
     bool isSelected = (info.entity == m_selectedEntity);
+
+    ImU32 bgColor = getEntityBgColor(info.entity);
+    if (bgColor != 0) {
+      ImVec2 cursorPos = ImGui::GetCursorScreenPos();
+      float fullLeft  = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMin().x;
+      float fullRight = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
+      float lineHeight = ImGui::GetTextLineHeightWithSpacing();
+      ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(fullLeft, cursorPos.y),
+                                               ImVec2(fullRight, cursorPos.y + lineHeight),
+                                               bgColor);
+    }
 
     if (info.isLoading) {
       ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 0.7f));

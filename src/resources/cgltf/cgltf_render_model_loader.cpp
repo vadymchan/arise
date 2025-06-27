@@ -35,12 +35,22 @@ std::unique_ptr<RenderModel> CgltfRenderModelLoader::loadRenderModel(const std::
   auto bufferManager             = ServiceLocator::s_get<BufferManager>();
   auto modelManager              = ServiceLocator::s_get<ModelManager>();
 
-  if (!materialManager || !renderGeometryMeshManager || !renderMeshManager || !bufferManager || !modelManager) {
-    GlobalLogger::Log(LogLevel::Error, "Required managers not available in ServiceLocator.");
+  if (!modelManager) {
+    GlobalLogger::Log(LogLevel::Error, "ModelManager not available in ServiceLocator while loading: " + filePath.string());
     return nullptr;
   }
 
-  auto cpuModelPtr      = modelManager->getModel(filePath);
+  auto cpuModelPtr = modelManager->getModel(filePath);
+  if (outModelPtr) {
+    *outModelPtr = cpuModelPtr;
+  }
+
+  if (!materialManager || !renderGeometryMeshManager || !renderMeshManager || !bufferManager) {
+    GlobalLogger::Log(LogLevel::Warning,
+                      "GPU managers not available – loaded CPU model only for: " + filePath.string());
+    return nullptr;  
+  }
+
   auto materialPointers = materialManager->getMaterials(filePath);
 
   auto renderModel      = std::make_unique<RenderModel>();
@@ -57,7 +67,20 @@ std::unique_ptr<RenderModel> CgltfRenderModelLoader::loadRenderModel(const std::
       Mesh* meshPtr = meshes[meshIndex++];
 
       auto renderGeometryMesh = createRenderGeometryMesh(meshPtr);
+      if (!renderGeometryMesh || !renderGeometryMesh->vertexBuffer || !renderGeometryMesh->indexBuffer) {
+        GlobalLogger::Log(LogLevel::Warning,
+                          "Failed to create GPU geometry buffers for mesh " + meshPtr->meshName
+                              + ". Falling back to CPU-only model.");
+        return nullptr;
+      }
+
       auto gpuMeshPtr = renderGeometryMeshManager->addRenderGeometryMesh(std::move(renderGeometryMesh), meshPtr);
+      if (!gpuMeshPtr) {
+        GlobalLogger::Log(LogLevel::Warning,
+                          "Failed to register RenderGeometryMesh for mesh " + meshPtr->meshName
+                              + ". Falling back to CPU-only model.");
+        return nullptr;
+      }
 
       Material*              materialPtr = nullptr;
       const cgltf_primitive* primitive   = &gltf_mesh->primitives[j];

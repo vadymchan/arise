@@ -228,34 +228,75 @@ void g_processEntityComponents(Registry& registry, Entity entity, const ConfigVa
             }
 
             if (success) {
-              auto modelManager = ServiceLocator::s_get<RenderModelManager>();
-              if (modelManager) {
-                Model* model       = nullptr;
-                auto   renderModel = modelManager->getRenderModel(modelPath, &model);
+              // Retrieve CPU model regardless of GPU managers.
+              Model* model      = nullptr;
+              auto*  cpuManager = ServiceLocator::s_get<ModelManager>();
+              if (cpuManager) {
+                model = cpuManager->getModel(modelPath);
+              }
 
-                if (renderModel && model) {
+              RenderModel* renderModel = nullptr;
+              if (auto* renderModelManager = ServiceLocator::s_get<RenderModelManager>()) {
+                renderModel = renderModelManager->getRenderModel(modelPath);
+              }
+
+              // Attach components
+              if (model) {
+                if (!registryPtr->all_of<Model*>(entity)) {
                   registryPtr->emplace<Model*>(entity, model);
-                  registryPtr->emplace<RenderModel*>(entity, renderModel);
-                  GlobalLogger::Log(LogLevel::Info, "Async model loaded and added to entity: " + modelPath);
+                } else {
+                  registryPtr->replace<Model*>(entity, model);
                 }
               }
+
+              if (renderModel) {
+                if (!registryPtr->all_of<RenderModel*>(entity)) {
+                  registryPtr->emplace<RenderModel*>(entity, renderModel);
+                } else {
+                  registryPtr->replace<RenderModel*>(entity, renderModel);
+                }
+              }
+
+              GlobalLogger::Log(
+                  LogLevel::Info,
+                  "Async model load completed (GPU=" + std::string(renderModel ? "yes" : "no") + ") for: " + modelPath);
             } else {
               GlobalLogger::Log(LogLevel::Error, "Failed to load model asynchronously: " + modelPath);
             }
           });
 
         } else {
-          auto modelManager = ServiceLocator::s_get<RenderModelManager>();
-          if (modelManager) {
-            Model* model       = nullptr;
-            auto   renderModel = modelManager->getRenderModel(modelPath, &model);
+          // Obtain CPU model
+          Model* model = nullptr;
+          if (auto* cpuManager = ServiceLocator::s_get<ModelManager>()) {
+            model = cpuManager->getModel(modelPath);
+          }
 
-            if (renderModel && model) {
+          RenderModel* renderModel = nullptr;
+          if (auto* renderModelManager = ServiceLocator::s_get<RenderModelManager>()) {
+            renderModel = renderModelManager->getRenderModel(modelPath);
+          }
+
+          if (model) {
+            if (!registry.all_of<Model*>(entity)) {
               registry.emplace<Model*>(entity, model);
+            } else {
+              registry.replace<Model*>(entity, model);
+            }
+          }
+
+          if (renderModel) {
+            if (!registry.all_of<RenderModel*>(entity)) {
               registry.emplace<RenderModel*>(entity, renderModel);
             } else {
-              GlobalLogger::Log(LogLevel::Error, "Failed to load model: " + modelPath);
+              registry.replace<RenderModel*>(entity, renderModel);
             }
+          }
+
+          if (!renderModel) {
+            GlobalLogger::Log(
+                LogLevel::Warning,
+                "GPU resources not yet available for model: " + modelPath + ". Model will render once reloaded.");
           }
         }
       }

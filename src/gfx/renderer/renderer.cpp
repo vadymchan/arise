@@ -666,11 +666,12 @@ void Renderer::reloadSceneModels_() {
 
   auto& registry = scene->getEntityRegistry();
 
-  auto view = registry.view<Model*, RenderModel*>();
+  // Consider *all* entities with a CPU model. GPU model may or may not be present.
+  auto viewAll = registry.view<Model*>();
 
   std::vector<std::pair<entt::entity, std::filesystem::path>> entitiesToUpdate;
 
-  for (auto entity : view) {
+  for (auto entity : viewAll) {
     auto* cpuModel = registry.get<Model*>(entity);
     if (cpuModel && !cpuModel->filePath.empty()) {
       entitiesToUpdate.emplace_back(entity, cpuModel->filePath);
@@ -680,6 +681,7 @@ void Renderer::reloadSceneModels_() {
     }
   }
 
+  // Remove any stale GPU pointers before recreating them.
   registry.clear<RenderModel*>();
 
   auto renderModelManager = ServiceLocator::s_get<RenderModelManager>();

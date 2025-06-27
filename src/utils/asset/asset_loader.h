@@ -3,6 +3,7 @@
 
 #include "profiler/profiler.h"
 #include "utils/logger/global_logger.h"
+#include "utils/model/model_manager.h"
 #include "utils/model/render_model_manager.h"
 #include "utils/service/service_locator.h"
 #include "utils/texture/texture_manager.h"
@@ -275,23 +276,31 @@ class AssetLoader {
   bool loadModelInternal_(const std::filesystem::path& filepath) {
     GlobalLogger::Log(LogLevel::Info, "Loading model: " + filepath.string());
 
-    auto modelManager = ServiceLocator::s_get<RenderModelManager>();
-    if (!modelManager) {
-      GlobalLogger::Log(LogLevel::Error, "Cannot load model, RenderModelManager not available");
-      return false;
+    if (auto renderModelManager = ServiceLocator::s_get<RenderModelManager>()) {
+      RenderModel* gpuModel = renderModelManager->getRenderModel(filepath);
+      if (gpuModel) {
+        GlobalLogger::Log(LogLevel::Info, "Successfully loaded GPU model: " + filepath.string());
+        return true;
+      }
+      GlobalLogger::Log(LogLevel::Warning,
+                        "GPU model load failed – will attempt CPU-only load for: " + filepath.string());
     }
 
-    RenderModel* model = modelManager->getRenderModel(filepath);
+    if (auto cpuModelManager = ServiceLocator::s_get<ModelManager>()) {
+      Model* cpuModel = cpuModelManager->getModel(filepath);
+      bool   success  = (cpuModel != nullptr);
 
-    bool success = (model != nullptr);
+      if (success) {
+        GlobalLogger::Log(LogLevel::Info, "Successfully loaded CPU model (no GPU resources yet): " + filepath.string());
+      } else {
+        GlobalLogger::Log(LogLevel::Error, "Failed to load CPU model: " + filepath.string());
+      }
 
-    if (success) {
-      GlobalLogger::Log(LogLevel::Info, "Successfully loaded model: " + filepath.string());
-    } else {
-      GlobalLogger::Log(LogLevel::Error, "Failed to load model: " + filepath.string());
+      return success;
     }
 
-    return success;
+    GlobalLogger::Log(LogLevel::Error, "Neither GPU nor CPU model managers are available for: " + filepath.string());
+    return false;
   }
 
   bool loadTextureInternal_(const std::filesystem::path& filepath) {

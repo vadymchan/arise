@@ -23,21 +23,36 @@ struct PSIn
 
 float4 main(PSIn inp) : SV_TARGET
 {
+    //float2 ndc = inp.pos.xy;
     float2 ndc = inp.ndc;
     
-    // H - homogeneous coordinates
-    float4 nearH = mul(ViewParam.InvVP, float4(ndc, 0.0, 1.0));
+    // H - homogeneous coordinates, W - world coordinate
+    //float4 nearH = mul(ViewParam.InvVP, float4(ndc, 0.0, 1.0));
+    float4 nearH = mul(ViewParam.InvP, float4(ndc, 0.0, 1.0));
+    nearH = mul(ViewParam.InvV, nearH);
     float3 nearW = nearH.xyz / nearH.w;
 
-    float4 farH = mul(ViewParam.InvVP, float4(ndc, 1.0, 1.0));
+    //float4 farH = mul(ViewParam.InvVP, float4(ndc, 1.0, 1.0));
+    //float4 farH = mul(float4(ndc, 1.0, 1.0), ViewParam.InvVP);
+    float4 farH = mul(ViewParam.InvP, float4(ndc, 1.0, 1.0));
+    farH = mul(ViewParam.InvV, farH);
     float3 farW = farH.xyz / farH.w;
 
-    float3 rayDir = normalize(farW - nearW);
+    //float3 rayDir = normalize(farW - nearW);
 
+    float3 rayDir = normalize(farW - ViewParam.EyeWorld);
+    
+    const float EPS = 1e-5;
+    if (abs(rayDir.y) < EPS)
+        discard;
+
+    
     float t = -ViewParam.EyeWorld.y / rayDir.y;
-    if (t < 0.0)
+    if (t <= 0.0)
         discard; 
 
+    //return float4(1, 0, 0, 1); 
+    
     float3 wPos = ViewParam.EyeWorld + rayDir * t;
 
 

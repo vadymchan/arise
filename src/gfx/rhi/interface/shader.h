@@ -20,11 +20,9 @@ class Shader {
       : m_desc_(desc) {}
   virtual ~Shader() = default;
 
-  ShaderStageFlag getStage() const { return m_desc_.stage; }
-
+  ShaderStageFlag    getStage() const { return m_desc_.stage; }
   const std::string& getEntryPoint() const { return m_desc_.entryPoint; }
-
-  const ShaderDesc& getDesc() const { return m_desc_; }
+  const ShaderDesc&  getDesc() const { return m_desc_; }
 
   virtual void initialize(const std::vector<uint8_t>& code) = 0;
   virtual void release()                                    = 0;

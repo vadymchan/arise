@@ -72,14 +72,14 @@ static const std::unordered_map<TextureAddressMode, D3D12_TEXTURE_ADDRESS_MODE> 
 };
 
 static const std::unordered_map<CompareOp, D3D12_COMPARISON_FUNC> compareOpMapping = {
-  { CompareOp::Never,    D3D12_COMPARISON_FUNC_NEVER         },
-  { CompareOp::Less,     D3D12_COMPARISON_FUNC_LESS          },
-  { CompareOp::Equal,    D3D12_COMPARISON_FUNC_EQUAL         },
-  { CompareOp::LessEqual,   D3D12_COMPARISON_FUNC_LESS_EQUAL    },
-  { CompareOp::Greater,  D3D12_COMPARISON_FUNC_GREATER       },
-  { CompareOp::NotEqual, D3D12_COMPARISON_FUNC_NOT_EQUAL     },
-  { CompareOp::GreaterEqual,   D3D12_COMPARISON_FUNC_GREATER_EQUAL },
-  { CompareOp::Always,   D3D12_COMPARISON_FUNC_ALWAYS        }
+  { CompareOp::Never,        D3D12_COMPARISON_FUNC_NEVER         },
+  { CompareOp::Less,         D3D12_COMPARISON_FUNC_LESS          },
+  { CompareOp::Equal,        D3D12_COMPARISON_FUNC_EQUAL         },
+  { CompareOp::LessEqual,    D3D12_COMPARISON_FUNC_LESS_EQUAL    },
+  { CompareOp::Greater,      D3D12_COMPARISON_FUNC_GREATER       },
+  { CompareOp::NotEqual,     D3D12_COMPARISON_FUNC_NOT_EQUAL     },
+  { CompareOp::GreaterEqual, D3D12_COMPARISON_FUNC_GREATER_EQUAL },
+  { CompareOp::Always,       D3D12_COMPARISON_FUNC_ALWAYS        }
 };
 
 static const std::unordered_map<StencilOp, D3D12_STENCIL_OP> stencilOpMapping = {
@@ -518,11 +518,11 @@ D3D12_SHADER_VISIBILITY g_getShaderVisibilityDx12(ShaderStageFlag stageFlags) {
   if (stageFlags == ShaderStageFlag::Vertex) {
     return D3D12_SHADER_VISIBILITY_VERTEX;
   } else if (stageFlags == ShaderStageFlag::Fragment) {
-    return D3D12_SHADER_VISIBILITY_PIXEL;   
+    return D3D12_SHADER_VISIBILITY_PIXEL;
   } else if (stageFlags == ShaderStageFlag::TessellationControl) {
-    return D3D12_SHADER_VISIBILITY_HULL;   
+    return D3D12_SHADER_VISIBILITY_HULL;
   } else if (stageFlags == ShaderStageFlag::TessellationEvaluation) {
-    return D3D12_SHADER_VISIBILITY_DOMAIN;  
+    return D3D12_SHADER_VISIBILITY_DOMAIN;
   } else if (stageFlags == ShaderStageFlag::Geometry) {
     return D3D12_SHADER_VISIBILITY_GEOMETRY;
   }

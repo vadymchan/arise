@@ -145,6 +145,7 @@ class DescriptorHeapDx12 {
 /**
  * Manages frame-specific resources in DirectX 12, such as per-frame descriptor heaps.
  */
+// TODO: rename this class
 class FrameResourcesManager {
   public:
   FrameResourcesManager() = default;

@@ -40,8 +40,7 @@ class FenceDx12 : public Fence {
  * Instead, all synchronization is accomplished through ID3D12Fence objects.
  *
  * This class emulates Vulkan-style semaphore behavior using a DirectX 12 fence,
- * providing a consistent API across both rendering backends. While previous
- * implementations omitted this class, we've included it to:
+ * providing a consistent API across both rendering backends. It's included to:
  *   - Maintain a unified abstraction layer
  *   - Preserve the same API contract regardless of backend
  *   - Simplify cross-API development for educational purposes

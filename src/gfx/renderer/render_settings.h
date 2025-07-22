@@ -18,6 +18,7 @@ enum class RenderMode {
   LightVisualization,
   WorldGrid,
   MeshHighlight,
+  BoundingBoxVisualization,
 };
 
 enum class PostProcessMode {

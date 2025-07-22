@@ -229,7 +229,8 @@ void Renderer::renderFrame(RenderContext& context) {
                   || context.renderSettings.renderMode == RenderMode::NormalMapVisualization
                   || context.renderSettings.renderMode == RenderMode::LightVisualization
                   || context.renderSettings.renderMode == RenderMode::WorldGrid
-                  || context.renderSettings.renderMode == RenderMode::MeshHighlight;
+                  || context.renderSettings.renderMode == RenderMode::MeshHighlight
+                  || context.renderSettings.renderMode == RenderMode::BoundingBoxVisualization;
 
   if (m_debugPass && isDebugPass) {
     m_debugPass->render(context);

@@ -1,5 +1,6 @@
 #include "gfx/renderer/passes/debug_pass.h"
 
+#include "gfx/renderer/debug_strategies/bounding_box_visualization_strategy.h"
 #include "gfx/renderer/debug_strategies/light_visualization_strategy.h"
 #include "gfx/renderer/debug_strategies/mesh_highlight_strategy.h"
 #include "gfx/renderer/debug_strategies/normal_map_visualization_strategy.h"
@@ -7,8 +8,8 @@
 #include "gfx/renderer/debug_strategies/vertex_normal_visualization_strategy.h"
 #include "gfx/renderer/debug_strategies/wireframe_strategy.h"
 #include "gfx/renderer/debug_strategies/world_grid_strategy.h"
-#include "utils/logger/global_logger.h"
 #include "profiler/profiler.h"
+#include "utils/logger/global_logger.h"
 
 namespace arise {
 namespace gfx {
@@ -105,6 +106,9 @@ void DebugPass::createDebugStrategy_() {
       break;
     case RenderMode::MeshHighlight:
       m_debugStrategy = std::make_unique<MeshHighlightStrategy>();
+      break;
+    case RenderMode::BoundingBoxVisualization:
+      m_debugStrategy = std::make_unique<BoundingBoxVisualizationStrategy>();
       break;
     default:
       GlobalLogger::Log(LogLevel::Error,

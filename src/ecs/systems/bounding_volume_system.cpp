@@ -14,8 +14,21 @@ void BoundingVolumeSystem::update(Scene* scene, float deltaTime) {
 
   auto& registry = scene->getEntityRegistry();
 
-  auto view = registry.view<Transform, Model*, WorldBounds>();
+  auto modelsWithoutBounds = registry.view<Transform, Model*>(entt::exclude<WorldBounds>);
+  for (auto entity : modelsWithoutBounds) {
+    auto& model = registry.get<Model*>(entity);
+    if (model) {
+      WorldBounds worldBounds;
+      worldBounds.boundingBox = bounds::createInvalid();
+      worldBounds.isDirty     = true;
+      registry.emplace<WorldBounds>(entity, worldBounds);
 
+      GlobalLogger::Log(LogLevel::Debug,
+                        "Added WorldBounds component to entity " + std::to_string(static_cast<uint32_t>(entity)));
+    }
+  }
+
+  auto view = registry.view<Transform, Model*, WorldBounds>();
   for (auto entity : view) {
     updateEntityWorldBounds_(entity, scene);
   }

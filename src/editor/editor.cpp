@@ -365,6 +365,10 @@ void Editor::renderModeSelectionWindow() {
     m_renderParams.renderMode = gfx::renderer::RenderMode::WorldGrid;
   }
 
+  if (ImGui::RadioButton("Bounding Box Visualization", m_renderParams.renderMode == gfx::renderer::RenderMode::BoundingBoxVisualization)) {
+    m_renderParams.renderMode = gfx::renderer::RenderMode::BoundingBoxVisualization;
+  }
+
   ImGui::End();
 }
 

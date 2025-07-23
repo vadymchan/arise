@@ -85,6 +85,7 @@ class Editor {
 
   void saveCurrentScene_();
   void setupInputHandlers_();
+  void handleMousePicking();
 
   // TODO: in future consider give to a user the ability to set values
   void addDirectionalLight();

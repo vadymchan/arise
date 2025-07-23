@@ -21,7 +21,8 @@ const std::unordered_map<std::string, EditorAction> InputMap::s_stringToEditorAc
   {          "GizmoRotate",           EditorAction::GizmoRotate},
   {           "GizmoScale",            EditorAction::GizmoScale},
   {     "GizmoToggleSpace",      EditorAction::GizmoToggleSpace},
-  {"GizmoToggleVisibility", EditorAction::GizmoToggleVisibility}
+  {"GizmoToggleVisibility", EditorAction::GizmoToggleVisibility},
+  {            "MousePick",             EditorAction::MousePick}  // TODO: not completely implemented yet
 };
 
 const std::unordered_map<std::string, SDL_Scancode> InputMap::s_keyNameToScancode = {

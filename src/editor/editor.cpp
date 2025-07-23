@@ -9,10 +9,13 @@
 #include "ecs/components/selected.h"
 #include "ecs/components/tags.h"
 #include "ecs/components/viewport_tag.h"
+#include "ecs/systems/mouse_picking_system.h"
+#include "ecs/systems/system_manager.h"
 #include "gfx/renderer/renderer.h"
 #include "input/actions.h"
 #include "input/editor_input_processor.h"
 #include "input/input_manager.h"
+#include "input/viewport_context.h"
 #include "profiler/profiler.h"
 #include "scene/scene_loader.h"
 #include "scene/scene_manager.h"
@@ -323,6 +326,11 @@ void Editor::renderViewportWindow(gfx::renderer::RenderContext& context) {
       const char* buttonName = leftClicked ? "Left" : "Right";
       GlobalLogger::Log(LogLevel::Info,
                         std::string("Viewport clicked with ") + buttonName + " mouse button - focused on viewport");
+
+      if (leftClicked) {
+        GlobalLogger::Log(LogLevel::Debug, "Triggering mouse picking from viewport click");
+        handleMousePicking();
+      }
     }
   } else {
     ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Render texture not available");
@@ -365,7 +373,8 @@ void Editor::renderModeSelectionWindow() {
     m_renderParams.renderMode = gfx::renderer::RenderMode::WorldGrid;
   }
 
-  if (ImGui::RadioButton("Bounding Box Visualization", m_renderParams.renderMode == gfx::renderer::RenderMode::BoundingBoxVisualization)) {
+  if (ImGui::RadioButton("Bounding Box Visualization",
+                         m_renderParams.renderMode == gfx::renderer::RenderMode::BoundingBoxVisualization)) {
     m_renderParams.renderMode = gfx::renderer::RenderMode::BoundingBoxVisualization;
   }
 
@@ -430,15 +439,24 @@ void Editor::renderSceneHierarchyWindow() {
 
     ImGui::Text("Legend:");
     ImGui::SameLine();
-    ImGui::ColorButton("##CamColor", ImVec4(1.0f, 0.0f, 0.0f, 0.6f), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop, ImVec2(12, 12));
+    ImGui::ColorButton("##CamColor",
+                       ImVec4(1.0f, 0.0f, 0.0f, 0.6f),
+                       ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop,
+                       ImVec2(12, 12));
     ImGui::SameLine();
     ImGui::TextUnformatted("Camera");
     ImGui::SameLine();
-    ImGui::ColorButton("##LightColor", ImVec4(1.0f, 1.0f, 0.0f, 0.6f), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop, ImVec2(12, 12));
+    ImGui::ColorButton("##LightColor",
+                       ImVec4(1.0f, 1.0f, 0.0f, 0.6f),
+                       ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop,
+                       ImVec2(12, 12));
     ImGui::SameLine();
     ImGui::TextUnformatted("Light");
     ImGui::SameLine();
-    ImGui::ColorButton("##ModelColor", ImVec4(0.0f, 1.0f, 0.0f, 0.6f), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop, ImVec2(12, 12));
+    ImGui::ColorButton("##ModelColor",
+                       ImVec4(0.0f, 1.0f, 0.0f, 0.6f),
+                       ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop,
+                       ImVec2(12, 12));
     ImGui::SameLine();
     ImGui::TextUnformatted("Model");
 
@@ -817,6 +835,7 @@ void Editor::renderControlsWindow() {
     ImGui::BulletText("W/A/S/D (whilde RMB): Move camera");
     ImGui::BulletText("E/Q: Move up/down");
     ImGui::BulletText("Mouse Wheel (while RMB): Change movement speed");
+    ImGui::BulletText("Left Mouse Button on Render Window: Select entity (mesh picking)");
 
     ImGui::Separator();
 
@@ -1228,6 +1247,7 @@ void Editor::handleEntitySelection(entt::entity entity) {
     m_renderParams.renderMode = gfx::renderer::RenderMode::Solid;
   }
 }
+
 bool Editor::shouldRenderGizmo_() {
   if (!m_showGizmo || m_selectedEntity == entt::null || !m_frameResources) {
     return false;
@@ -1406,6 +1426,48 @@ void Editor::setupInputHandlers_() {
 
   inputManager->addProcessor(std::move(editorProcessor));
   GlobalLogger::Log(LogLevel::Info, "Editor input handlers configured with new architecture");
+}
+
+void Editor::handleMousePicking() {
+  GlobalLogger::Log(LogLevel::Debug, "Editor::handleMousePicking called");
+
+  auto systemManager      = ServiceLocator::s_get<SystemManager>();
+  auto mousePickingSystem = systemManager->getSystem<MousePickingSystem>();
+
+  if (!mousePickingSystem) {
+    GlobalLogger::Log(LogLevel::Warning, "MousePickingSystem not found");
+    return;
+  }
+
+  auto  inputManager    = ServiceLocator::s_get<InputManager>();
+  auto& viewportContext = inputManager->getViewportContext();
+
+  int mouseX = viewportContext.getMouseX();
+  int mouseY = viewportContext.getMouseY();
+
+  int viewportX = viewportContext.getViewportX();
+  int viewportY = viewportContext.getViewportY();
+
+  int relativeMouseX = mouseX - viewportX;
+  int relativeMouseY = mouseY - viewportY;
+
+  auto scene = ServiceLocator::s_get<SceneManager>()->getCurrentScene();
+  if (scene) {
+    entt::entity pickedEntity = mousePickingSystem->handleMousePick(scene, relativeMouseX, relativeMouseY);
+
+    if (pickedEntity != entt::null) {
+      handleEntitySelection(pickedEntity);
+      GlobalLogger::Log(LogLevel::Error,
+                        "Mouse picking: Selected entity " + std::to_string(static_cast<uint32_t>(pickedEntity))
+                            + " at (" + std::to_string(relativeMouseX) + ", " + std::to_string(relativeMouseY) + ")");
+    } else {
+      GlobalLogger::Log(LogLevel::Debug,
+                        "Mouse picking: Nothing picked at (" + std::to_string(relativeMouseX) + ", "
+                            + std::to_string(relativeMouseY) + ")");
+    }
+  } else {
+    GlobalLogger::Log(LogLevel::Warning, "No current scene for mouse picking");
+  }
 }
 
 void Editor::addDirectionalLight() {
@@ -1896,15 +1958,15 @@ void Editor::renderEntityList_(Registry& registry) {
 
   auto getEntityBgColor = [&registry](entt::entity e) -> ImU32 {
     if (registry.all_of<Camera>(e)) {
-      return IM_COL32(255, 0, 0, 60); 
+      return IM_COL32(255, 0, 0, 60);
     }
     if (registry.all_of<Light>(e)) {
       return IM_COL32(255, 255, 0, 60);
     }
     if (registry.all_of<RenderModel*>(e)) {
-      return IM_COL32(0, 255, 0, 60); 
+      return IM_COL32(0, 255, 0, 60);
     }
-    return 0; 
+    return 0;
   };
 
   for (auto entity : entities) {
@@ -1970,13 +2032,12 @@ void Editor::renderEntityList_(Registry& registry) {
 
     ImU32 bgColor = getEntityBgColor(info.entity);
     if (bgColor != 0) {
-      ImVec2 cursorPos = ImGui::GetCursorScreenPos();
-      float fullLeft  = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMin().x;
-      float fullRight = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
-      float lineHeight = ImGui::GetTextLineHeightWithSpacing();
-      ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(fullLeft, cursorPos.y),
-                                               ImVec2(fullRight, cursorPos.y + lineHeight),
-                                               bgColor);
+      ImVec2 cursorPos  = ImGui::GetCursorScreenPos();
+      float  fullLeft   = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMin().x;
+      float  fullRight  = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
+      float  lineHeight = ImGui::GetTextLineHeightWithSpacing();
+      ImGui::GetWindowDrawList()->AddRectFilled(
+          ImVec2(fullLeft, cursorPos.y), ImVec2(fullRight, cursorPos.y + lineHeight), bgColor);
     }
 
     if (info.isLoading) {

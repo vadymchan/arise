@@ -16,7 +16,6 @@ void CameraInputSystem::update(Scene* scene, float dt) {
   auto  view     = registry.view<InputActions, MouseInput, ViewportTag, Movement, Transform, Camera>();
 
   if (view.begin() == view.end()) {
-    // GlobalLogger::Log(LogLevel::Warning, "CameraInputSystem: No camera entities found with required components");
     return;
   }
 
@@ -24,7 +23,6 @@ void CameraInputSystem::update(Scene* scene, float dt) {
     const auto& viewportTag = view.get<ViewportTag>(entity);
 
     if (m_viewportContext && !m_viewportContext->isViewportFocused(viewportTag.id)) {
-      // GlobalLogger::Log(LogLevel::Debug, "CameraInputSystem: Viewport not focused, skipping camera input");
       continue;
     }
 
@@ -40,7 +38,7 @@ void CameraInputSystem::update(Scene* scene, float dt) {
     } else {
       clearCameraInput(movement);
     }
-        
+
     mouse.clearDeltas();
   }
 }

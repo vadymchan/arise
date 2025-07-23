@@ -1,15 +1,26 @@
 #include "input/editor_input_processor.h"
 
+#include "utils/logger/global_logger.h"
+
 #include <imgui.h>
 
 namespace arise {
 
-bool EditorInputProcessor::process(const SDL_Event& e) {
-  if (!shouldProcess() || e.type != SDL_KEYDOWN) {
+bool EditorInputProcessor::process(const SDL_Event& event) {
+  if (!shouldProcess(event)) {
     return false;
   }
 
-  auto actionOpt = m_inputMap->getEditorAction(e.key);
+  switch (event.type) {
+    case SDL_KEYDOWN:
+      return handleKeyboard(event);
+  }
+
+  return false;
+}
+
+bool EditorInputProcessor::handleKeyboard(const SDL_Event& event) {
+  auto actionOpt = m_inputMap->getEditorAction(event.key);
   if (!actionOpt) {
     return false;
   }
@@ -24,8 +35,17 @@ bool EditorInputProcessor::process(const SDL_Event& e) {
   return true;
 }
 
-bool EditorInputProcessor::shouldProcess() const {
-  return !ImGui::GetIO().WantCaptureKeyboard;
+bool EditorInputProcessor::shouldProcess(const SDL_Event& event) const {
+  if (event.type == SDL_KEYDOWN) {
+    return !ImGui::GetIO().WantCaptureKeyboard;
+  }
+
+  if (event.type == SDL_MOUSEBUTTONDOWN) {
+    bool wantCapture = ImGui::GetIO().WantCaptureMouse;
+    return !wantCapture;
+  }
+
+  return false;
 }
 
 }  // namespace arise

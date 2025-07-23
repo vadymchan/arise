@@ -9,6 +9,7 @@
 #include "ecs/systems/camera_input_system.h"
 #include "ecs/systems/camera_system.h"
 #include "ecs/systems/light_system.h"
+#include "ecs/systems/mouse_picking_system.h"
 #include "ecs/systems/movement_system.h"
 #include "ecs/systems/render_system.h"
 #include "ecs/systems/system_manager.h"
@@ -247,23 +248,6 @@ auto Engine::initialize() -> bool {
     inputManager->updateViewport(windowSize.width(), windowSize.height());
   }
 
-  // viewport context
-  // -------------------------------------------------------------------------
-  ViewportContext* viewportContext = nullptr;
-  if (m_applicationMode == ApplicationMode::Editor) {
-    viewportContext = &inputManager->getViewportContext();
-  }
-
-  // ecs
-  // ------------------------------------------------------------------------
-  auto systemManager = ServiceLocator::s_get<SystemManager>();
-
-  systemManager->addSystem(std::make_unique<CameraInputSystem>(viewportContext));
-  systemManager->addSystem(std::make_unique<CameraSystem>());
-  systemManager->addSystem(std::make_unique<MovementSystem>());
-  systemManager->addSystem(std::make_unique<BoundingVolumeSystem>());
-  systemManager->addSystem(std::make_unique<RenderSystem>());
-
   // renderer
   // ------------------------------------------------------------------------
   m_renderer_ = std::make_unique<gfx::renderer::Renderer>();
@@ -273,8 +257,6 @@ auto Engine::initialize() -> bool {
   auto device = m_renderer_->getDevice();
   ServiceLocator::s_provide<TextureManager>(device);
   ServiceLocator::s_provide<BufferManager>(device);
-
-  systemManager->addSystem(std::make_unique<LightSystem>(device, m_renderer_->getResourceManager()));
 
   // image loader
   // ------------------------------------------------------------------------
@@ -352,6 +334,25 @@ auto Engine::initialize() -> bool {
   } else if (applicationModeStr == "game") {
     m_applicationMode = ApplicationMode::Standalone;
   }
+
+  // viewport context
+  // -------------------------------------------------------------------------
+  ViewportContext* viewportContext = nullptr;
+  if (m_applicationMode == ApplicationMode::Editor) {
+    viewportContext = &inputManager->getViewportContext();
+  }
+
+  // ecs
+  // ------------------------------------------------------------------------
+  auto systemManager = ServiceLocator::s_get<SystemManager>();
+
+  systemManager->addSystem(std::make_unique<CameraInputSystem>(viewportContext));
+  systemManager->addSystem(std::make_unique<CameraSystem>());
+  systemManager->addSystem(std::make_unique<MovementSystem>());
+  systemManager->addSystem(std::make_unique<BoundingVolumeSystem>());
+  systemManager->addSystem(std::make_unique<RenderSystem>());
+  systemManager->addSystem(std::make_unique<MousePickingSystem>(viewportContext));
+  systemManager->addSystem(std::make_unique<LightSystem>(device, m_renderer_->getResourceManager()));
 
   // editor
   // ------------------------------------------------------------------------

@@ -22,6 +22,7 @@ enum class EditorAction {
   GizmoScale,
   GizmoToggleSpace,
   GizmoToggleVisibility,
+  MousePick,
   Count
 };
 

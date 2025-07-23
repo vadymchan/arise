@@ -34,7 +34,6 @@ void InputManager::updateViewport(int32_t width,
 }
 
 void InputManager::routeEvent(const SDL_Event& event) {
-  // GlobalLogger::Log(LogLevel::Debug, "InputManager: Routing event type " + std::to_string(event.type));
   m_router->route(event);
 }
 

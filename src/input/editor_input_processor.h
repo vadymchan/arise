@@ -26,7 +26,8 @@ class EditorInputProcessor : public InputProcessor {
   int  getPriority() const override { return 100; }
 
   private:
-  bool shouldProcess() const;
+  bool shouldProcess(const SDL_Event& event) const;
+  bool handleKeyboard(const SDL_Event& event);
 
   InputMap*                                                     m_inputMap;
   std::unordered_map<EditorAction, std::vector<EditorCallback>> m_callbacks;

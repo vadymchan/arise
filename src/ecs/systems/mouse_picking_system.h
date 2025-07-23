@@ -5,8 +5,16 @@
 #include "input/viewport_context.h"
 
 #include <math_library/graphics.h>
+#include <vector>
 
 namespace arise {
+
+struct Mesh;
+
+struct AABBCandidate {
+  entt::entity entity;
+  float        distance;
+};
 
 class MousePickingSystem : public IUpdatableSystem {
   public:
@@ -32,6 +40,15 @@ class MousePickingSystem : public IUpdatableSystem {
                                     const math::Matrix4f<>& projMatrix);
 
   entt::entity performRaycast_(Scene* scene, const math::Rayf<>& ray);
+
+  std::vector<AABBCandidate> performAABBRaycast_(Scene* scene, const math::Rayf<>& ray);
+  
+  entt::entity performTriangleRaycast_(Scene* scene, const math::Rayf<>& ray, const std::vector<AABBCandidate>& candidates);
+  
+  bool rayIntersectsMesh_(const math::Rayf<>& ray, 
+                         const Mesh* mesh, 
+                         const math::Matrix4f<>& meshToWorldTransform,
+                         float& outDistance);
 
   ViewportContext* m_viewportContext = nullptr;
 };

@@ -1461,6 +1461,7 @@ void Editor::handleMousePicking() {
                         "Mouse picking: Selected entity " + std::to_string(static_cast<uint32_t>(pickedEntity))
                             + " at (" + std::to_string(relativeMouseX) + ", " + std::to_string(relativeMouseY) + ")");
     } else {
+      handleEntitySelection(entt::null);
       GlobalLogger::Log(LogLevel::Debug,
                         "Mouse picking: Nothing picked at (" + std::to_string(relativeMouseX) + ", "
                             + std::to_string(relativeMouseY) + ")");

@@ -418,7 +418,6 @@ rhi::GraphicsPipeline* MeshHighlightStrategy::getOrCreateStencilMarkPipeline_(co
 
   pipelineDesc.multisample.rasterizationSamples = rhi::MSAASamples::Count1;
 
-  // Descriptor set layouts
   auto viewLayout        = m_frameResources->getViewDescriptorSetLayout();
   auto modelMatrixLayout = m_frameResources->getModelMatrixDescriptorSetLayout();
 

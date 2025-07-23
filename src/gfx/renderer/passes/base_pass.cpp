@@ -266,12 +266,6 @@ void BasePass::updateInstanceBuffer_(RenderModel*                         model,
 void BasePass::prepareDrawCalls_(const RenderContext& context) {
   m_drawData.clear();
 
-  auto viewLayout        = m_frameResources->getViewDescriptorSetLayout();
-  auto lightLayout       = m_frameResources->getLightDescriptorSetLayout();
-  auto modelMatrixLayout = m_frameResources->getModelMatrixDescriptorSetLayout();
-  auto materialLayout    = m_frameResources->getMaterialDescriptorSetLayout();
-  auto samplerLayout     = m_frameResources->getDefaultSamplerDescriptorSet()->getLayout();
-
   for (const auto& [model, cache] : m_instanceBufferCache) {
     if (cache.count == 0) {
       continue;
@@ -399,6 +393,12 @@ void BasePass::prepareDrawCalls_(const RenderContext& context) {
 
         pipelineDesc.multisample.rasterizationSamples = rhi::MSAASamples::Count1;
 
+        auto viewLayout        = m_frameResources->getViewDescriptorSetLayout();
+        auto lightLayout       = m_frameResources->getLightDescriptorSetLayout();
+        auto modelMatrixLayout = m_frameResources->getModelMatrixDescriptorSetLayout();
+        auto materialLayout    = m_frameResources->getMaterialDescriptorSetLayout();
+        auto samplerLayout     = m_frameResources->getDefaultSamplerDescriptorSet()->getLayout();
+
         pipelineDesc.setLayouts.push_back(viewLayout);
         pipelineDesc.setLayouts.push_back(modelMatrixLayout);
         pipelineDesc.setLayouts.push_back(lightLayout);
@@ -489,7 +489,7 @@ rhi::DescriptorSet* BasePass::getOrCreateMaterialDescriptorSet_(Material* materi
   auto descriptorSetPtr = m_resourceManager->getDescriptorSet(materialKey);
   if (!descriptorSetPtr) {
     auto descriptorSet = m_device->createDescriptorSet(materialLayout);
-    
+
     // Update the descriptor set BEFORE adding it to the resource manager
     rhi::Buffer* paramBuffer = m_frameResources->getOrCreateMaterialParamBuffer(material);
     if (paramBuffer) {
@@ -523,9 +523,9 @@ rhi::DescriptorSet* BasePass::getOrCreateMaterialDescriptorSet_(Material* materi
       }
 
       if (!texture) {
-        GlobalLogger::Log(
-            LogLevel::Error,
-            "No texture available (including fallback) for '" + textureName + "' in material: " + material->materialName);
+        GlobalLogger::Log(LogLevel::Error,
+                          "No texture available (including fallback) for '" + textureName
+                              + "' in material: " + material->materialName);
         allTexturesValid = false;
         break;
       }

@@ -247,7 +247,7 @@ Edit `config/debug/config.json` in your build directory:
 ```json
 {
   "renderingApi": "vulkan", // or "dx12"
-  "applicationMode": "editor" // or "game"
+  "applicationMode": "editor" // or "standalone"
 }
 ```
 

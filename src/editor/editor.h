@@ -167,6 +167,8 @@ class Editor {
   gfx::rhi::RenderingApi m_pendingApi;
 
   std::function<Window*(gfx::rhi::RenderingApi)> m_windowRecreationCallback;
+
+  bool m_preserveRenderModeOnSelection = false;
 };
 
 }  // namespace arise

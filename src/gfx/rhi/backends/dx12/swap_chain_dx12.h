@@ -4,7 +4,7 @@
 #include "gfx/rhi/interface/swap_chain.h"
 #include "platform/windows/windows_platform_setup.h"
 
-#ifdef ARISE_RHI_DX12
+#ifdef ARISE_USE_DX12
 
 #include <memory>
 #include <vector>
@@ -55,6 +55,6 @@ class SwapChainDx12 : public SwapChain {
 }  // namespace gfx
 }  // namespace arise
 
-#endif  // ARISE_RHI_DX12
+#endif  // ARISE_USE_DX12
 
 #endif  // ARISE_SWAP_CHAIN_DX12_H

@@ -3,7 +3,10 @@
 
 #include "gfx/rhi/backends/dx12/dxc_util.h"
 #include "gfx/rhi/common/rhi_enums.h"
+#include "gfx/rhi/common/rhi_types.h"
+#include "gfx/rhi/shader_reflection/shader_reflection_types.h"
 #include "gfx/rhi/interface/device.h"
+#include "gfx/rhi/interface/pipeline.h"
 #include "gfx/rhi/interface/shader.h"
 #include "utils/hot_reload/hot_reload_manager.h"
 #include "utils/logger/global_logger.h"
@@ -16,6 +19,7 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 namespace arise {
 namespace gfx {
@@ -158,6 +162,9 @@ class ShaderManager {
       return nullptr;
     }
 
+    // shader reflection
+    ShaderMeta meta = DxcUtil::s_get().reflectShader(compiledShader, stage, backend);
+
     ShaderDesc desc;
     desc.stage      = stage;
     desc.entryPoint = entryPoint;
@@ -167,7 +174,12 @@ class ShaderManager {
     size_t size = compiledShader->GetBufferSize();
     desc.code.assign(data, data + size);
 
-    return m_device_->createShader(desc);
+    auto shader = m_device_->createShader(desc);
+    if (shader) {
+      shader->setMeta(meta);
+    }
+
+    return shader;
   }
 
   ShaderStageFlag deduceStageFromPath(const std::filesystem::path& path) {

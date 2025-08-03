@@ -3,7 +3,7 @@
 #include "gfx/rhi/backends/dx12/device_dx12.h"
 #include "utils/logger/global_logger.h"
 
-#ifdef ARISE_RHI_DX12
+#ifdef ARISE_USE_DX12
 
 #include <d3dcompiler.h>
 
@@ -49,4 +49,4 @@ void ShaderDx12::release() {
 }  // namespace gfx
 }  // namespace arise
 
-#endif  // ARISE_RHI_DX12
+#endif  // ARISE_USE_DX12

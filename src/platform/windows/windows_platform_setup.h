@@ -13,15 +13,6 @@
  */
 #define ARISE_PLATFORM_WINDOWS
 
-/**
- * @def ARISE_RHI_DX12
- * @brief Specifies that DirectX 12 is included in the engine
- *
- * This macro activates DirectX 12 specific code paths and dependencies
- * within the engine's rendering subsystem
- */
-#define ARISE_RHI_DX12
-
 // Disable min and max macros from Windows headers
 #define NOMINMAX
 

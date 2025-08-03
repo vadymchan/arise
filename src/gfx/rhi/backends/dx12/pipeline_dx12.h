@@ -4,7 +4,7 @@
 #include "gfx/rhi/interface/pipeline.h"
 #include "platform/windows/windows_platform_setup.h"
 
-#ifdef ARISE_RHI_DX12
+#ifdef ARISE_USE_DX12
 
 #include <array>
 #include <memory>
@@ -64,5 +64,5 @@ class GraphicsPipelineDx12 : public GraphicsPipeline {
 }  // namespace gfx
 }  // namespace arise
 
-#endif  // ARISE_RHI_DX12
+#endif  // ARISE_USE_DX12
 #endif  // ARISE_PIPELINE_DX12_H

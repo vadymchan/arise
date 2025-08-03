@@ -1,6 +1,6 @@
 #include "gfx/rhi/backends/dx12/rhi_enums_dx12.h"
 
-#ifdef ARISE_RHI_DX12
+#ifdef ARISE_USE_DX12
 
 #include <cassert>
 
@@ -618,4 +618,4 @@ ResourceLayout g_getResourceLayoutDx12(D3D12_RESOURCE_STATES resourceState) {
 }  // namespace gfx
 }  // namespace arise
 
-#endif  // ARISE_RHI_DX12
+#endif  // ARISE_USE_DX12

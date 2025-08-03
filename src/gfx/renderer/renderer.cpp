@@ -151,12 +151,12 @@ RenderContext Renderer::beginFrame(Scene* scene, const RenderSettings& renderSet
 
   {
     GPU_ZONE_NC(commandBuffer.get(), "Descriptor Heap Setup", color::PURPLE);
-#ifdef ARISE_RHI_DX12
+#ifdef ARISE_USE_DX12
     if (m_device->getApiType() == rhi::RenderingApi::Dx12) {
       auto dx12CmdBuffer = static_cast<rhi::CommandBufferDx12*>(commandBuffer.get());
       dx12CmdBuffer->bindDescriptorHeaps();
     }
-#endif  //  ARISE_RHI_DX12
+#endif  //  ARISE_USE_DX12
   }
 
   {
@@ -493,6 +493,11 @@ void Renderer::setupRenderPasses_() {
 void Renderer::cleanupResources_() {
   GlobalLogger::Log(LogLevel::Info, "Cleaning up all rendering resources");
 
+  if (m_resourceManager) {
+    m_resourceManager->clear();
+    m_resourceManager.reset();
+  }
+
   if (m_finalPass) {
     m_finalPass->cleanup();
     m_finalPass.reset();
@@ -502,7 +507,7 @@ void Renderer::cleanupResources_() {
     m_debugPass->cleanup();
     m_debugPass.reset();
   }
-
+  
   if (m_basePass) {
     m_basePass->cleanup();
     m_basePass.reset();
@@ -511,11 +516,6 @@ void Renderer::cleanupResources_() {
   if (m_frameResources) {
     m_frameResources->cleanup();
     m_frameResources.reset();
-  }
-
-  if (m_resourceManager) {
-    m_resourceManager->clear();
-    m_resourceManager.reset();
   }
 
   if (m_shaderManager) {

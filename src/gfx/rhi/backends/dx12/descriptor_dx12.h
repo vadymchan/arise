@@ -4,7 +4,7 @@
 #include "gfx/rhi/interface/descriptor.h"
 #include "platform/windows/windows_platform_setup.h"
 
-#ifdef ARISE_RHI_DX12
+#ifdef ARISE_USE_DX12
 
 #include <mutex>
 #include <vector>
@@ -181,6 +181,6 @@ class FrameResourcesManager {
 }  // namespace gfx
 }  // namespace arise
 
-#endif  // ARISE_RHI_DX12
+#endif  // ARISE_USE_DX12
 
 #endif  // ARISE_DESCRIPTOR_DX12_H

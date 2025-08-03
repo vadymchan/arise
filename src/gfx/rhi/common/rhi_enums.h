@@ -63,6 +63,7 @@ enum class TextureType : uint8_t {
   Count
 };
 
+// TODO: add int, uint
 enum class TextureFormat : uint8_t {
   // Color formats
   Rgb8,
@@ -393,6 +394,8 @@ enum class TextureCreateFlag : uint32_t {
 };
 
 DECLARE_ENUM_BIT_OPERATORS(TextureCreateFlag)
+
+int g_getTextureComponentCount(TextureFormat format, RenderingApi api);
 
 }  // namespace rhi
 }  // namespace gfx

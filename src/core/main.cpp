@@ -1,7 +1,7 @@
 #define SDL_MAIN_HANDLED
 
-#include <core/engine.h>
 #include <core/application.h>
+#include <core/engine.h>
 
 using namespace arise;
 

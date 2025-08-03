@@ -4,7 +4,7 @@
 #include "gfx/rhi/common/rhi_enums.h"
 #include "platform/windows/windows_platform_setup.h"
 
-#ifdef ARISE_RHI_DX12
+#ifdef ARISE_USE_DX12
 
 #include <unordered_map>
 
@@ -62,5 +62,5 @@ ResourceLayout        g_getResourceLayoutDx12(D3D12_RESOURCE_STATES resourceStat
 }  // namespace gfx
 }  // namespace arise
 
-#endif  // ARISE_RHI_DX12
+#endif  // ARISE_USE_DX12
 #endif  // ARISE_RHI_DX12_UTIL_H

@@ -122,7 +122,7 @@ void ImGuiRHIContext::shutdown() {
       m_imguiPoolManager.reset();
     }
   }
-#ifdef ARISE_RHI_DX12
+#ifdef ARISE_USE_DX12
   else if (m_renderingApi == rhi::RenderingApi::Dx12) {
     m_dx12ImGuiDescriptorHeap.reset();
 
@@ -239,7 +239,7 @@ ImTextureID ImGuiRHIContext::createTextureID(rhi::Texture* texture, uint32_t cur
     texID = reinterpret_cast<ImTextureID>(ImGui_ImplVulkan_AddTexture(
         samplerVk->getSampler(), textureVk->getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL));
   }
-#ifdef ARISE_RHI_DX12
+#ifdef ARISE_USE_DX12
   else if (m_renderingApi == rhi::RenderingApi::Dx12) {
     // For DX12, we copy the texture's descriptor to the ImGui descriptor heap
     auto textureDx12 = static_cast<rhi::TextureDx12*>(texture);
@@ -282,7 +282,7 @@ void ImGuiRHIContext::releaseTextureID(ImTextureID textureID) {
 
   // For DirectX 12, we don't need to do anything special since we're
   // just using a fixed location in the descriptor heap
-#ifdef ARISE_RHI_DX12
+#ifdef ARISE_USE_DX12
   // No cleanup needed for DX12 in this simple approach
 #endif
 }

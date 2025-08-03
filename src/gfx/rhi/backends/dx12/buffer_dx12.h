@@ -6,7 +6,7 @@
 
 #include <D3D12MemAlloc.h>
 
-#ifdef ARISE_RHI_DX12
+#ifdef ARISE_USE_DX12
 
 namespace arise {
 namespace gfx {
@@ -128,5 +128,5 @@ class DescriptorBufferDx12 : public BufferDx12 {
 }  // namespace gfx
 }  // namespace arise
 
-#endif  // ARISE_RHI_DX12
+#endif  // ARISE_USE_DX12
 #endif  // ARISE_BUFFER_DX12_H

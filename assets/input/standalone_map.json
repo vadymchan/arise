@@ -4,5 +4,8 @@
   "MoveLeft": "A",
   "MoveRight": "D",
   "MoveUp": "E",
-  "MoveDown": "Q"
+  "MoveDown": "Q",
+  "ZoomIn": "Z",
+  "ZoomOut": "X",
+  "ZoomReset": "Shift+Z"
 } 

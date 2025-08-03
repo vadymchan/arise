@@ -31,6 +31,9 @@ void CameraInputSystem::update(Scene* scene, float dt) {
     auto& mouse     = view.get<MouseInput>(entity);
     auto& movement  = view.get<Movement>(entity);
     auto& transform = view.get<Transform>(entity);
+    auto& camera    = view.get<Camera>(entity);
+
+    handleZoom(actions, camera, dt);
 
     if (mouse.rightButtonPressed) {
       handleMouseLook(mouse, transform);
@@ -57,7 +60,7 @@ void CameraInputSystem::handleSpeedChange(MouseInput& mouse, Movement& movement)
   if (mouse.wheelDelta != 0.0f) {
     m_currentMouseSpeed += mouse.wheelDelta;
   }
-  movement.strength = std::clamp(m_currentMouseSpeed, m_minMovingSpeed, m_maxMovingSpeed);
+  movement.strength = std::clamp(m_currentMouseSpeed, s_kMinMovingSpeed, s_kMaxMovingSpeed);
 }
 
 void CameraInputSystem::handleMovement(const InputActions& actions,
@@ -95,6 +98,20 @@ void CameraInputSystem::handleMovement(const InputActions& actions,
   }
 
   movement.direction = direction;
+}
+
+void CameraInputSystem::handleZoom(const InputActions& actions, Camera& camera, float deltaTime) {
+  float zoomDelta = s_kZoomSpeed * deltaTime;
+  
+  if (actions.isActive(InputAction::ZoomIn)) {
+    camera.fov = std::clamp(camera.fov - zoomDelta, s_kMinFov, s_kMaxFov);
+  }
+  if (actions.isActive(InputAction::ZoomOut)) {
+    camera.fov = std::clamp(camera.fov + zoomDelta, s_kMinFov, s_kMaxFov);
+  }
+  if (actions.isActive(InputAction::ZoomReset)) {
+    camera.fov = s_kDefaultFov;
+  }
 }
 
 void CameraInputSystem::clearCameraInput(Movement& movement) {

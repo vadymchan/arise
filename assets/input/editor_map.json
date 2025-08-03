@@ -6,5 +6,8 @@
   "GizmoRotate": "2",
   "GizmoScale": "3",
   "GizmoToggleSpace": "4",
-  "GizmoToggleVisibility": "5"
+  "GizmoToggleVisibility": "5",
+  "ZoomIn": "Z",
+  "ZoomOut": "X",
+  "ZoomReset": "Shift+Z"
 } 

@@ -10,7 +10,10 @@ const std::unordered_map<std::string, InputAction> InputMap::s_stringToInputActi
   {    "MoveLeft",     InputAction::MoveLeft},
   {   "MoveRight",    InputAction::MoveRight},
   {      "MoveUp",       InputAction::MoveUp},
-  {    "MoveDown",     InputAction::MoveDown}
+  {    "MoveDown",     InputAction::MoveDown},
+  {      "ZoomIn",       InputAction::ZoomIn},
+  {     "ZoomOut",      InputAction::ZoomOut},
+  {   "ZoomReset",    InputAction::ZoomReset}
 };
 
 const std::unordered_map<std::string, EditorAction> InputMap::s_stringToEditorAction = {

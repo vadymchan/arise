@@ -10,6 +10,9 @@ enum class InputAction {
   MoveRight,
   MoveUp,
   MoveDown,
+  ZoomIn,
+  ZoomOut,
+  ZoomReset,
   Count
 };
 

@@ -27,7 +27,8 @@ void MaterialLoaderManager::registerLoader(MaterialType materialType, std::share
   loaderMap_[materialType] = std::move(loader);
 }
 
-std::vector<std::unique_ptr<Material>> MaterialLoaderManager::loadMaterials(const std::filesystem::path& filePath) {
+std::vector<std::unique_ptr<ecs::Material>> MaterialLoaderManager::loadMaterials(
+    const std::filesystem::path& filePath) {
   std::string extension = filePath.extension().string();
   std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
   MaterialType materialType = getMaterialTypeFromExtension(extension);

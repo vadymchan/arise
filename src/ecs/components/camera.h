@@ -4,6 +4,7 @@
 #include <math_library/matrix.h>
 
 namespace arise {
+namespace ecs {
 
 enum class CameraType {
   Perspective  = 0,
@@ -24,6 +25,7 @@ struct CameraMatrices {
   math::Matrix4f<> projection;
 };
 
+}  // namespace ecs
 }  // namespace arise
 
 #endif  // ARISE_CAMERA_H

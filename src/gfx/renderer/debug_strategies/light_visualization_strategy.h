@@ -8,8 +8,10 @@
 #include <vector>
 
 namespace arise {
+namespace ecs {
 struct RenderModel;
 struct Material;
+}  // namespace ecs
 }  // namespace arise
 
 namespace arise::gfx::rhi {
@@ -62,16 +64,16 @@ class LightVisualizationStrategy : public DebugDrawStrategy {
     uint32_t               instanceCount            = 0;
   };
 
-  rhi::DescriptorSet* getOrCreateMaterialDescriptorSet_(Material* material);
+  rhi::DescriptorSet* getOrCreateMaterialDescriptorSet_(ecs::Material* material);
 
   void setupRenderPass_();
   void createFramebuffers_(const math::Dimension2i& dimension);
   void prepareDrawCalls_(const RenderContext& context);
-  void updateInstanceBuffer_(RenderModel*                         model,
+  void updateInstanceBuffer_(ecs::RenderModel*                    model,
                              const std::vector<math::Matrix4f<>>& matrices,
                              ModelBufferCache&                    cache);
   void cleanupUnusedBuffers_(
-      const std::unordered_map<RenderModel*, std::vector<math::Matrix4f<>>>& currentFrameInstances);
+      const std::unordered_map<ecs::RenderModel*, std::vector<math::Matrix4f<>>>& currentFrameInstances);
 
   const std::string m_vertexShaderPath_ = "assets/shaders/debug/light_visualization/shader_instancing.vs.hlsl";
   const std::string m_pixelShaderPath_  = "assets/shaders/debug/light_visualization/shader.ps.hlsl";
@@ -90,15 +92,15 @@ class LightVisualizationStrategy : public DebugDrawStrategy {
   rhi::RenderPass*               m_renderPass = nullptr;
   std::vector<rhi::Framebuffer*> m_framebuffers;
 
-  std::unordered_map<RenderModel*, ModelBufferCache> m_instanceBufferCache;
-  std::vector<DrawData>                              m_drawData;
+  std::unordered_map<ecs::RenderModel*, ModelBufferCache> m_instanceBufferCache;
+  std::vector<DrawData>                                   m_drawData;
 
   struct MaterialCache {
     rhi::DescriptorSet* descriptorSet = nullptr;
   };
 
-  std::unordered_map<Material*, MaterialCache> m_materialCache;
-  rhi::DescriptorSetLayout*                    m_materialDescriptorSetLayout = nullptr;
+  std::unordered_map<ecs::Material*, MaterialCache> m_materialCache;
+  rhi::DescriptorSetLayout*                         m_materialDescriptorSetLayout = nullptr;
 };
 
 }  // namespace renderer

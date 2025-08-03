@@ -6,6 +6,7 @@
 #include <cstdint>
 
 namespace arise {
+namespace ecs {
 
 // GPU-Side Mesh Geometry data
 // TODO: can we somehow manage vertex and index buffers? so we can have 1 big
@@ -22,6 +23,7 @@ struct RenderGeometryMesh {
   // uint32_t vertexStride = 0;
 };
 
+}  // namespace ecs
 }  // namespace arise
 
 #endif  // ARISE_RENDER_GEOMETRY_MESH_H

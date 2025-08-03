@@ -25,7 +25,7 @@ class MaterialLoaderManager {
 
   void registerLoader(MaterialType materialType, std::shared_ptr<IMaterialLoader> loader);
 
-  std::vector<std::unique_ptr<Material>> loadMaterials(const std::filesystem::path& filePath);
+  std::vector<std::unique_ptr<ecs::Material>> loadMaterials(const std::filesystem::path& filePath);
 
   private:
   std::unordered_map<MaterialType, std::shared_ptr<IMaterialLoader>> loaderMap_;

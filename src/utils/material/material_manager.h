@@ -16,12 +16,12 @@ class MaterialManager {
   MaterialManager() = default;
   ~MaterialManager();
 
-  std::vector<Material*> getMaterials(const std::filesystem::path& filepath);
+  std::vector<ecs::Material*> getMaterials(const std::filesystem::path& filepath);
 
-  bool removeMaterial(Material* material);
+  bool removeMaterial(ecs::Material* material);
 
   private:
-  std::unordered_map<std::filesystem::path, std::vector<std::unique_ptr<Material>>> materialCache_;
+  std::unordered_map<std::filesystem::path, std::vector<std::unique_ptr<ecs::Material>>> materialCache_;
   std::mutex                                                                        m_mutex_;
 };
 

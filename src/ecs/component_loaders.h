@@ -6,6 +6,7 @@
 #include "scene/scene.h"
 
 namespace arise {
+namespace ecs {
 
 struct Transform;
 struct Camera;
@@ -24,6 +25,7 @@ SpotLight        g_loadSpotLight(const ConfigValue& value);
 Entity g_createEntityFromConfig(Registry& registry, const ConfigValue& entityConfig);
 void   g_processEntityComponents(Registry& registry, Entity entity, const ConfigValue& components);
 
+}  // namespace ecs
 }  // namespace arise
 
 #endif  // ARISE_COMPONENT_LOADERS_H

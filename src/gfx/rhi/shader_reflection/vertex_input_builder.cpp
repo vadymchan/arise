@@ -111,17 +111,17 @@ bool VertexInputBuilder::isKnownVertexSemantic_(const std::string& semanticName)
 
 uint32_t VertexInputBuilder::getVertexAttributeOffset_(const std::string& semanticName) {
   if (semanticName == "POSITION") {
-    return offsetof(Vertex, position);
+    return offsetof(ecs::Vertex, position);
   } else if (semanticName == "TEXCOORD") {
-    return offsetof(Vertex, texCoords);
+    return offsetof(ecs::Vertex, texCoords);
   } else if (semanticName == "NORMAL") {
-    return offsetof(Vertex, normal);
+    return offsetof(ecs::Vertex, normal);
   } else if (semanticName == "TANGENT") {
-    return offsetof(Vertex, tangent);
+    return offsetof(ecs::Vertex, tangent);
   } else if (semanticName == "BITANGENT") {
-    return offsetof(Vertex, bitangent);
+    return offsetof(ecs::Vertex, bitangent);
   } else if (semanticName == "COLOR") {
-    return offsetof(Vertex, color);
+    return offsetof(ecs::Vertex, color);
   }
 
   GlobalLogger::Log(LogLevel::Error,

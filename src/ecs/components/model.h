@@ -8,6 +8,7 @@
 #include <memory>
 
 namespace arise {
+namespace ecs {
 
 // This is the geometry data on CPU side (imported from cgltf)
 struct Model {
@@ -17,6 +18,7 @@ struct Model {
   BoundingBox           boundingBox; // in model space
 };
 
+}  // namespace ecs
 }  // namespace arise
 
 #endif  // ARISE_MODEL_H

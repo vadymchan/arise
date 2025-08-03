@@ -4,6 +4,7 @@
 #include "ecs/components/transform.h"
 
 namespace arise {
+namespace ecs {
 
 void MovementSystem::update(Scene* scene, float deltaTime) {
   Registry& registry = scene->getEntityRegistry();
@@ -19,4 +20,5 @@ void MovementSystem::update(Scene* scene, float deltaTime) {
   }
 }
 
+}  // namespace ecs
 }  // namespace arise

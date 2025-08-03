@@ -19,7 +19,9 @@ RenderMeshManager::~RenderMeshManager() {
   }
 }
 
-RenderMesh* RenderMeshManager::addRenderMesh(RenderGeometryMesh* gpuMesh, Material* material, Mesh* sourceMesh) {
+ecs::RenderMesh* RenderMeshManager::addRenderMesh(ecs::RenderGeometryMesh* gpuMesh,
+                                                  ecs::Material*           material,
+                                                  ecs::Mesh*               sourceMesh) {
   std::lock_guard<std::mutex> lock(m_mutex);
 
   if (!gpuMesh || !sourceMesh) {
@@ -32,18 +34,18 @@ RenderMesh* RenderMeshManager::addRenderMesh(RenderGeometryMesh* gpuMesh, Materi
     GlobalLogger::Log(LogLevel::Warning, "Render mesh already exists for this mesh. Overwriting.");
   }
 
-  auto renderMesh      = std::make_unique<RenderMesh>();
+  auto renderMesh      = std::make_unique<ecs::RenderMesh>();
   renderMesh->gpuMesh  = gpuMesh;
   renderMesh->material = material;
 
-  RenderMesh* meshPtr = renderMesh.get();
+  ecs::RenderMesh* meshPtr = renderMesh.get();
 
   m_renderMeshes[sourceMesh] = std::move(renderMesh);
 
   return meshPtr;
 }
 
-RenderMesh* RenderMeshManager::getRenderMesh(Mesh* sourceMesh) {
+ecs::RenderMesh* RenderMeshManager::getRenderMesh(ecs::Mesh* sourceMesh) {
   std::lock_guard<std::mutex> lock(m_mutex);
 
   auto it = m_renderMeshes.find(sourceMesh);
@@ -55,7 +57,7 @@ RenderMesh* RenderMeshManager::getRenderMesh(Mesh* sourceMesh) {
   return nullptr;
 }
 
-bool RenderMeshManager::removeRenderMesh(RenderMesh* renderMesh) {
+bool RenderMeshManager::removeRenderMesh(ecs::RenderMesh* renderMesh) {
   if (!renderMesh) {
     GlobalLogger::Log(LogLevel::Error, "Cannot remove null render mesh");
     return false;
@@ -81,7 +83,7 @@ bool RenderMeshManager::removeRenderMesh(RenderMesh* renderMesh) {
 
   std::lock_guard<std::mutex> lock(m_mutex);
 
-  Mesh* sourceMesh = nullptr;
+  ecs::Mesh* sourceMesh = nullptr;
   for (auto it = m_renderMeshes.begin(); it != m_renderMeshes.end(); ++it) {
     if (it->second.get() == renderMesh) {
       sourceMesh = it->first;

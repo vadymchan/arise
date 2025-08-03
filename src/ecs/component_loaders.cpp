@@ -16,6 +16,7 @@
 #include "utils/service/service_locator.h"
 
 namespace arise {
+namespace ecs {
 
 Transform g_loadTransform(const ConfigValue& value) {
   Transform transform;
@@ -313,4 +314,5 @@ void g_processEntityComponents(Registry& registry, Entity entity, const ConfigVa
     }
   }
 }
+}  // namespace ecs
 }  // namespace arise

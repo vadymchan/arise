@@ -61,8 +61,8 @@ void NormalMapVisualizationStrategy::resize(const math::Dimension2i& newDimensio
 }
 
 void NormalMapVisualizationStrategy::prepareFrame(const RenderContext& context) {
-  std::unordered_map<RenderModel*, std::vector<math::Matrix4f<>>> currentFrameInstances;
-  std::unordered_map<RenderModel*, bool>                          modelDirtyFlags;
+  std::unordered_map<ecs::RenderModel*, std::vector<math::Matrix4f<>>> currentFrameInstances;
+  std::unordered_map<ecs::RenderModel*, bool>                          modelDirtyFlags;
 
   for (const auto& instance : m_frameResources->getModels()) {
     currentFrameInstances[instance->model].push_back(instance->modelMatrix);
@@ -227,7 +227,7 @@ void NormalMapVisualizationStrategy::createFramebuffers_(const math::Dimension2i
   }
 }
 
-void NormalMapVisualizationStrategy::updateInstanceBuffer_(RenderModel*                         model,
+void NormalMapVisualizationStrategy::updateInstanceBuffer_(ecs::RenderModel*                         model,
                                                            const std::vector<math::Matrix4f<>>& matrices,
                                                            ModelBufferCache&                    cache) {
   if (!cache.instanceBuffer || matrices.size() > cache.capacity) {
@@ -289,7 +289,7 @@ void NormalMapVisualizationStrategy::prepareDrawCalls_(const RenderContext& cont
 
         rhi::VertexInputBindingDesc vertexBinding;
         vertexBinding.binding   = 0;
-        vertexBinding.stride    = sizeof(Vertex);
+        vertexBinding.stride    = sizeof(ecs::Vertex);
         vertexBinding.inputRate = rhi::VertexInputRate::Vertex;
         pipelineDesc.vertexBindings.push_back(vertexBinding);
 
@@ -303,7 +303,7 @@ void NormalMapVisualizationStrategy::prepareDrawCalls_(const RenderContext& cont
         positionAttr.location     = 0;
         positionAttr.binding      = 0;
         positionAttr.format       = rhi::TextureFormat::Rgb32f;
-        positionAttr.offset       = offsetof(Vertex, position);
+        positionAttr.offset       = offsetof(ecs::Vertex, position);
         positionAttr.semanticName = "POSITION";
         pipelineDesc.vertexAttributes.push_back(positionAttr);
 
@@ -311,7 +311,7 @@ void NormalMapVisualizationStrategy::prepareDrawCalls_(const RenderContext& cont
         uvAttr.location     = 1;
         uvAttr.binding      = 0;
         uvAttr.format       = rhi::TextureFormat::Rg32f;
-        uvAttr.offset       = offsetof(Vertex, texCoords);
+        uvAttr.offset       = offsetof(ecs::Vertex, texCoords);
         uvAttr.semanticName = "TEXCOORD";
         pipelineDesc.vertexAttributes.push_back(uvAttr);
 
@@ -319,7 +319,7 @@ void NormalMapVisualizationStrategy::prepareDrawCalls_(const RenderContext& cont
         normalAttr.location     = 2;
         normalAttr.binding      = 0;
         normalAttr.format       = rhi::TextureFormat::Rgb32f;
-        normalAttr.offset       = offsetof(Vertex, normal);
+        normalAttr.offset       = offsetof(ecs::Vertex, normal);
         normalAttr.semanticName = "NORMAL";
         pipelineDesc.vertexAttributes.push_back(normalAttr);
 
@@ -327,7 +327,7 @@ void NormalMapVisualizationStrategy::prepareDrawCalls_(const RenderContext& cont
         tangentAttr.location     = 3;
         tangentAttr.binding      = 0;
         tangentAttr.format       = rhi::TextureFormat::Rgb32f;
-        tangentAttr.offset       = offsetof(Vertex, tangent);
+        tangentAttr.offset       = offsetof(ecs::Vertex, tangent);
         tangentAttr.semanticName = "TANGENT";
         pipelineDesc.vertexAttributes.push_back(tangentAttr);
 
@@ -335,7 +335,7 @@ void NormalMapVisualizationStrategy::prepareDrawCalls_(const RenderContext& cont
         bitangentAttr.location     = 4;
         bitangentAttr.binding      = 0;
         bitangentAttr.format       = rhi::TextureFormat::Rgb32f;
-        bitangentAttr.offset       = offsetof(Vertex, bitangent);
+        bitangentAttr.offset       = offsetof(ecs::Vertex, bitangent);
         bitangentAttr.semanticName = "BITANGENT";
         pipelineDesc.vertexAttributes.push_back(bitangentAttr);
 
@@ -400,8 +400,8 @@ void NormalMapVisualizationStrategy::prepareDrawCalls_(const RenderContext& cont
 }
 
 void NormalMapVisualizationStrategy::cleanupUnusedBuffers_(
-    const std::unordered_map<RenderModel*, std::vector<math::Matrix4f<>>>& currentFrameInstances) {
-  std::vector<RenderModel*> modelsToRemove;
+  const std::unordered_map<ecs::RenderModel*, std::vector<math::Matrix4f<>>>& currentFrameInstances) {
+  std::vector<ecs::RenderModel*> modelsToRemove;
   for (const auto& [model, cache] : m_instanceBufferCache) {
     if (!currentFrameInstances.contains(model)) {
       modelsToRemove.push_back(model);
@@ -412,7 +412,7 @@ void NormalMapVisualizationStrategy::cleanupUnusedBuffers_(
     m_instanceBufferCache.erase(model);
   }
 
-  std::unordered_set<Material*> activeMaterials;
+  std::unordered_set<ecs::Material*> activeMaterials;
 
   for (const auto& [model, matrices] : currentFrameInstances) {
     for (const auto& renderMesh : model->renderMeshes) {
@@ -422,7 +422,7 @@ void NormalMapVisualizationStrategy::cleanupUnusedBuffers_(
     }
   }
 
-  std::vector<Material*> materialsToRemove;
+  std::vector<ecs::Material*> materialsToRemove;
   for (const auto& [material, cache] : m_materialCache) {
     if (!activeMaterials.contains(material)) {
       materialsToRemove.push_back(material);
@@ -438,7 +438,7 @@ void NormalMapVisualizationStrategy::cleanupUnusedBuffers_(
   }
 }
 
-rhi::DescriptorSet* NormalMapVisualizationStrategy::getOrCreateMaterialDescriptorSet_(Material* material) {
+rhi::DescriptorSet* NormalMapVisualizationStrategy::getOrCreateMaterialDescriptorSet_(ecs::Material* material) {
   if (!material) {
     GlobalLogger::Log(LogLevel::Error, "Material is null");
     return nullptr;

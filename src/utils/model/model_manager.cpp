@@ -1,7 +1,7 @@
 #include "utils/model/model_manager.h"
 
 namespace arise {
-Model* ModelManager::getModel(const std::filesystem::path& filepath) {
+ecs::Model* ModelManager::getModel(const std::filesystem::path& filepath) {
   std::lock_guard<std::mutex> lock(mutex_);
   auto                        it = modelCache_.find(filepath);
   if (it != modelCache_.end()) {
@@ -16,7 +16,7 @@ Model* ModelManager::getModel(const std::filesystem::path& filepath) {
 
   auto model = modelLoaderManager->loadModel(filepath);
   if (model) {
-    Model* modelPtr       = model.get();
+    ecs::Model* modelPtr  = model.get();
     modelCache_[filepath] = std::move(model);
     return modelPtr;
   }

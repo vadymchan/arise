@@ -10,6 +10,7 @@
 
 namespace arise {
 
+namespace ecs {
 struct Transform;
 struct Camera;
 struct Light;
@@ -17,6 +18,7 @@ struct DirectionalLight;
 struct PointLight;
 struct SpotLight;
 struct RenderModel;
+}
 
 class SceneSaver {
   public:
@@ -30,25 +32,25 @@ class SceneSaver {
                                 rapidjson::MemoryPoolAllocator<>& allocator);
 
   // Specialized component serialization methods
-  static void serializeTransform(const Transform&                  transform,
+  static void serializeTransform(const ecs::Transform&                  transform,
                                  rapidjson::Value&                 componentValue,
                                  rapidjson::MemoryPoolAllocator<>& allocator);
-  static void serializeCamera(const Camera&                     camera,
+  static void serializeCamera(const ecs::Camera&                     camera,
                               rapidjson::Value&                 componentValue,
                               rapidjson::MemoryPoolAllocator<>& allocator);
-  static void serializeLight(const Light&                      light,
+  static void serializeLight(const ecs::Light&                      light,
                              rapidjson::Value&                 componentValue,
                              rapidjson::MemoryPoolAllocator<>& allocator);
-  static void serializeDirectionalLight(const DirectionalLight&           dirLight,
+  static void serializeDirectionalLight(const ecs::DirectionalLight&      dirLight,
                                         rapidjson::Value&                 componentValue,
                                         rapidjson::MemoryPoolAllocator<>& allocator);
-  static void serializePointLight(const PointLight&                 pointLight,
+  static void serializePointLight(const ecs::PointLight&            pointLight,
                                   rapidjson::Value&                 componentValue,
                                   rapidjson::MemoryPoolAllocator<>& allocator);
-  static void serializeSpotLight(const SpotLight&                  spotLight,
+  static void serializeSpotLight(const ecs::SpotLight&                  spotLight,
                                  rapidjson::Value&                 componentValue,
                                  rapidjson::MemoryPoolAllocator<>& allocator);
-  static void serializeModel(const RenderModel*                model,
+  static void serializeModel(const ecs::RenderModel*           model,
                              rapidjson::Value&                 componentValue,
                              rapidjson::MemoryPoolAllocator<>& allocator);
 };

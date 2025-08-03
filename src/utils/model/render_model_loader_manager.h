@@ -19,7 +19,8 @@ class RenderModelLoaderManager {
 
   void registerLoader(ModelType modelType, std::shared_ptr<IRenderModelLoader> loader);
 
-  std::unique_ptr<RenderModel> loadRenderModel(const std::filesystem::path& filePath, Model** outModel = nullptr);
+  std::unique_ptr<ecs::RenderModel> loadRenderModel(const std::filesystem::path& filePath,
+                                                    ecs::Model**                 outModel = nullptr);
 
   private:
   std::unordered_map<ModelType, std::shared_ptr<IRenderModelLoader>> loaderMap_;

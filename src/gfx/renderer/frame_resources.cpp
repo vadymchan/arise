@@ -58,8 +58,8 @@ void FrameResources::resize(const math::Dimension2i& newDimension) {
 void FrameResources::updatePerFrameResources(const RenderContext& context) {
   CPU_ZONE_NC("FrameResources::updatePerFrameResources", color::YELLOW);
   if (!m_lightSystem) {
-    auto systemManager = ServiceLocator::s_get<SystemManager>();
-    m_lightSystem      = systemManager->getSystem<LightSystem>();
+    auto systemManager = ServiceLocator::s_get<ecs::SystemManager>();
+    m_lightSystem      = systemManager->getSystem<ecs::LightSystem>();
     if (!m_lightSystem) {
       GlobalLogger::Log(LogLevel::Error, "LightSystem not found!");
       return;
@@ -105,7 +105,7 @@ rhi::DescriptorSet* FrameResources::getLightDescriptorSet() const {
   return m_lightSystem->getLightDescriptorSet();
 }
 
-rhi::DescriptorSet* FrameResources::getOrCreateModelMatrixDescriptorSet(RenderMesh* renderMesh) {
+rhi::DescriptorSet* FrameResources::getOrCreateModelMatrixDescriptorSet(ecs::RenderMesh* renderMesh) {
   auto it = m_modelMatrixCache.find(renderMesh);
   if (it != m_modelMatrixCache.end() && it->second.descriptorSet) {
     return it->second.descriptorSet;
@@ -130,7 +130,7 @@ rhi::DescriptorSetLayout* FrameResources::getLightDescriptorSetLayout() const {
   return m_lightSystem->getLightDescriptorSetLayout();
 }
 
-rhi::Buffer* FrameResources::getOrCreateMaterialParamBuffer(Material* material) {
+rhi::Buffer* FrameResources::getOrCreateMaterialParamBuffer(ecs::Material* material) {
   if (!material) {
     GlobalLogger::Log(LogLevel::Warning, "Material is null");
     return nullptr;
@@ -356,7 +356,7 @@ void FrameResources::createRenderTargets_(RenderTargets& targets, const math::Di
 void FrameResources::updateViewResources_(const RenderContext& context) {
   CPU_ZONE_NC("Update View Buffer", color::YELLOW);
   auto& registry = context.scene->getEntityRegistry();
-  auto  view     = registry.view<Transform, Camera, CameraMatrices>();
+  auto  view     = registry.view<ecs::Transform, ecs::Camera, ecs::CameraMatrices>();
 
   if (view.begin() == view.end()) {
     GlobalLogger::Log(LogLevel::Warning, "No main Camera exists!");
@@ -364,8 +364,8 @@ void FrameResources::updateViewResources_(const RenderContext& context) {
   }
 
   auto  entity       = *view.begin();
-  auto& transform    = view.get<Transform>(entity);
-  auto& cameraMatrix = view.get<CameraMatrices>(entity);
+  auto& transform    = view.get<ecs::Transform>(entity);
+  auto& cameraMatrix = view.get<ecs::CameraMatrices>(entity);
 
   if (!m_viewUniformBuffer) {
     rhi::BufferDesc viewUboDesc;
@@ -409,15 +409,15 @@ void FrameResources::updateViewResources_(const RenderContext& context) {
 void FrameResources::updateModelList_(const RenderContext& context) {
   bool                             needRebuildRenderArray = false;
   std::unordered_set<entt::entity> currentEntityIds;
-  std::unordered_set<Material*>    activeMaterials;
+  std::unordered_set<ecs::Material*> activeMaterials;
 
   auto& registry = context.scene->getEntityRegistry();
-  auto  view     = registry.view<Transform, RenderModel*>();
+  auto  view     = registry.view<ecs::Transform, ecs::RenderModel*>();
 
   for (auto entity : view) {
     currentEntityIds.insert(entity);
-    auto& transform   = view.get<Transform>(entity);
-    auto& renderModel = view.get<RenderModel*>(entity);
+    auto& transform   = view.get<ecs::Transform>(entity);
+    auto& renderModel = view.get<ecs::RenderModel*>(entity);
 
     for (const auto& renderMesh : renderModel->renderMeshes) {
       if (renderMesh->material) {
@@ -428,15 +428,15 @@ void FrameResources::updateModelList_(const RenderContext& context) {
     auto it = m_modelsMap.find(entity);
     if (it != m_modelsMap.end()) {
       if (transform.isDirty) {
-        it->second.transform   = transform;
-        it->second.modelMatrix = calculateTransformMatrix(transform);
+              it->second.transform   = transform;
+      it->second.modelMatrix = ecs::calculateTransformMatrix(transform);
         it->second.isDirty     = true;
       }
     } else {
       ModelInstance instance;
       instance.model       = renderModel;
-      instance.transform   = transform;
-      instance.modelMatrix = calculateTransformMatrix(transform);
+          instance.transform   = transform;
+    instance.modelMatrix = ecs::calculateTransformMatrix(transform);
       instance.entityId    = entity;
       instance.isDirty     = true;
 
@@ -458,7 +458,7 @@ void FrameResources::updateModelList_(const RenderContext& context) {
     }
   }
 
-  std::vector<Material*> materialsToRemove;
+  std::vector<ecs::Material*> materialsToRemove;
   for (const auto& [material, cache] : m_materialParamCache) {
     if (!activeMaterials.contains(material)) {
       materialsToRemove.push_back(material);
@@ -499,10 +499,10 @@ void FrameResources::clearInternalDirtyFlags_() {
 void FrameResources::clearEntityDirtyFlags_(const RenderContext& context) {
   if (context.scene) {
     auto& registry = context.scene->getEntityRegistry();
-    auto  view     = registry.view<Transform>();
+    auto  view     = registry.view<ecs::Transform>();
 
     for (auto entity : view) {
-      auto& transform = view.get<Transform>(entity);
+      auto& transform = view.get<ecs::Transform>(entity);
       if (transform.isDirty) {
         transform.isDirty = false;
       }

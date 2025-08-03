@@ -10,6 +10,7 @@
 #include <algorithm>
 
 namespace arise {
+namespace ecs {
 
 void CameraInputSystem::update(Scene* scene, float dt) {
   auto& registry = scene->getEntityRegistry();
@@ -101,4 +102,5 @@ void CameraInputSystem::clearCameraInput(Movement& movement) {
   movement.strength  = 0.0f;
 }
 
+}  // namespace ecs
 }  // namespace arise

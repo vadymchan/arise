@@ -7,6 +7,7 @@
 #include <string>
 
 namespace arise {
+namespace ecs {
 
 struct InputActions {
   std::bitset<static_cast<size_t>(InputAction::Count)> actions;
@@ -24,6 +25,7 @@ struct MouseInput {
   void  clearDeltas() { deltaX = deltaY = wheelDelta = 0.0f; }
 };
 
+}  // namespace ecs
 }  // namespace arise
 
 #endif  // ARISE_INPUT_COMPONENTS_H

@@ -15,31 +15,36 @@ struct cgltf_primitive;
 struct cgltf_accessor;
 
 namespace arise {
+namespace ecs {
 struct Mesh;
 struct Model;
 struct BoundingBox;
+}  // namespace ecs
+}  // namespace arise
+
+namespace arise {
 
 class CgltfModelLoader : public IModelLoader {
   public:
   CgltfModelLoader()  = default;
   ~CgltfModelLoader() = default;
 
-  std::unique_ptr<Model> loadModel(const std::filesystem::path& filePath) override;
+  std::unique_ptr<ecs::Model> loadModel(const std::filesystem::path& filePath) override;
 
   private:
-  math::Matrix4f<>      calculateWorldMatrix(cgltf_node* node, const math::Matrix4f<>& localMatrix);
-  bool                  containsMesh(cgltf_node* node);
-  math::Matrix4f<>      getNodeTransformMatrix(const cgltf_node* node);
-  std::unique_ptr<Mesh> processPrimitive(const cgltf_primitive* primitive);
-  void                  processVertices(const cgltf_primitive* primitive, Mesh* mesh);
-  void                  processIndices(const cgltf_primitive* primitive, Mesh* mesh);
-  void                  calculateTangents(Mesh* mesh);
-  BoundingBox           extractBoundingBoxFromAccessor(const cgltf_accessor* positionAccessor);
-  BoundingBox           calculateBoundingBoxFromVertices(const Mesh* mesh);
-  void                  processBoundingBox(Mesh* mesh, const cgltf_primitive* primitive);
+  math::Matrix4f<>           calculateWorldMatrix(cgltf_node* node, const math::Matrix4f<>& localMatrix);
+  bool                       containsMesh(cgltf_node* node);
+  math::Matrix4f<>           getNodeTransformMatrix(const cgltf_node* node);
+  std::unique_ptr<ecs::Mesh> processPrimitive(const cgltf_primitive* primitive);
+  void                       processVertices(const cgltf_primitive* primitive, ecs::Mesh* mesh);
+  void                       processIndices(const cgltf_primitive* primitive, ecs::Mesh* mesh);
+  void                       calculateTangents(ecs::Mesh* mesh);
+  ecs::BoundingBox           extractBoundingBoxFromAccessor(const cgltf_accessor* positionAccessor);
+  ecs::BoundingBox           calculateBoundingBoxFromVertices(const ecs::Mesh* mesh);
+  void                       processBoundingBox(ecs::Mesh* mesh, const cgltf_primitive* primitive);
 
 #ifdef ARISE_USE_MIKKTS
-  void generateMikkTSpaceTangents(Mesh* mesh);
+  void generateMikkTSpaceTangents(ecs::Mesh* mesh);
 #endif
 };
 }  // namespace arise

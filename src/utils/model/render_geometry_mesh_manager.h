@@ -12,22 +12,23 @@ namespace arise {
 
 class RenderGeometryMeshManager {
   public:
-  RenderGeometryMeshManager()  = default;
+  RenderGeometryMeshManager() = default;
   ~RenderGeometryMeshManager();
 
   /**
    * @param sourceMesh Associated CPU mesh for identification
    */
-  RenderGeometryMesh* addRenderGeometryMesh(std::unique_ptr<RenderGeometryMesh> renderGeometryMesh, Mesh* sourceMesh);
+  ecs::RenderGeometryMesh* addRenderGeometryMesh(std::unique_ptr<ecs::RenderGeometryMesh> renderGeometryMesh,
+                                                 ecs::Mesh*                               sourceMesh);
 
-  RenderGeometryMesh* getRenderGeometryMesh(Mesh* sourceMesh);
+  ecs::RenderGeometryMesh* getRenderGeometryMesh(ecs::Mesh* sourceMesh);
 
-  bool removeRenderGeometryMesh(RenderGeometryMesh* gpuMesh);
+  bool removeRenderGeometryMesh(ecs::RenderGeometryMesh* gpuMesh);
 
   private:
   // Map of GPU geometry meshes keyed by CPU mesh pointer
-  std::unordered_map<Mesh*, std::unique_ptr<RenderGeometryMesh>> m_renderGeometryMeshes;
-  mutable std::mutex                                             m_mutex;
+  std::unordered_map<ecs::Mesh*, std::unique_ptr<ecs::RenderGeometryMesh>> m_renderGeometryMeshes;
+  mutable std::mutex                                                       m_mutex;
 };
 
 }  // namespace arise

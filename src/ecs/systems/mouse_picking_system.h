@@ -8,6 +8,7 @@
 #include <vector>
 
 namespace arise {
+namespace ecs {
 
 struct Mesh;
 
@@ -53,6 +54,7 @@ class MousePickingSystem : public IUpdatableSystem {
   ViewportContext* m_viewportContext = nullptr;
 };
 
+}  // namespace ecs
 }  // namespace arise
 
 #endif  // ARISE_MOUSE_PICKING_SYSTEM_H

@@ -348,11 +348,11 @@ bool Renderer::onViewportResize(const math::Dimension2i& newDimension) {
   auto scene = ServiceLocator::s_get<SceneManager>()->getCurrentScene();
   if (scene) {
     auto& registry = scene->getEntityRegistry();
-    auto  view     = registry.view<Camera>();
+    auto  view     = registry.view<ecs::Camera>();
 
     if (!view.empty()) {
       auto  entity  = view.front();
-      auto& camera  = view.get<Camera>(entity);
+      auto& camera  = view.get<ecs::Camera>(entity);
       camera.width  = width;
       camera.height = height;
     }
@@ -643,11 +643,11 @@ void Renderer::recreateResourceManagers_() {
   ServiceLocator::s_provide<RenderGeometryMeshManager>();
   ServiceLocator::s_provide<MaterialManager>();
 
-  auto systemManager = ServiceLocator::s_get<SystemManager>();
+  auto systemManager = ServiceLocator::s_get<ecs::SystemManager>();
   if (systemManager) {
-    auto existingLightSystem = systemManager->getSystem<LightSystem>();
+    auto existingLightSystem = systemManager->getSystem<ecs::LightSystem>();
     if (existingLightSystem) {
-      systemManager->replaceSystem<LightSystem>(m_device.get(), m_resourceManager.get());
+      systemManager->replaceSystem<ecs::LightSystem>(m_device.get(), m_resourceManager.get());
     }
   }
 
@@ -668,12 +668,12 @@ void Renderer::reloadSceneModels_() {
   auto& registry = scene->getEntityRegistry();
 
   // Consider *all* entities with a CPU model. GPU model may or may not be present.
-  auto viewAll = registry.view<Model*>();
+  auto viewAll = registry.view<ecs::Model*>();
 
   std::vector<std::pair<entt::entity, std::filesystem::path>> entitiesToUpdate;
 
   for (auto entity : viewAll) {
-    auto* cpuModel = registry.get<Model*>(entity);
+    auto* cpuModel = registry.get<ecs::Model*>(entity);
     if (cpuModel && !cpuModel->filePath.empty()) {
       entitiesToUpdate.emplace_back(entity, cpuModel->filePath);
       GlobalLogger::Log(LogLevel::Info,
@@ -683,7 +683,7 @@ void Renderer::reloadSceneModels_() {
   }
 
   // Remove any stale GPU pointers before recreating them.
-  registry.clear<RenderModel*>();
+  registry.clear<ecs::RenderModel*>();
 
   auto renderModelManager = ServiceLocator::s_get<RenderModelManager>();
   if (!renderModelManager) {
@@ -698,11 +698,11 @@ void Renderer::reloadSceneModels_() {
       continue;
     }
 
-    Model* cpuModel       = nullptr;
+    ecs::Model* cpuModel       = nullptr;
     auto*  newRenderModel = renderModelManager->getRenderModel(modelPath.string(), &cpuModel);
 
     if (newRenderModel) {
-      registry.emplace<RenderModel*>(entity, newRenderModel);
+      registry.emplace<ecs::RenderModel*>(entity, newRenderModel);
 
       GlobalLogger::Log(LogLevel::Info,
                         "Entity " + std::to_string(static_cast<uint32_t>(entity))

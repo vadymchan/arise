@@ -5,6 +5,7 @@
 #include "utils/logger/global_logger.h"
 
 namespace arise {
+namespace ecs {
 
 // TODO: In future, when other than UpdatableSystems will be introduced,
 // consider to separate SystemManager to SubSystems like UpdatableSystemManager,
@@ -57,6 +58,7 @@ class SystemManager {
   std::vector<std::unique_ptr<IUpdatableSystem>> m_systems_;
 };
 
+}  // namespace ecs
 }  // namespace arise
 
 #endif  // ARISE_SYSTEM_MANAGER_H

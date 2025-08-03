@@ -4,6 +4,7 @@
 #include "ecs/systems/i_updatable_system.h"
 
 namespace arise {
+namespace ecs {
 
 /**
  * System for managing and updating bounding volumes of entities
@@ -20,6 +21,7 @@ class BoundingVolumeSystem : public IUpdatableSystem {
   void updateEntityWorldBounds_(entt::entity entity, Scene* scene);
 };
 
+}  // namespace ecs
 }  // namespace arise
 
 #endif  // ARISE_BOUNDING_VOLUME_SYSTEM_H

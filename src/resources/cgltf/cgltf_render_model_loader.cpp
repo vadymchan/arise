@@ -19,8 +19,8 @@
 
 namespace arise {
 
-std::unique_ptr<RenderModel> CgltfRenderModelLoader::loadRenderModel(const std::filesystem::path& filePath,
-                                                                     Model**                      outModelPtr) {
+std::unique_ptr<ecs::RenderModel> CgltfRenderModelLoader::loadRenderModel(const std::filesystem::path& filePath,
+                                                                     ecs::Model**                      outModelPtr) {
   auto scene = CgltfSceneCache::getOrLoad(filePath);
   if (!scene) {
     GlobalLogger::Log(LogLevel::Error, "Failed to load GLTF scene for material mapping: " + filePath.string());
@@ -53,7 +53,7 @@ std::unique_ptr<RenderModel> CgltfRenderModelLoader::loadRenderModel(const std::
 
   auto materialPointers = materialManager->getMaterials(filePath);
 
-  auto renderModel      = std::make_unique<RenderModel>();
+  auto renderModel      = std::make_unique<ecs::RenderModel>();
   renderModel->filePath = filePath;
 
   auto& meshes = cpuModelPtr->meshes;
@@ -64,7 +64,7 @@ std::unique_ptr<RenderModel> CgltfRenderModelLoader::loadRenderModel(const std::
     cgltf_mesh* gltf_mesh = &data->meshes[i];
 
     for (size_t j = 0; j < gltf_mesh->primitives_count && meshIndex < meshes.size(); ++j) {
-      Mesh* meshPtr = meshes[meshIndex++];
+      ecs::Mesh* meshPtr = meshes[meshIndex++];
 
       auto renderGeometryMesh = createRenderGeometryMesh(meshPtr);
       if (!renderGeometryMesh || !renderGeometryMesh->vertexBuffer || !renderGeometryMesh->indexBuffer) {
@@ -82,7 +82,7 @@ std::unique_ptr<RenderModel> CgltfRenderModelLoader::loadRenderModel(const std::
         return nullptr;
       }
 
-      Material*              materialPtr = nullptr;
+      ecs::Material*         materialPtr = nullptr;
       const cgltf_primitive* primitive   = &gltf_mesh->primitives[j];
       if (primitive->material) {
         for (size_t materialIndex = 0; materialIndex < data->materials_count; ++materialIndex) {
@@ -125,8 +125,8 @@ std::unique_ptr<RenderModel> CgltfRenderModelLoader::loadRenderModel(const std::
   return renderModel;
 }
 
-std::unique_ptr<RenderGeometryMesh> CgltfRenderModelLoader::createRenderGeometryMesh(Mesh* mesh) {
-  auto renderGeometryMesh = std::make_unique<RenderGeometryMesh>();
+std::unique_ptr<ecs::RenderGeometryMesh> CgltfRenderModelLoader::createRenderGeometryMesh(ecs::Mesh* mesh) {
+  auto renderGeometryMesh = std::make_unique<ecs::RenderGeometryMesh>();
 
   renderGeometryMesh->vertexBuffer = createVertexBuffer(mesh);
   renderGeometryMesh->indexBuffer  = createIndexBuffer(mesh);
@@ -134,7 +134,7 @@ std::unique_ptr<RenderGeometryMesh> CgltfRenderModelLoader::createRenderGeometry
   return renderGeometryMesh;
 }
 
-gfx::rhi::Buffer* CgltfRenderModelLoader::createVertexBuffer(const Mesh* mesh) {
+gfx::rhi::Buffer* CgltfRenderModelLoader::createVertexBuffer(const ecs::Mesh* mesh) {
   auto bufferManager = ServiceLocator::s_get<BufferManager>();
   if (!bufferManager) {
     GlobalLogger::Log(LogLevel::Error, "Cannot create vertex buffer, BufferManager not found");
@@ -144,10 +144,10 @@ gfx::rhi::Buffer* CgltfRenderModelLoader::createVertexBuffer(const Mesh* mesh) {
   std::string bufferName  = "VertexBuffer_";
   bufferName             += mesh->meshName.empty() ? "Unnamed" : mesh->meshName;
 
-  return bufferManager->createVertexBuffer(mesh->vertices.data(), mesh->vertices.size(), sizeof(Vertex), bufferName);
+  return bufferManager->createVertexBuffer(mesh->vertices.data(), mesh->vertices.size(), sizeof(ecs::Vertex), bufferName);
 }
 
-gfx::rhi::Buffer* CgltfRenderModelLoader::createIndexBuffer(const Mesh* mesh) {
+gfx::rhi::Buffer* CgltfRenderModelLoader::createIndexBuffer(const ecs::Mesh* mesh) {
   auto bufferManager = ServiceLocator::s_get<BufferManager>();
   if (!bufferManager) {
     GlobalLogger::Log(LogLevel::Error, "Cannot create index buffer, BufferManager not found");

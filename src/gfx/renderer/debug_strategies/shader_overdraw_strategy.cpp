@@ -46,8 +46,8 @@ void ShaderOverdrawStrategy::resize(const math::Dimension2i& newDimension) {
 }
 
 void ShaderOverdrawStrategy::prepareFrame(const RenderContext& context) {
-  std::unordered_map<RenderModel*, std::vector<math::Matrix4f<>>> currentFrameInstances;
-  std::unordered_map<RenderModel*, bool>                          modelDirtyFlags;
+  std::unordered_map<ecs::RenderModel*, std::vector<math::Matrix4f<>>> currentFrameInstances;
+  std::unordered_map<ecs::RenderModel*, bool>                          modelDirtyFlags;
 
   for (const auto& instance : m_frameResources->getModels()) {
     currentFrameInstances[instance->model].push_back(instance->modelMatrix);
@@ -185,7 +185,7 @@ void ShaderOverdrawStrategy::createFramebuffers_(const math::Dimension2i& dimens
   }
 }
 
-void ShaderOverdrawStrategy::updateInstanceBuffer_(RenderModel*                         model,
+void ShaderOverdrawStrategy::updateInstanceBuffer_(ecs::RenderModel*                    model,
                                                    const std::vector<math::Matrix4f<>>& matrices,
                                                    ModelBufferCache&                    cache) {
   if (!cache.instanceBuffer || matrices.size() > cache.capacity) {
@@ -240,7 +240,7 @@ void ShaderOverdrawStrategy::prepareDrawCalls_(const RenderContext& context) {
 
         rhi::VertexInputBindingDesc vertexBinding;
         vertexBinding.binding   = 0;
-        vertexBinding.stride    = sizeof(Vertex);
+        vertexBinding.stride    = sizeof(ecs::Vertex);
         vertexBinding.inputRate = rhi::VertexInputRate::Vertex;
         pipelineDesc.vertexBindings.push_back(vertexBinding);
 
@@ -254,7 +254,7 @@ void ShaderOverdrawStrategy::prepareDrawCalls_(const RenderContext& context) {
         positionAttr.location     = 0;
         positionAttr.binding      = 0;
         positionAttr.format       = rhi::TextureFormat::Rgb32f;
-        positionAttr.offset       = offsetof(Vertex, position);
+        positionAttr.offset       = offsetof(ecs::Vertex, position);
         positionAttr.semanticName = "POSITION";
         pipelineDesc.vertexAttributes.push_back(positionAttr);
 
@@ -321,8 +321,8 @@ void ShaderOverdrawStrategy::prepareDrawCalls_(const RenderContext& context) {
 }
 
 void ShaderOverdrawStrategy::cleanupUnusedBuffers_(
-    const std::unordered_map<RenderModel*, std::vector<math::Matrix4f<>>>& currentFrameInstances) {
-  std::vector<RenderModel*> modelsToRemove;
+    const std::unordered_map<ecs::RenderModel*, std::vector<math::Matrix4f<>>>& currentFrameInstances) {
+  std::vector<ecs::RenderModel*> modelsToRemove;
 
   for (const auto& [model, cache] : m_instanceBufferCache) {
     if (!currentFrameInstances.contains(model)) {

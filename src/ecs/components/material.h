@@ -10,6 +10,7 @@
 #include <unordered_map>
 
 namespace arise {
+namespace ecs {
 
 struct Material {
   std::string materialName;
@@ -32,6 +33,7 @@ struct Material {
   std::unordered_map<std::string, gfx::rhi::Texture*> textures;
 };
 
+}  // namespace ecs
 }  // namespace arise
 
 #endif  // ARISE_MATERIAL_H

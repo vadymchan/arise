@@ -6,6 +6,7 @@
 #include "utils/logger/global_logger.h"
 
 namespace arise {
+namespace ecs {
 
 void BoundingVolumeSystem::update(Scene* scene, float deltaTime) {
   if (!scene) {
@@ -75,4 +76,5 @@ void BoundingVolumeSystem::updateEntityWorldBounds_(entt::entity entity, Scene* 
                         + std::to_string(static_cast<uint32_t>(entity)) + " using model: " + model->filePath.string());
 }
 
+}  // namespace ecs
 }  // namespace arise

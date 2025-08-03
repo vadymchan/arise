@@ -43,18 +43,18 @@ bool GameInputProcessor::handleKeyboard(const SDL_Event& event) {
   }
 
   auto& registry   = scene->getEntityRegistry();
-  auto  cameraView = registry.view<Camera, InputActions, ViewportTag>();
+  auto  cameraView = registry.view<ecs::Camera, ecs::InputActions, ecs::ViewportTag>();
 
   if (cameraView.begin() == cameraView.end()) {
     return false;
   }
 
   for (auto entity : cameraView) {
-    const auto& viewportTag = cameraView.get<ViewportTag>(entity);
+    const auto& viewportTag = cameraView.get<ecs::ViewportTag>(entity);
     if (m_viewportContext && !m_viewportContext->isViewportFocused(viewportTag.id)) {
       continue;
     }
-    auto& actions = cameraView.get<InputActions>(entity);
+    auto& actions = cameraView.get<ecs::InputActions>(entity);
 
     switch (event.type) {
       case SDL_KEYDOWN:
@@ -84,18 +84,18 @@ bool GameInputProcessor::handleMouse(const SDL_Event& event) {
   }
 
   auto& registry   = scene->getEntityRegistry();
-  auto  cameraView = registry.view<Camera, MouseInput, ViewportTag>();
+  auto  cameraView = registry.view<ecs::Camera, ecs::MouseInput, ecs::ViewportTag>();
 
   if (cameraView.begin() == cameraView.end()) {
     return false;
   }
 
   for (auto entity : cameraView) {
-    const auto& viewportTag = cameraView.get<ViewportTag>(entity);
+    const auto& viewportTag = cameraView.get<ecs::ViewportTag>(entity);
     if (m_viewportContext && !m_viewportContext->isViewportFocused(viewportTag.id)) {
       continue;
     }
-    auto& mouse = cameraView.get<MouseInput>(entity);
+    auto& mouse = cameraView.get<ecs::MouseInput>(entity);
 
     switch (event.type) {
       case SDL_MOUSEMOTION:

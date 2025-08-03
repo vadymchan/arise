@@ -16,14 +16,14 @@ class RenderModelManager {
   RenderModelManager() = default;
   ~RenderModelManager();
 
-  RenderModel* getRenderModel(const std::filesystem::path& filepath, Model** outModel = nullptr);
+  ecs::RenderModel* getRenderModel(const std::filesystem::path& filepath, ecs::Model** outModel = nullptr);
 
   bool hasRenderModel(const std::filesystem::path& filepath) const;
 
-  bool removeRenderModel(RenderModel* renderModel);
+  bool removeRenderModel(ecs::RenderModel* renderModel);
 
   private:
-  std::unordered_map<std::filesystem::path, std::unique_ptr<RenderModel>> renderModelCache_;
+  std::unordered_map<std::filesystem::path, std::unique_ptr<ecs::RenderModel>> renderModelCache_;
   mutable std::shared_mutex                                               mutex_;
 };
 

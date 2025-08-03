@@ -59,18 +59,18 @@ void SceneSaver::serializeRegistry(const Registry&                   registry,
 
     std::string entityName = "Entity_" + std::to_string(static_cast<uint32_t>(entity));
 
-    if (registry.all_of<Camera>(entity)) {
+    if (registry.all_of<ecs::Camera>(entity)) {
       entityName = "MainCamera";
-    } else if (registry.all_of<RenderModel*>(entity)) {
-      auto* model = registry.get<RenderModel*>(entity);
+    } else if (registry.all_of<ecs::RenderModel*>(entity)) {
+      auto* model = registry.get<ecs::RenderModel*>(entity);
       if (model && !model->filePath.empty()) {
         entityName = "Model_" + model->filePath.filename().string();
       }
-    } else if (registry.all_of<Light, DirectionalLight>(entity)) {
+    } else if (registry.all_of<ecs::Light, ecs::DirectionalLight>(entity)) {
       entityName = "DirectionalLight";
-    } else if (registry.all_of<Light, PointLight>(entity)) {
+    } else if (registry.all_of<ecs::Light, ecs::PointLight>(entity)) {
       entityName = "PointLight";
-    } else if (registry.all_of<Light, SpotLight>(entity)) {
+    } else if (registry.all_of<ecs::Light, ecs::SpotLight>(entity)) {
       entityName = "SpotLight";
     }
 
@@ -78,77 +78,77 @@ void SceneSaver::serializeRegistry(const Registry&                   registry,
 
     rapidjson::Value componentsArray(rapidjson::kArrayType);
 
-    if (registry.all_of<Transform>(entity)) {
+    if (registry.all_of<ecs::Transform>(entity)) {
       rapidjson::Value componentObject(rapidjson::kObjectType);
       componentObject.AddMember("type", rapidjson::Value("transform", allocator), allocator);
 
-      const auto& transform = registry.get<Transform>(entity);
+      const auto& transform = registry.get<ecs::Transform>(entity);
       serializeTransform(transform, componentObject, allocator);
 
       componentsArray.PushBack(componentObject, allocator);
     }
 
-    if (registry.all_of<Camera>(entity)) {
+    if (registry.all_of<ecs::Camera>(entity)) {
       rapidjson::Value componentObject(rapidjson::kObjectType);
       componentObject.AddMember("type", rapidjson::Value("camera", allocator), allocator);
 
-      const auto& camera = registry.get<Camera>(entity);
+      const auto& camera = registry.get<ecs::Camera>(entity);
       serializeCamera(camera, componentObject, allocator);
 
       componentsArray.PushBack(componentObject, allocator);
     }
 
-    if (registry.all_of<Movement>(entity)) {
+    if (registry.all_of<ecs::Movement>(entity)) {
       rapidjson::Value componentObject(rapidjson::kObjectType);
       componentObject.AddMember("type", rapidjson::Value("movement", allocator), allocator);
 
       componentsArray.PushBack(componentObject, allocator);
     }
 
-    if (registry.all_of<RenderModel*>(entity)) {
+    if (registry.all_of<ecs::RenderModel*>(entity)) {
       rapidjson::Value componentObject(rapidjson::kObjectType);
       componentObject.AddMember("type", rapidjson::Value("model", allocator), allocator);
 
-      auto* model = registry.get<RenderModel*>(entity);
+      auto* model = registry.get<ecs::RenderModel*>(entity);
       serializeModel(model, componentObject, allocator);
 
       componentsArray.PushBack(componentObject, allocator);
     }
 
-    if (registry.all_of<Light>(entity)) {
+    if (registry.all_of<ecs::Light>(entity)) {
       rapidjson::Value componentObject(rapidjson::kObjectType);
       componentObject.AddMember("type", rapidjson::Value("light", allocator), allocator);
 
-      const auto& light = registry.get<Light>(entity);
+      const auto& light = registry.get<ecs::Light>(entity);
       serializeLight(light, componentObject, allocator);
 
       componentsArray.PushBack(componentObject, allocator);
 
-      if (registry.all_of<DirectionalLight>(entity)) {
+      if (registry.all_of<ecs::DirectionalLight>(entity)) {
         rapidjson::Value dirLightObject(rapidjson::kObjectType);
         dirLightObject.AddMember("type", rapidjson::Value("directionalLight", allocator), allocator);
 
-        const auto& dirLight = registry.get<DirectionalLight>(entity);
+        const auto& dirLight = registry.get<ecs::DirectionalLight>(entity);
         serializeDirectionalLight(dirLight, dirLightObject, allocator);
 
         componentsArray.PushBack(dirLightObject, allocator);
       }
 
-      else if (registry.all_of<PointLight>(entity)) {
+      else if (registry.all_of<ecs::PointLight>(entity)) {
         rapidjson::Value pointLightObject(rapidjson::kObjectType);
         pointLightObject.AddMember("type", rapidjson::Value("pointLight", allocator), allocator);
 
-        const auto& pointLight = registry.get<PointLight>(entity);
+        const auto& pointLight = registry.get<ecs::PointLight>(entity);
         serializePointLight(pointLight, pointLightObject, allocator);
 
         componentsArray.PushBack(pointLightObject, allocator);
       }
 
-      else if (registry.all_of<SpotLight>(entity)) {
+      else if (registry.all_of<ecs::SpotLight>(entity)) {
         rapidjson::Value spotLightObject(rapidjson::kObjectType);
         spotLightObject.AddMember("type", rapidjson::Value("spotLight", allocator), allocator);
 
-        const auto& spotLight = registry.get<SpotLight>(entity);
+        const auto& spotLight = registry.get<ecs::SpotLight>(entity);
         serializeSpotLight(spotLight, spotLightObject, allocator);
 
         componentsArray.PushBack(spotLightObject, allocator);
@@ -163,7 +163,7 @@ void SceneSaver::serializeRegistry(const Registry&                   registry,
   document.AddMember("entities", entitiesArray, allocator);
 }
 
-void SceneSaver::serializeTransform(const Transform&                  transform,
+void SceneSaver::serializeTransform(const ecs::Transform&             transform,
                                     rapidjson::Value&                 componentValue,
                                     rapidjson::MemoryPoolAllocator<>& allocator) {
   rapidjson::Value positionArray(rapidjson::kArrayType);
@@ -187,10 +187,10 @@ void SceneSaver::serializeTransform(const Transform&                  transform,
   componentValue.AddMember("scale", scaleArray, allocator);
 }
 
-void SceneSaver::serializeCamera(const Camera&                     camera,
+void SceneSaver::serializeCamera(const ecs::Camera&                camera,
                                  rapidjson::Value&                 componentValue,
                                  rapidjson::MemoryPoolAllocator<>& allocator) {
-  if (camera.type == CameraType::Perspective) {
+  if (camera.type == ecs::CameraType::Perspective) {
     componentValue.AddMember("cameraType", rapidjson::Value("perspective", allocator), allocator);
   } else {
     componentValue.AddMember("cameraType", rapidjson::Value("orthographic", allocator), allocator);
@@ -203,7 +203,7 @@ void SceneSaver::serializeCamera(const Camera&                     camera,
   componentValue.AddMember("height", camera.height, allocator);
 }
 
-void SceneSaver::serializeLight(const Light&                      light,
+void SceneSaver::serializeLight(const ecs::Light&                 light,
                                 rapidjson::Value&                 componentValue,
                                 rapidjson::MemoryPoolAllocator<>& allocator) {
   rapidjson::Value colorArray(rapidjson::kArrayType);
@@ -215,7 +215,7 @@ void SceneSaver::serializeLight(const Light&                      light,
   componentValue.AddMember("intensity", light.intensity, allocator);
 }
 
-void SceneSaver::serializeDirectionalLight(const DirectionalLight&           dirLight,
+void SceneSaver::serializeDirectionalLight(const ecs::DirectionalLight&      dirLight,
                                            rapidjson::Value&                 componentValue,
                                            rapidjson::MemoryPoolAllocator<>& allocator) {
   rapidjson::Value directionArray(rapidjson::kArrayType);
@@ -225,13 +225,13 @@ void SceneSaver::serializeDirectionalLight(const DirectionalLight&           dir
   componentValue.AddMember("direction", directionArray, allocator);
 }
 
-void SceneSaver::serializePointLight(const PointLight&                 pointLight,
+void SceneSaver::serializePointLight(const ecs::PointLight&            pointLight,
                                      rapidjson::Value&                 componentValue,
                                      rapidjson::MemoryPoolAllocator<>& allocator) {
   componentValue.AddMember("range", pointLight.range, allocator);
 }
 
-void SceneSaver::serializeSpotLight(const SpotLight&                  spotLight,
+void SceneSaver::serializeSpotLight(const ecs::SpotLight&             spotLight,
                                     rapidjson::Value&                 componentValue,
                                     rapidjson::MemoryPoolAllocator<>& allocator) {
   componentValue.AddMember("range", spotLight.range, allocator);
@@ -240,7 +240,7 @@ void SceneSaver::serializeSpotLight(const SpotLight&                  spotLight,
   componentValue.AddMember("outerConeAngle", spotLight.outerConeAngle, allocator);
 }
 
-void SceneSaver::serializeModel(const RenderModel*                model,
+void SceneSaver::serializeModel(const ecs::RenderModel*           model,
                                 rapidjson::Value&                 componentValue,
                                 rapidjson::MemoryPoolAllocator<>& allocator) {
   if (model && !model->filePath.empty()) {

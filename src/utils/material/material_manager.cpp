@@ -26,12 +26,12 @@ MaterialManager::~MaterialManager() {
   }
 }
 
-std::vector<Material*> MaterialManager::getMaterials(const std::filesystem::path& filepath) {
+std::vector<ecs::Material*> MaterialManager::getMaterials(const std::filesystem::path& filepath) {
   std::lock_guard<std::mutex> lock(m_mutex_);
 
   auto it = materialCache_.find(filepath);
   if (it != materialCache_.end()) {
-    std::vector<Material*> result;
+    std::vector<ecs::Material*> result;
     for (const auto& material : it->second) {
       result.push_back(material.get());
     }
@@ -46,7 +46,7 @@ std::vector<Material*> MaterialManager::getMaterials(const std::filesystem::path
 
   auto materials = materialLoaderManager->loadMaterials(filepath);
   if (!materials.empty()) {
-    std::vector<Material*> result;
+    std::vector<ecs::Material*> result;
 
     auto& cacheEntry = materialCache_[filepath];
 
@@ -63,7 +63,7 @@ std::vector<Material*> MaterialManager::getMaterials(const std::filesystem::path
   return {};
 }
 
-bool MaterialManager::removeMaterial(Material* material) {
+bool MaterialManager::removeMaterial(ecs::Material* material) {
   if (!material) {
     GlobalLogger::Log(LogLevel::Error, "Cannot remove null material");
     return false;
@@ -75,7 +75,7 @@ bool MaterialManager::removeMaterial(Material* material) {
     auto& materialVec = it->second;
     auto  materialIt  = std::find_if(materialVec.begin(),
                                    materialVec.end(),
-                                   [material](const std::unique_ptr<Material>& m) { return m.get() == material; });
+                                   [material](const std::unique_ptr<ecs::Material>& m) { return m.get() == material; });
 
     if (materialIt != materialVec.end()) {
       GlobalLogger::Log(LogLevel::Info, "Removing material: " + material->materialName);

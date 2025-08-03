@@ -6,8 +6,8 @@ void RenderModelLoaderManager::registerLoader(ModelType modelType, std::shared_p
   loaderMap_[modelType] = std::move(loader);
 }
 
-std::unique_ptr<RenderModel> RenderModelLoaderManager::loadRenderModel(const std::filesystem::path& filePath,
-                                                                       Model**                      outModel) {
+std::unique_ptr<ecs::RenderModel> RenderModelLoaderManager::loadRenderModel(const std::filesystem::path& filePath,
+                                                                            ecs::Model**                 outModel) {
   std::string extension = filePath.extension().string();
   std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
   ModelType modelType = getModelTypeFromExtension(extension);

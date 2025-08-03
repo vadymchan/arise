@@ -277,7 +277,7 @@ class AssetLoader {
     GlobalLogger::Log(LogLevel::Info, "Loading model: " + filepath.string());
 
     if (auto renderModelManager = ServiceLocator::s_get<RenderModelManager>()) {
-      RenderModel* gpuModel = renderModelManager->getRenderModel(filepath);
+      ecs::RenderModel* gpuModel = renderModelManager->getRenderModel(filepath);
       if (gpuModel) {
         GlobalLogger::Log(LogLevel::Info, "Successfully loaded GPU model: " + filepath.string());
         return true;
@@ -287,8 +287,8 @@ class AssetLoader {
     }
 
     if (auto cpuModelManager = ServiceLocator::s_get<ModelManager>()) {
-      Model* cpuModel = cpuModelManager->getModel(filepath);
-      bool   success  = (cpuModel != nullptr);
+      ecs::Model* cpuModel = cpuModelManager->getModel(filepath);
+      bool        success  = (cpuModel != nullptr);
 
       if (success) {
         GlobalLogger::Log(LogLevel::Info, "Successfully loaded CPU model (no GPU resources yet): " + filepath.string());

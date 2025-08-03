@@ -4,6 +4,7 @@
 #include <math_library/vector.h>
 
 namespace arise {
+namespace ecs {
 
 struct Vertex {
   math::Vector3f position;
@@ -14,6 +15,7 @@ struct Vertex {
   math::Vector4f color;
 };
 
+}  // namespace ecs
 }  // namespace arise
 
 #endif  // ARISE_VERTEX_H

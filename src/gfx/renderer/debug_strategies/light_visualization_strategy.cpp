@@ -61,8 +61,8 @@ void LightVisualizationStrategy::resize(const math::Dimension2i& newDimension) {
 }
 
 void LightVisualizationStrategy::prepareFrame(const RenderContext& context) {
-  std::unordered_map<RenderModel*, std::vector<math::Matrix4f<>>> currentFrameInstances;
-  std::unordered_map<RenderModel*, bool>                          modelDirtyFlags;
+  std::unordered_map<ecs::RenderModel*, std::vector<math::Matrix4f<>>> currentFrameInstances;
+  std::unordered_map<ecs::RenderModel*, bool>                          modelDirtyFlags;
 
   for (const auto& instance : m_frameResources->getModels()) {
     currentFrameInstances[instance->model].push_back(instance->modelMatrix);
@@ -172,7 +172,7 @@ void LightVisualizationStrategy::cleanup() {
   m_pixelShader  = nullptr;
 }
 
-rhi::DescriptorSet* LightVisualizationStrategy::getOrCreateMaterialDescriptorSet_(Material* material) {
+rhi::DescriptorSet* LightVisualizationStrategy::getOrCreateMaterialDescriptorSet_(ecs::Material* material) {
   if (!material) {
     GlobalLogger::Log(LogLevel::Error, "Material is null");
     return nullptr;
@@ -188,7 +188,7 @@ rhi::DescriptorSet* LightVisualizationStrategy::getOrCreateMaterialDescriptorSet
   auto descriptorSetPtr = m_resourceManager->getDescriptorSet(descriptorKey);
   if (!descriptorSetPtr) {
     auto descriptorSet = m_device->createDescriptorSet(m_materialDescriptorSetLayout);
-    
+
     // Update the descriptor set BEFORE adding it to the resource manager
     rhi::Texture* normalMapTexture = nullptr;
     auto          normalMapIt      = material->textures.find("normal_map");
@@ -200,7 +200,7 @@ rhi::DescriptorSet* LightVisualizationStrategy::getOrCreateMaterialDescriptorSet
     }
 
     descriptorSet->setTexture(0, normalMapTexture);
-    
+
     descriptorSetPtr = m_resourceManager->addDescriptorSet(std::move(descriptorSet), descriptorKey);
   }
 
@@ -268,7 +268,7 @@ void LightVisualizationStrategy::createFramebuffers_(const math::Dimension2i& di
   }
 }
 
-void LightVisualizationStrategy::updateInstanceBuffer_(RenderModel*                         model,
+void LightVisualizationStrategy::updateInstanceBuffer_(ecs::RenderModel*                    model,
                                                        const std::vector<math::Matrix4f<>>& matrices,
                                                        ModelBufferCache&                    cache) {
   if (!cache.instanceBuffer || matrices.size() > cache.capacity) {
@@ -330,7 +330,7 @@ void LightVisualizationStrategy::prepareDrawCalls_(const RenderContext& context)
 
         rhi::VertexInputBindingDesc vertexBinding;
         vertexBinding.binding   = 0;
-        vertexBinding.stride    = sizeof(Vertex);
+        vertexBinding.stride    = sizeof(ecs::Vertex);
         vertexBinding.inputRate = rhi::VertexInputRate::Vertex;
         pipelineDesc.vertexBindings.push_back(vertexBinding);
 
@@ -344,7 +344,7 @@ void LightVisualizationStrategy::prepareDrawCalls_(const RenderContext& context)
         positionAttr.location     = 0;
         positionAttr.binding      = 0;
         positionAttr.format       = rhi::TextureFormat::Rgb32f;
-        positionAttr.offset       = offsetof(Vertex, position);
+        positionAttr.offset       = offsetof(ecs::Vertex, position);
         positionAttr.semanticName = "POSITION";
         pipelineDesc.vertexAttributes.push_back(positionAttr);
 
@@ -352,7 +352,7 @@ void LightVisualizationStrategy::prepareDrawCalls_(const RenderContext& context)
         texCoordAttr.location     = 1;
         texCoordAttr.binding      = 0;
         texCoordAttr.format       = rhi::TextureFormat::Rg32f;
-        texCoordAttr.offset       = offsetof(Vertex, texCoords);
+        texCoordAttr.offset       = offsetof(ecs::Vertex, texCoords);
         texCoordAttr.semanticName = "TEXCOORD";
         pipelineDesc.vertexAttributes.push_back(texCoordAttr);
 
@@ -360,7 +360,7 @@ void LightVisualizationStrategy::prepareDrawCalls_(const RenderContext& context)
         normalAttr.location     = 2;
         normalAttr.binding      = 0;
         normalAttr.format       = rhi::TextureFormat::Rgb32f;
-        normalAttr.offset       = offsetof(Vertex, normal);
+        normalAttr.offset       = offsetof(ecs::Vertex, normal);
         normalAttr.semanticName = "NORMAL";
         pipelineDesc.vertexAttributes.push_back(normalAttr);
 
@@ -368,7 +368,7 @@ void LightVisualizationStrategy::prepareDrawCalls_(const RenderContext& context)
         tangentAttr.location     = 3;
         tangentAttr.binding      = 0;
         tangentAttr.format       = rhi::TextureFormat::Rgb32f;
-        tangentAttr.offset       = offsetof(Vertex, tangent);
+        tangentAttr.offset       = offsetof(ecs::Vertex, tangent);
         tangentAttr.semanticName = "TANGENT";
         pipelineDesc.vertexAttributes.push_back(tangentAttr);
 
@@ -376,7 +376,7 @@ void LightVisualizationStrategy::prepareDrawCalls_(const RenderContext& context)
         bitangentAttr.location     = 4;
         bitangentAttr.binding      = 0;
         bitangentAttr.format       = rhi::TextureFormat::Rgb32f;
-        bitangentAttr.offset       = offsetof(Vertex, bitangent);
+        bitangentAttr.offset       = offsetof(ecs::Vertex, bitangent);
         bitangentAttr.semanticName = "BITANGENT";
         pipelineDesc.vertexAttributes.push_back(bitangentAttr);
 
@@ -442,8 +442,8 @@ void LightVisualizationStrategy::prepareDrawCalls_(const RenderContext& context)
 }
 
 void LightVisualizationStrategy::cleanupUnusedBuffers_(
-    const std::unordered_map<RenderModel*, std::vector<math::Matrix4f<>>>& currentFrameInstances) {
-  std::vector<RenderModel*> modelsToRemove;
+    const std::unordered_map<ecs::RenderModel*, std::vector<math::Matrix4f<>>>& currentFrameInstances) {
+  std::vector<ecs::RenderModel*> modelsToRemove;
   for (const auto& [model, cache] : m_instanceBufferCache) {
     if (!currentFrameInstances.contains(model)) {
       modelsToRemove.push_back(model);
@@ -453,7 +453,7 @@ void LightVisualizationStrategy::cleanupUnusedBuffers_(
     m_instanceBufferCache.erase(model);
   }
 
-  std::unordered_set<Material*> activeMaterials;
+  std::unordered_set<ecs::Material*> activeMaterials;
 
   for (const auto& [model, matrices] : currentFrameInstances) {
     for (const auto& renderMesh : model->renderMeshes) {
@@ -463,7 +463,7 @@ void LightVisualizationStrategy::cleanupUnusedBuffers_(
     }
   }
 
-  std::vector<Material*> materialsToRemove;
+  std::vector<ecs::Material*> materialsToRemove;
   for (const auto& [material, cache] : m_materialCache) {
     if (!activeMaterials.contains(material)) {
       materialsToRemove.push_back(material);

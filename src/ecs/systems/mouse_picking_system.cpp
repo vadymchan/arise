@@ -16,6 +16,7 @@
 #include <limits>
 
 namespace arise {
+namespace ecs {
 
 void MousePickingSystem::update(Scene* scene, float deltaTime) {
   // This system primarily responds to input events
@@ -250,4 +251,5 @@ bool MousePickingSystem::rayIntersectsMesh_(const math::Rayf<>&     ray,
   return anyHit;
 }
 
+}  // namespace ecs
 }  // namespace arise

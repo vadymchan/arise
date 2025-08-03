@@ -19,17 +19,17 @@ class CgltfMaterialLoader : public IMaterialLoader {
   CgltfMaterialLoader()  = default;
   ~CgltfMaterialLoader() = default;
 
-  std::vector<std::unique_ptr<Material>> loadMaterials(const std::filesystem::path& filePath) override;
+  std::vector<std::unique_ptr<ecs::Material>> loadMaterials(const std::filesystem::path& filePath) override;
 
   private:
-  std::vector<std::unique_ptr<Material>> processMaterials(const cgltf_data*            data,
-                                                          const std::filesystem::path& filePath);
+  std::vector<std::unique_ptr<ecs::Material>> processMaterials(const cgltf_data*            data,
+                                                               const std::filesystem::path& filePath);
 
-  std::unique_ptr<Material> processMaterial(const cgltf_material*        material,
+  std::unique_ptr<ecs::Material> processMaterial(const cgltf_material*        material,
                                             const std::filesystem::path& filePath,
                                             size_t                       materialIndex);
 
-  void loadTextures(const cgltf_material* material, Material* outMaterial, const std::filesystem::path& basePath);
+  void loadTextures(const cgltf_material* material, ecs::Material* outMaterial, const std::filesystem::path& basePath);
 
   gfx::rhi::Texture* loadTexture(const cgltf_image*           image,
                                  const std::filesystem::path& basePath,

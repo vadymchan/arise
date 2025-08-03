@@ -52,17 +52,17 @@ void BoundingBoxVisualizationStrategy::resize(const math::Dimension2i& newDimens
 }
 
 void BoundingBoxVisualizationStrategy::prepareFrame(const RenderContext& context) {
-  std::unordered_map<RenderModel*, std::vector<BoundingBoxData>> currentFrameInstances;
-  std::unordered_map<RenderModel*, bool>                         modelDirtyFlags;
+  std::unordered_map<ecs::RenderModel*, std::vector<BoundingBoxData>> currentFrameInstances;
+  std::unordered_map<ecs::RenderModel*, bool>                         modelDirtyFlags;
 
   auto& registry = context.scene->getEntityRegistry();
 
   for (const auto& instance : m_frameResources->getModels()) {
-    if (registry.all_of<Model*, WorldBounds>(instance->entityId)) {
-      auto* model       = registry.get<Model*>(instance->entityId);
-      auto& worldBounds = registry.get<WorldBounds>(instance->entityId);
+    if (registry.all_of<ecs::Model*, ecs::WorldBounds>(instance->entityId)) {
+      auto* model       = registry.get<ecs::Model*>(instance->entityId);
+      auto& worldBounds = registry.get<ecs::WorldBounds>(instance->entityId);
 
-      if (!model || !bounds::isValid(model->boundingBox)) {
+      if (!model || !ecs::bounds::isValid(model->boundingBox)) {
         continue;
       }
 
@@ -74,7 +74,7 @@ void BoundingBoxVisualizationStrategy::prepareFrame(const RenderContext& context
       boundingBoxData.localMaxCorner = model->boundingBox.max;
 
       // World bounds mode (AABB)
-      if (bounds::isValid(worldBounds.boundingBox)) {
+      if (ecs::bounds::isValid(worldBounds.boundingBox)) {
         boundingBoxData.worldMinCorner = worldBounds.boundingBox.min;
         boundingBoxData.worldMaxCorner = worldBounds.boundingBox.max;
       } else {
@@ -379,7 +379,7 @@ void BoundingBoxVisualizationStrategy::prepareDrawCalls_(const RenderContext& co
   }
 }
 
-void BoundingBoxVisualizationStrategy::updateInstanceBuffer_(RenderModel*                        model,
+void BoundingBoxVisualizationStrategy::updateInstanceBuffer_(ecs::RenderModel*                        model,
                                                              const std::vector<BoundingBoxData>& boundingBoxData,
                                                              ModelBufferCache&                   cache) {
   if (!cache.instanceBuffer || boundingBoxData.size() > cache.capacity) {
@@ -409,8 +409,8 @@ void BoundingBoxVisualizationStrategy::updateInstanceBuffer_(RenderModel*       
 }
 
 void BoundingBoxVisualizationStrategy::cleanupUnusedBuffers_(
-    const std::unordered_map<RenderModel*, std::vector<BoundingBoxData>>& currentFrameInstances) {
-  std::vector<RenderModel*> modelsToRemove;
+    const std::unordered_map<ecs::RenderModel*, std::vector<BoundingBoxData>>& currentFrameInstances) {
+  std::vector<ecs::RenderModel*> modelsToRemove;
 
   for (const auto& [model, cache] : m_instanceBufferCache) {
     if (!currentFrameInstances.contains(model)) {

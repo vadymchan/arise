@@ -6,6 +6,7 @@
 #include <vector>
 
 namespace arise {
+namespace ecs {
 
 class Vertex;
 
@@ -76,6 +77,7 @@ BoundingBox combineAABBs(const std::vector<BoundingBox>& boxes);
 
 }  // namespace bounds
 
+}  // namespace ecs
 }  // namespace arise
 
 #endif  // ARISE_BOUNDING_VOLUME_H

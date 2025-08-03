@@ -8,6 +8,7 @@
 #include <math_library/quaternion.h>
 
 namespace arise {
+namespace ecs {
 
 void CameraSystem::update(Scene* scene, float deltaTime) {
   Registry&              registry        = scene->getEntityRegistry();
@@ -47,4 +48,5 @@ void CameraSystem::update(Scene* scene, float deltaTime) {
     }
   }
 }
+}  // namespace ecs
 }  // namespace arise

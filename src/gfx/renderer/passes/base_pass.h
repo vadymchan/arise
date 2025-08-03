@@ -9,8 +9,10 @@
 #include <vector>
 
 namespace arise {
+namespace ecs {
 struct RenderModel;
 struct Material;
+}  // namespace ecs
 }  // namespace arise
 
 namespace arise::gfx::rhi {
@@ -70,19 +72,19 @@ class BasePass : public RenderPass {
 
   void createFramebuffer_(const math::Dimension2i& dimension);
 
-  void updateInstanceBuffer_(RenderModel*                         model,
+  void updateInstanceBuffer_(ecs::RenderModel*                    model,
                              const std::vector<math::Matrix4f<>>& matrices,
                              ModelBufferCache&                    cache);
 
   void prepareDrawCalls_(const RenderContext& context);
 
   void cleanupUnusedBuffers_(
-      const std::unordered_map<RenderModel*, std::vector<math::Matrix4f<>>>& currentFrameInstances);
+      const std::unordered_map<ecs::RenderModel*, std::vector<math::Matrix4f<>>>& currentFrameInstances);
 
   const std::string m_vertexShaderPath_ = "assets/shaders/base_pass/shader_instancing.vs.hlsl";
   const std::string m_pixelShaderPath_  = "assets/shaders/base_pass/shader.ps.hlsl";
 
-  rhi::DescriptorSet* getOrCreateMaterialDescriptorSet_(Material* material);
+  rhi::DescriptorSet* getOrCreateMaterialDescriptorSet_(ecs::Material* material);
 
   rhi::Device*           m_device          = nullptr;
   RenderResourceManager* m_resourceManager = nullptr;
@@ -96,14 +98,14 @@ class BasePass : public RenderPass {
   rhi::Viewport    m_viewport;
   rhi::ScissorRect m_scissor;
 
-  std::unordered_map<RenderModel*, ModelBufferCache> m_instanceBufferCache;
-  std::vector<DrawData>                              m_drawData;
+  std::unordered_map<ecs::RenderModel*, ModelBufferCache> m_instanceBufferCache;
+  std::vector<DrawData>                                   m_drawData;
 
   struct MaterialCache {
     rhi::DescriptorSet* descriptorSet = nullptr;
   };
 
-  std::unordered_map<Material*, MaterialCache> m_materialCache;
+  std::unordered_map<ecs::Material*, MaterialCache> m_materialCache;
 
   rhi::ShaderManager* m_shaderManager = nullptr;
 

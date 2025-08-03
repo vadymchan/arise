@@ -4,6 +4,7 @@
 #include <math_library/vector.h>
 
 namespace arise {
+namespace ecs {
 
 // TODO: consider adding a base class inside all light types(Directional, Point, Spot) for better cache locality
 struct Light {
@@ -32,6 +33,7 @@ struct SpotLight {
   bool  isDirty = true;
 };
 
+}  // namespace ecs
 }  // namespace arise
 
 #endif  // ARISE_LIGHT_H

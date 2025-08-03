@@ -76,7 +76,7 @@ Engine::~Engine() {
   ServiceLocator::s_remove<WindowEventManager>();
   ServiceLocator::s_remove<ApplicationEventManager>();
   ServiceLocator::s_remove<SceneManager>();
-  ServiceLocator::s_remove<SystemManager>();
+  ServiceLocator::s_remove<ecs::SystemManager>();
   ServiceLocator::s_remove<FrameManager>();
   ServiceLocator::s_remove<TimingManager>();
   ServiceLocator::s_remove<AssetLoader>();
@@ -124,10 +124,10 @@ auto Engine::initialize() -> bool {
 
       auto  scene    = ServiceLocator::s_get<SceneManager>()->getCurrentScene();
       auto& registry = scene->getEntityRegistry();
-      auto  view     = registry.view<Camera>();
+      auto  view     = registry.view<ecs::Camera>();
       auto  entity   = view.front();
       if (entity != entt::null) {
-        auto& camera  = view.get<Camera>(entity);
+        auto& camera  = view.get<ecs::Camera>(entity);
         camera.width  = event.data1;
         camera.height = event.data2;
       }
@@ -168,7 +168,7 @@ auto Engine::initialize() -> bool {
   ServiceLocator::s_provide<WindowEventManager>(std::move(windowEventHandler));
   ServiceLocator::s_provide<ApplicationEventManager>(std::move(applicationEventHandler));
   ServiceLocator::s_provide<SceneManager>();
-  ServiceLocator::s_provide<SystemManager>();
+  ServiceLocator::s_provide<ecs::SystemManager>();
   ServiceLocator::s_provide<TimingManager>();
   ServiceLocator::s_provide<FrameManager>(framesInFlight);
   ServiceLocator::s_provide<ResourceDeletionManager>();
@@ -344,15 +344,15 @@ auto Engine::initialize() -> bool {
 
   // ecs
   // ------------------------------------------------------------------------
-  auto systemManager = ServiceLocator::s_get<SystemManager>();
+  auto systemManager = ServiceLocator::s_get<ecs::SystemManager>();
 
-  systemManager->addSystem(std::make_unique<CameraInputSystem>(viewportContext));
-  systemManager->addSystem(std::make_unique<CameraSystem>());
-  systemManager->addSystem(std::make_unique<MovementSystem>());
-  systemManager->addSystem(std::make_unique<BoundingVolumeSystem>());
-  systemManager->addSystem(std::make_unique<RenderSystem>());
-  systemManager->addSystem(std::make_unique<MousePickingSystem>(viewportContext));
-  systemManager->addSystem(std::make_unique<LightSystem>(device, m_renderer_->getResourceManager()));
+  systemManager->addSystem(std::make_unique<ecs::CameraInputSystem>(viewportContext));
+  systemManager->addSystem(std::make_unique<ecs::CameraSystem>());
+  systemManager->addSystem(std::make_unique<ecs::MovementSystem>());
+  systemManager->addSystem(std::make_unique<ecs::BoundingVolumeSystem>());
+  systemManager->addSystem(std::make_unique<ecs::RenderSystem>());
+  systemManager->addSystem(std::make_unique<ecs::MousePickingSystem>(viewportContext));
+  systemManager->addSystem(std::make_unique<ecs::LightSystem>(device, m_renderer_->getResourceManager()));
 
   // editor
   // ------------------------------------------------------------------------
@@ -473,7 +473,7 @@ void Engine::update_(float deltaTime) {
 
   m_application_->update(deltaTime);
 
-  auto systemManager = ServiceLocator::s_get<SystemManager>();
+  auto systemManager = ServiceLocator::s_get<ecs::SystemManager>();
   auto scene         = ServiceLocator::s_get<SceneManager>()->getCurrentScene();
   systemManager->updateSystems(scene, deltaTime);
 }

@@ -8,6 +8,7 @@
 #include <vector>
 
 namespace arise {
+namespace ecs {
 
 // This is the geometry data on CPU side (imported from cgltf)
 struct Mesh {
@@ -18,6 +19,7 @@ struct Mesh {
   BoundingBox           boundingBox; // in mesh local space
 };
 
+}  // namespace ecs
 }  // namespace arise
 
 #endif  // ARISE_MESH_H

@@ -8,6 +8,7 @@
 #include <limits>
 
 namespace arise {
+namespace ecs {
 namespace bounds {
 
 namespace {
@@ -120,4 +121,5 @@ BoundingBox combineAABBs(const std::vector<BoundingBox>& boxes) {
 }
 
 }  // namespace bounds
+}  // namespace ecs
 }  // namespace arise

@@ -7,7 +7,9 @@
 #include <vector>
 
 namespace arise {
+namespace ecs {
 struct RenderModel;
+}  // namespace ecs
 }  // namespace arise
 
 namespace arise::gfx::rhi {
@@ -51,9 +53,9 @@ class MeshHighlightStrategy : public DebugDrawStrategy {
 
   struct HighlightParams {
     math::Vector4f color;
-    float           thickness;
-    float           xRay;
-    float           padding[2];
+    float          thickness;
+    float          xRay;
+    float          padding[2];
   };
 
   struct DrawData {
@@ -72,14 +74,12 @@ class MeshHighlightStrategy : public DebugDrawStrategy {
   void setupVertexInput_(rhi::GraphicsPipelineDesc& pipelineDesc);
   void createFramebuffers_(const math::Dimension2i& dimension);
   void prepareDrawCalls_(const RenderContext& context);
-  void updateInstanceBuffer_(RenderModel*                         model,
+  void updateInstanceBuffer_(ecs::RenderModel*                    model,
                              const std::vector<math::Matrix4f<>>& matrices,
                              ModelBufferCache&                    cache);
   void cleanupUnusedBuffers_(
-      const std::unordered_map<RenderModel*, std::vector<math::Matrix4f<>>>& currentFrameInstances);
-  rhi::DescriptorSet*    getOrCreateHighlightParamsDescriptorSet_(const math::Vector4f& color,
-                                                                  float                  thickness,
-                                                                  bool                   xRay);
+      const std::unordered_map<ecs::RenderModel*, std::vector<math::Matrix4f<>>>& currentFrameInstances);
+  rhi::DescriptorSet* getOrCreateHighlightParamsDescriptorSet_(const math::Vector4f& color, float thickness, bool xRay);
   rhi::GraphicsPipeline* getOrCreateStencilMarkPipeline_(const std::string& pipelineKey);
   rhi::GraphicsPipeline* getOrCreateOutlinePipeline_(const std::string& pipelineKey, bool xRay);
 
@@ -102,8 +102,8 @@ class MeshHighlightStrategy : public DebugDrawStrategy {
   rhi::RenderPass*               m_renderPass = nullptr;
   std::vector<rhi::Framebuffer*> m_framebuffers;
 
-  std::unordered_map<RenderModel*, ModelBufferCache> m_instanceBufferCache;
-  std::vector<DrawData>                              m_drawData;
+  std::unordered_map<ecs::RenderModel*, ModelBufferCache> m_instanceBufferCache;
+  std::vector<DrawData>                                   m_drawData;
 
   rhi::DescriptorSetLayout*                                                  m_highlightParamsLayout = nullptr;
   std::unordered_map<uint64_t, std::pair<rhi::Buffer*, rhi::DescriptorSet*>> m_highlightParamsCache;

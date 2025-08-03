@@ -34,12 +34,12 @@ Scene* SceneLoader::loadSceneFromFile(const std::filesystem::path& configPath,
       GlobalLogger::Log(LogLevel::Error, "Failed to load scene config: " + configPath.string());
       return nullptr;
     }
-    config->registerConverter<Transform>(&g_loadTransform);
-    config->registerConverter<Camera>(&g_loadCamera);
-    config->registerConverter<Light>(&g_loadLight);
-    config->registerConverter<DirectionalLight>(&g_loadDirectionalLight);
-    config->registerConverter<PointLight>(&g_loadPointLight);
-    config->registerConverter<SpotLight>(&g_loadSpotLight);
+    config->registerConverter<ecs::Transform>(&ecs::g_loadTransform);
+    config->registerConverter<ecs::Camera>(&ecs::g_loadCamera);
+    config->registerConverter<ecs::Light>(&ecs::g_loadLight);
+    config->registerConverter<ecs::DirectionalLight>(&ecs::g_loadDirectionalLight);
+    config->registerConverter<ecs::PointLight>(&ecs::g_loadPointLight);
+    config->registerConverter<ecs::SpotLight>(&ecs::g_loadSpotLight);
   }
 
   auto                jsonStr = config->toString();
@@ -67,7 +67,7 @@ Scene* SceneLoader::loadSceneFromFile(const std::filesystem::path& configPath,
 
   if (document.HasMember("entities") && document["entities"].IsArray()) {
     for (auto& entityJson : document["entities"].GetArray()) {
-      g_createEntityFromConfig(registry, entityJson);
+      ecs::g_createEntityFromConfig(registry, entityJson);
     }
   }
 

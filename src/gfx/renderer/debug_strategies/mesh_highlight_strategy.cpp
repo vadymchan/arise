@@ -61,19 +61,19 @@ void MeshHighlightStrategy::resize(const math::Dimension2i& newDimension) {
 }
 
 void MeshHighlightStrategy::prepareFrame(const RenderContext& context) {
-  std::unordered_map<RenderModel*, std::vector<math::Matrix4f<>>>     currentFrameInstances;
-  std::unordered_map<RenderModel*, std::pair<math::Vector4f, float>> highlightParams;
-  std::unordered_map<RenderModel*, bool>                              modelDirtyFlags;
+  std::unordered_map<ecs::RenderModel*, std::vector<math::Matrix4f<>>>     currentFrameInstances;
+  std::unordered_map<ecs::RenderModel*, std::pair<math::Vector4f, float>> highlightParams;
+  std::unordered_map<ecs::RenderModel*, bool>                              modelDirtyFlags;
 
   auto& registry = context.scene->getEntityRegistry();
-  auto  view     = registry.view<Selected, RenderModel*>();
+  auto  view     = registry.view<ecs::Selected, ecs::RenderModel*>();
 
   for (auto entity : view) {
-    auto& selectedComp = view.get<Selected>(entity);
-    auto* renderModel  = view.get<RenderModel*>(entity);
+    auto& selectedComp = view.get<ecs::Selected>(entity);
+    auto* renderModel  = view.get<ecs::RenderModel*>(entity);
 
-    if (registry.all_of<Transform>(entity)) {
-      auto& transform   = registry.get<Transform>(entity);
+    if (registry.all_of<ecs::Transform>(entity)) {
+      auto& transform   = registry.get<ecs::Transform>(entity);
       auto  modelMatrix = calculateTransformMatrix(transform);
 
       currentFrameInstances[renderModel].push_back(modelMatrix);
@@ -228,7 +228,7 @@ void MeshHighlightStrategy::setupRenderPass_() {
 void MeshHighlightStrategy::setupVertexInput_(rhi::GraphicsPipelineDesc& pipelineDesc) {
   rhi::VertexInputBindingDesc vertexBinding;
   vertexBinding.binding   = 0;
-  vertexBinding.stride    = sizeof(Vertex);
+  vertexBinding.stride    = sizeof(ecs::Vertex);
   vertexBinding.inputRate = rhi::VertexInputRate::Vertex;
   pipelineDesc.vertexBindings.push_back(vertexBinding);
 
@@ -242,7 +242,7 @@ void MeshHighlightStrategy::setupVertexInput_(rhi::GraphicsPipelineDesc& pipelin
   positionAttr.location     = 0;
   positionAttr.binding      = 0;
   positionAttr.format       = rhi::TextureFormat::Rgb32f;
-  positionAttr.offset       = offsetof(Vertex, position);
+  positionAttr.offset       = offsetof(ecs::Vertex, position);
   positionAttr.semanticName = "POSITION";
   pipelineDesc.vertexAttributes.push_back(positionAttr);
 
@@ -250,7 +250,7 @@ void MeshHighlightStrategy::setupVertexInput_(rhi::GraphicsPipelineDesc& pipelin
   normalAttr.location     = 1;
   normalAttr.binding      = 0;
   normalAttr.format       = rhi::TextureFormat::Rgb32f;
-  normalAttr.offset       = offsetof(Vertex, normal);
+  normalAttr.offset       = offsetof(ecs::Vertex, normal);
   normalAttr.semanticName = "NORMAL";
   pipelineDesc.vertexAttributes.push_back(normalAttr);
 
@@ -299,7 +299,7 @@ void MeshHighlightStrategy::createFramebuffers_(const math::Dimension2i& dimensi
   }
 }
 
-void MeshHighlightStrategy::updateInstanceBuffer_(RenderModel*                         model,
+void MeshHighlightStrategy::updateInstanceBuffer_(ecs::RenderModel*                         model,
                                                   const std::vector<math::Matrix4f<>>& matrices,
                                                   ModelBufferCache&                    cache) {
   if (!cache.instanceBuffer || matrices.size() > cache.capacity) {
@@ -516,11 +516,11 @@ void MeshHighlightStrategy::prepareDrawCalls_(const RenderContext& context) {
   m_drawData.clear();
 
   auto& registry = context.scene->getEntityRegistry();
-  auto  view     = registry.view<Selected, RenderModel*>();
+  auto  view     = registry.view<ecs::Selected, ecs::RenderModel*>();
 
   for (auto entity : view) {
-    auto& selectedComp = view.get<Selected>(entity);
-    auto* renderModel  = view.get<RenderModel*>(entity);
+    auto& selectedComp = view.get<ecs::Selected>(entity);
+    auto* renderModel  = view.get<ecs::RenderModel*>(entity);
 
     auto it = m_instanceBufferCache.find(renderModel);
     if (it == m_instanceBufferCache.end() || it->second.count == 0) {
@@ -561,8 +561,8 @@ void MeshHighlightStrategy::prepareDrawCalls_(const RenderContext& context) {
 }
 
 void MeshHighlightStrategy::cleanupUnusedBuffers_(
-    const std::unordered_map<RenderModel*, std::vector<math::Matrix4f<>>>& currentFrameInstances) {
-  std::vector<RenderModel*> modelsToRemove;
+    const std::unordered_map<ecs::RenderModel*, std::vector<math::Matrix4f<>>>& currentFrameInstances) {
+  std::vector<ecs::RenderModel*> modelsToRemove;
 
   for (const auto& [model, cache] : m_instanceBufferCache) {
     if (!currentFrameInstances.contains(model)) {

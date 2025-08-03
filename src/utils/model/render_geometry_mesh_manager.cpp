@@ -17,8 +17,8 @@ RenderGeometryMeshManager::~RenderGeometryMeshManager() {
   }
 }
 
-RenderGeometryMesh* RenderGeometryMeshManager::addRenderGeometryMesh(
-    std::unique_ptr<RenderGeometryMesh> renderGeometryMesh, Mesh* sourceMesh) {
+ecs::RenderGeometryMesh* RenderGeometryMeshManager::addRenderGeometryMesh(
+    std::unique_ptr<ecs::RenderGeometryMesh> renderGeometryMesh, ecs::Mesh* sourceMesh) {
   std::lock_guard<std::mutex> lock(m_mutex);
 
   if (!renderGeometryMesh || !sourceMesh) {
@@ -31,14 +31,14 @@ RenderGeometryMesh* RenderGeometryMeshManager::addRenderGeometryMesh(
     GlobalLogger::Log(LogLevel::Warning, "Render geometry already exists for this mesh. Overwriting.");
   }
 
-  RenderGeometryMesh* meshPtr = renderGeometryMesh.get();
+  ecs::RenderGeometryMesh* meshPtr = renderGeometryMesh.get();
 
   m_renderGeometryMeshes[sourceMesh] = std::move(renderGeometryMesh);
 
   return meshPtr;
 }
 
-RenderGeometryMesh* RenderGeometryMeshManager::getRenderGeometryMesh(Mesh* sourceMesh) {
+ecs::RenderGeometryMesh* RenderGeometryMeshManager::getRenderGeometryMesh(ecs::Mesh* sourceMesh) {
   std::lock_guard<std::mutex> lock(m_mutex);
 
   auto it = m_renderGeometryMeshes.find(sourceMesh);
@@ -50,7 +50,7 @@ RenderGeometryMesh* RenderGeometryMeshManager::getRenderGeometryMesh(Mesh* sourc
   return nullptr;
 }
 
-bool RenderGeometryMeshManager::removeRenderGeometryMesh(RenderGeometryMesh* gpuMesh) {
+bool RenderGeometryMeshManager::removeRenderGeometryMesh(ecs::RenderGeometryMesh* gpuMesh) {
   if (!gpuMesh) {
     GlobalLogger::Log(LogLevel::Error, "Cannot remove null render geometry mesh");
     return false;
@@ -71,7 +71,7 @@ bool RenderGeometryMeshManager::removeRenderGeometryMesh(RenderGeometryMesh* gpu
 
   std::lock_guard<std::mutex> lock(m_mutex);
 
-  Mesh* sourceMesh = nullptr;
+  ecs::Mesh* sourceMesh = nullptr;
   for (auto it = m_renderGeometryMeshes.begin(); it != m_renderGeometryMeshes.end(); ++it) {
     if (it->second.get() == gpuMesh) {
       sourceMesh = it->first;

@@ -18,8 +18,8 @@ class IRenderModelLoader {
   virtual ~IRenderModelLoader() = default;
 
   // Optionally returns CPU-side geometry model (outModel)
-  virtual std::unique_ptr<RenderModel> loadRenderModel(const std::filesystem::path& filepath,
-                                                       Model**                      outModel = nullptr)
+  virtual std::unique_ptr<ecs::RenderModel> loadRenderModel(const std::filesystem::path& filepath,
+                                                            ecs::Model**                 outModel = nullptr)
       = 0;
 };
 

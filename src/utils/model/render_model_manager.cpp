@@ -18,7 +18,7 @@ RenderModelManager::~RenderModelManager() {
   }
 }
 
-RenderModel* RenderModelManager::getRenderModel(const std::filesystem::path& filepath, Model** outModel) {
+ecs::RenderModel* RenderModelManager::getRenderModel(const std::filesystem::path& filepath, ecs::Model** outModel) {
   {
     std::shared_lock<std::shared_mutex> readLock(mutex_);
     auto                                it = renderModelCache_.find(filepath);
@@ -46,7 +46,7 @@ RenderModel* RenderModelManager::getRenderModel(const std::filesystem::path& fil
   auto renderModel = renderModelLoaderManager->loadRenderModel(filepath, outModel);
 
   if (renderModel) {
-    RenderModel* modelPtr = renderModel.get();
+    ecs::RenderModel* modelPtr = renderModel.get();
     {
       std::unique_lock<std::shared_mutex> writeLock(mutex_);
 
@@ -68,7 +68,7 @@ bool RenderModelManager::hasRenderModel(const std::filesystem::path& filepath) c
   return renderModelCache_.find(filepath) != renderModelCache_.end();
 }
 
-bool RenderModelManager::removeRenderModel(RenderModel* renderModel) {
+bool RenderModelManager::removeRenderModel(ecs::RenderModel* renderModel) {
   if (!renderModel) {
     GlobalLogger::Log(LogLevel::Error, "Cannot remove null render model");
     return false;

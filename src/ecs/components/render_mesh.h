@@ -7,6 +7,7 @@
 #include <memory>
 
 namespace arise {
+namespace ecs {
 
 struct RenderMesh {
   RenderGeometryMesh* gpuMesh;
@@ -14,6 +15,7 @@ struct RenderMesh {
   gfx::rhi::Buffer*   transformMatrixBuffer = nullptr;
 };
 
+}  // namespace ecs
 }  // namespace arise
 
 #endif  // ARISE_RENDER_MESH_H

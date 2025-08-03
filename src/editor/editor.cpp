@@ -463,7 +463,7 @@ void Editor::renderSceneHierarchyWindow() {
     ImGui::Separator();
 
     if (ImGui::Button("Add Model")) {
-      m_newModelTransform  = Transform();
+      m_newModelTransform  = ecs::Transform();
       m_openAddModelDialog = true;
     }
 
@@ -536,9 +536,9 @@ void Editor::renderInspectorWindow() {
   ImGui::Separator();
 
   // Transform
-  if (registry.all_of<Transform>(m_selectedEntity)) {
+  if (registry.all_of<ecs::Transform>(m_selectedEntity)) {
     if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen)) {
-      auto& transform = registry.get<Transform>(m_selectedEntity);
+      auto& transform = registry.get<ecs::Transform>(m_selectedEntity);
 
       float position[3] = {transform.translation.x(), transform.translation.y(), transform.translation.z()};
       if (ImGui::DragFloat3("Position", position, 0.1f)) {
@@ -567,17 +567,17 @@ void Editor::renderInspectorWindow() {
   }
 
   // Camera
-  if (registry.all_of<Camera>(m_selectedEntity)) {
+  if (registry.all_of<ecs::Camera>(m_selectedEntity)) {
     if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen)) {
-      auto& camera = registry.get<Camera>(m_selectedEntity);
+      auto& camera = registry.get<ecs::Camera>(m_selectedEntity);
 
       const char* typeItems[] = {"Perspective", "Orthographic"};
       int         currentType = static_cast<int>(camera.type);
       if (ImGui::Combo("Type", &currentType, typeItems, IM_ARRAYSIZE(typeItems))) {
-        camera.type = static_cast<CameraType>(currentType);
+        camera.type = static_cast<ecs::CameraType>(currentType);
       }
 
-      if (camera.type == CameraType::Perspective) {
+      if (camera.type == ecs::CameraType::Perspective) {
         float fovDegrees = math::g_radianToDegree(camera.fov);
         if (ImGui::SliderFloat("FOV", &fovDegrees, 10.0f, 120.0f, "%.1f")) {
           camera.fov = math::g_degreeToRadian(fovDegrees);
@@ -607,9 +607,9 @@ void Editor::renderInspectorWindow() {
   }
 
   // Light
-  if (registry.all_of<Light>(m_selectedEntity)) {
+  if (registry.all_of<ecs::Light>(m_selectedEntity)) {
     if (ImGui::CollapsingHeader("Light", ImGuiTreeNodeFlags_DefaultOpen)) {
-      auto& light = registry.get<Light>(m_selectedEntity);
+      auto& light = registry.get<ecs::Light>(m_selectedEntity);
 
       bool isEnabled = light.enabled;
       if (ImGui::Checkbox("Enabled", &isEnabled)) {
@@ -618,11 +618,11 @@ void Editor::renderInspectorWindow() {
 
         // Log the state change
         std::string lightType = "Light";
-        if (registry.all_of<DirectionalLight>(m_selectedEntity)) {
+        if (registry.all_of<ecs::DirectionalLight>(m_selectedEntity)) {
           lightType = "Directional Light";
-        } else if (registry.all_of<PointLight>(m_selectedEntity)) {
+        } else if (registry.all_of<ecs::PointLight>(m_selectedEntity)) {
           lightType = "Point Light";
-        } else if (registry.all_of<SpotLight>(m_selectedEntity)) {
+        } else if (registry.all_of<ecs::SpotLight>(m_selectedEntity)) {
           lightType = "Spot Light";
         }
 
@@ -645,8 +645,8 @@ void Editor::renderInspectorWindow() {
         light.isDirty   = true;
       }
 
-      if (registry.all_of<DirectionalLight>(m_selectedEntity)) {
-        auto& dirLight = registry.get<DirectionalLight>(m_selectedEntity);
+      if (registry.all_of<ecs::DirectionalLight>(m_selectedEntity)) {
+        auto& dirLight = registry.get<ecs::DirectionalLight>(m_selectedEntity);
 
         float direction[3] = {dirLight.direction.x(), dirLight.direction.y(), dirLight.direction.z()};
         if (ImGui::DragFloat3("Direction", direction, 0.1f)) {
@@ -658,16 +658,16 @@ void Editor::renderInspectorWindow() {
 
           dirLight.isDirty = true;
         }
-      } else if (registry.all_of<PointLight>(m_selectedEntity)) {
-        auto& pointLight = registry.get<PointLight>(m_selectedEntity);
+      } else if (registry.all_of<ecs::PointLight>(m_selectedEntity)) {
+        auto& pointLight = registry.get<ecs::PointLight>(m_selectedEntity);
 
         float range = pointLight.range;
         if (ImGui::DragFloat("Range", &range, 0.1f, 0.0f, 1000.0f)) {
           pointLight.range   = range;
           pointLight.isDirty = true;
         }
-      } else if (registry.all_of<SpotLight>(m_selectedEntity)) {
-        auto& spotLight = registry.get<SpotLight>(m_selectedEntity);
+      } else if (registry.all_of<ecs::SpotLight>(m_selectedEntity)) {
+        auto& spotLight = registry.get<ecs::SpotLight>(m_selectedEntity);
 
         float range = spotLight.range;
         if (ImGui::DragFloat("Range", &range, 0.1f, 0.0f, 1000.0f)) {
@@ -691,9 +691,9 @@ void Editor::renderInspectorWindow() {
   }
 
   // Render Model
-  if (registry.all_of<RenderModel*>(m_selectedEntity)) {
+  if (registry.all_of<ecs::RenderModel*>(m_selectedEntity)) {
     if (ImGui::CollapsingHeader("Model", ImGuiTreeNodeFlags_DefaultOpen)) {
-      auto* model = registry.get<RenderModel*>(m_selectedEntity);
+      auto* model = registry.get<ecs::RenderModel*>(m_selectedEntity);
 
       if (model) {
         ImGui::Text("File: %s", model->filePath.string().c_str());
@@ -747,9 +747,9 @@ void Editor::renderInspectorWindow() {
   }
 
   // Selected
-  if (registry.all_of<Selected>(m_selectedEntity)) {
+  if (registry.all_of<ecs::Selected>(m_selectedEntity)) {
     if (ImGui::CollapsingHeader("Highlight", ImGuiTreeNodeFlags_DefaultOpen)) {
-      auto& highlight = registry.get<Selected>(m_selectedEntity);
+      auto& highlight = registry.get<ecs::Selected>(m_selectedEntity);
 
       float color[4] = {highlight.highlightColor.x(),
                         highlight.highlightColor.y(),
@@ -1051,13 +1051,13 @@ void Editor::renderGizmoControlsWindow() {
   ImGui::Separator();
   ImGui::Text("Selected Entity: %u", static_cast<uint32_t>(m_selectedEntity));
 
-  if (registry.all_of<Light, DirectionalLight>(m_selectedEntity)) {
+  if (registry.all_of<ecs::Light, ecs::DirectionalLight>(m_selectedEntity)) {
     ImGui::Text("Type: Directional Light");
     ImGui::Text("Allowed Operations: Rotation only");
-  } else if (registry.all_of<Light, PointLight>(m_selectedEntity)) {
+  } else if (registry.all_of<ecs::Light, ecs::PointLight>(m_selectedEntity)) {
     ImGui::Text("Type: Point Light");
     ImGui::Text("Allowed Operations: Translation, Rotation");
-  } else if (registry.all_of<Light, SpotLight>(m_selectedEntity)) {
+  } else if (registry.all_of<ecs::Light, ecs::SpotLight>(m_selectedEntity)) {
     ImGui::Text("Type: Spot Light");
     ImGui::Text("Allowed Operations: Translation, Rotation");
   } else {
@@ -1091,11 +1091,12 @@ bool Editor::isOperationAllowedForEntity(ImGuizmo::OPERATION operation) {
 
   auto& registry = scene->getEntityRegistry();
 
-  if (registry.all_of<Light, DirectionalLight>(m_selectedEntity)) {
+  if (registry.all_of<ecs::Light, ecs::DirectionalLight>(m_selectedEntity)) {
     return operation == ImGuizmo::ROTATE;
   }
 
-  if (registry.all_of<Light, PointLight>(m_selectedEntity) || registry.all_of<Light, SpotLight>(m_selectedEntity)) {
+  if (registry.all_of<ecs::Light, ecs::PointLight>(m_selectedEntity)
+      || registry.all_of<ecs::Light, ecs::SpotLight>(m_selectedEntity)) {
     return operation == ImGuizmo::TRANSLATE || operation == ImGuizmo::ROTATE;
   }
 
@@ -1124,12 +1125,12 @@ math::Vector3f Editor::getGizmoWorldPosition() {
 
   auto& registry = scene->getEntityRegistry();
 
-  if (registry.all_of<Light, DirectionalLight>(m_selectedEntity)) {
+  if (registry.all_of<ecs::Light, ecs::DirectionalLight>(m_selectedEntity)) {
     return m_currentDirectionalLightGizmoPosition;
   }
 
-  if (registry.all_of<Transform>(m_selectedEntity)) {
-    auto& transform = registry.get<Transform>(m_selectedEntity);
+  if (registry.all_of<ecs::Transform>(m_selectedEntity)) {
+    auto& transform = registry.get<ecs::Transform>(m_selectedEntity);
     return transform.translation;
   }
 
@@ -1158,8 +1159,8 @@ void Editor::handleGizmoManipulation(const math::Matrix4f<>& modelMatrix) {
     scale(i)       = scaleArray[i];
   }
 
-  if (registry.all_of<Light, DirectionalLight>(m_selectedEntity)) {
-    auto& dirLight = registry.get<DirectionalLight>(m_selectedEntity);
+  if (registry.all_of<ecs::Light, ecs::DirectionalLight>(m_selectedEntity)) {
+    auto& dirLight = registry.get<ecs::DirectionalLight>(m_selectedEntity);
 
     math::Quaternionf quat = math::Quaternionf::fromEulerAngles(math::g_degreeToRadian(rotation.x()),
                                                                 math::g_degreeToRadian(rotation.y()),
@@ -1175,10 +1176,11 @@ void Editor::handleGizmoManipulation(const math::Matrix4f<>& modelMatrix) {
         "DirectionalLight direction updated for entity: " + std::to_string(static_cast<uint32_t>(m_selectedEntity)));
   }
 
-  else if (registry.all_of<Transform>(m_selectedEntity)) {
-    auto& transform = registry.get<Transform>(m_selectedEntity);
+  else if (registry.all_of<ecs::Transform>(m_selectedEntity)) {
+    auto& transform = registry.get<ecs::Transform>(m_selectedEntity);
 
-    if (registry.all_of<Light, PointLight>(m_selectedEntity) || registry.all_of<Light, SpotLight>(m_selectedEntity)) {
+    if (registry.all_of<ecs::Light, ecs::PointLight>(m_selectedEntity)
+        || registry.all_of<ecs::Light, ecs::SpotLight>(m_selectedEntity)) {
       transform.translation = translation;
       transform.rotation    = rotation;
     }
@@ -1204,20 +1206,20 @@ void Editor::handleEntitySelection(entt::entity entity) {
   auto& registry = scene->getEntityRegistry();
 
   if (m_selectedEntity != entt::null && registry.valid(m_selectedEntity)) {
-    registry.remove<Selected>(m_selectedEntity);
+    registry.remove<ecs::Selected>(m_selectedEntity);
 
-    if (registry.all_of<RenderModel*>(m_selectedEntity)) {
+    if (registry.all_of<ecs::RenderModel*>(m_selectedEntity)) {
       GlobalLogger::Log(LogLevel::Info,
                         "Entity " + std::to_string(static_cast<uint32_t>(m_selectedEntity)) + " deselected");
     }
   }
 
-  if (registry.valid(entity) && registry.all_of<Light, DirectionalLight>(entity)) {
-    auto cameraView = registry.view<Camera, CameraMatrices, Transform>();
+  if (registry.valid(entity) && registry.all_of<ecs::Light, ecs::DirectionalLight>(entity)) {
+    auto cameraView = registry.view<ecs::Camera, ecs::CameraMatrices, ecs::Transform>();
     if (cameraView.begin() != cameraView.end()) {
       auto        cameraEntity    = *cameraView.begin();
-      const auto& cameraTransform = registry.get<Transform>(cameraEntity);
-      const auto& cameraMatrices  = registry.get<CameraMatrices>(cameraEntity);
+      const auto& cameraTransform = registry.get<ecs::Transform>(cameraEntity);
+      const auto& cameraMatrices  = registry.get<ecs::CameraMatrices>(cameraEntity);
 
       math::Vector3f cameraForward = cameraMatrices.view.getColumn<2>().resizedCopy<3>();
       cameraForward.normalize();
@@ -1232,8 +1234,8 @@ void Editor::handleEntitySelection(entt::entity entity) {
 
   bool hasSelectedRenderModel = false;
   if (m_selectedEntity != entt::null && registry.valid(m_selectedEntity)) {
-    if (registry.all_of<RenderModel*>(m_selectedEntity)) {
-      registry.emplace_or_replace<Selected>(m_selectedEntity);
+    if (registry.all_of<ecs::RenderModel*>(m_selectedEntity)) {
+      registry.emplace_or_replace<ecs::Selected>(m_selectedEntity);
       hasSelectedRenderModel = true;
 
       GlobalLogger::Log(LogLevel::Info,
@@ -1262,8 +1264,8 @@ bool Editor::shouldRenderGizmo_() {
 
   auto& registry = scene->getEntityRegistry();
 
-  bool isDirectionalLight = registry.all_of<Light, DirectionalLight>(m_selectedEntity);
-  bool hasTransform       = registry.all_of<Transform>(m_selectedEntity);
+  bool isDirectionalLight = registry.all_of<ecs::Light, ecs::DirectionalLight>(m_selectedEntity);
+  bool hasTransform       = registry.all_of<ecs::Transform>(m_selectedEntity);
 
   if (!isDirectionalLight && !hasTransform) {
     return false;
@@ -1280,7 +1282,7 @@ entt::entity Editor::getCameraEntity_() {
   }
 
   auto& registry   = scene->getEntityRegistry();
-  auto  cameraView = registry.view<Camera, CameraMatrices>();
+  auto  cameraView = registry.view<ecs::Camera, ecs::CameraMatrices>();
 
   if (cameraView.begin() == cameraView.end()) {
     return entt::null;
@@ -1305,11 +1307,11 @@ math::Matrix4f<> Editor::calculateEntityModelMatrix_() {
 
   math::Matrix4f<> modelMatrix = math::Matrix4f<>::Identity();
 
-  bool hasTransform       = registry.all_of<Transform>(m_selectedEntity);
-  bool isDirectionalLight = registry.all_of<Light, DirectionalLight>(m_selectedEntity);
+  bool hasTransform       = registry.all_of<ecs::Transform>(m_selectedEntity);
+  bool isDirectionalLight = registry.all_of<ecs::Light, ecs::DirectionalLight>(m_selectedEntity);
 
   if (hasTransform) {
-    auto& transform = registry.get<Transform>(m_selectedEntity);
+    auto& transform = registry.get<ecs::Transform>(m_selectedEntity);
     modelMatrix     = calculateTransformMatrix(transform);
   } else if (isDirectionalLight) {
     modelMatrix = calculateDirectionalLightMatrix_(registry);
@@ -1319,7 +1321,7 @@ math::Matrix4f<> Editor::calculateEntityModelMatrix_() {
 }
 
 math::Matrix4f<> Editor::calculateDirectionalLightMatrix_(Registry& registry) {
-  auto& dirLight = registry.get<DirectionalLight>(m_selectedEntity);
+  auto& dirLight = registry.get<ecs::DirectionalLight>(m_selectedEntity);
 
   math::Vector3f gizmoPosition = getGizmoWorldPosition();
 
@@ -1350,7 +1352,7 @@ bool Editor::performGizmoManipulation_(math::Matrix4f<>& modelMatrix, entt::enti
   auto* scene        = sceneManager->getCurrentScene();
   auto& registry     = scene->getEntityRegistry();
 
-  const auto& cameraMatrices = registry.get<CameraMatrices>(cameraEntity);
+  const auto& cameraMatrices = registry.get<ecs::CameraMatrices>(cameraEntity);
 
   float* viewMatrix      = const_cast<float*>(cameraMatrices.view.data());
   float* projMatrix      = const_cast<float*>(cameraMatrices.projection.data());
@@ -1431,8 +1433,8 @@ void Editor::setupInputHandlers_() {
 void Editor::handleMousePicking() {
   GlobalLogger::Log(LogLevel::Debug, "Editor::handleMousePicking called");
 
-  auto systemManager      = ServiceLocator::s_get<SystemManager>();
-  auto mousePickingSystem = systemManager->getSystem<MousePickingSystem>();
+  auto systemManager      = ServiceLocator::s_get<ecs::SystemManager>();
+  auto mousePickingSystem = systemManager->getSystem<ecs::MousePickingSystem>();
 
   if (!mousePickingSystem) {
     GlobalLogger::Log(LogLevel::Warning, "MousePickingSystem not found");
@@ -1484,11 +1486,11 @@ void Editor::addDirectionalLight() {
 
   entt::entity entity = registry.create();
 
-  auto& light     = registry.emplace<Light>(entity);
+  auto& light     = registry.emplace<ecs::Light>(entity);
   light.color     = math::Vector3f(1.0f, 1.0f, 1.0f);
   light.intensity = 1.0f;
 
-  auto& dirLight     = registry.emplace<DirectionalLight>(entity);
+  auto& dirLight     = registry.emplace<ecs::DirectionalLight>(entity);
   dirLight.direction = math::Vector3f(0.0f, -1.0f, 0.0f);
 
   handleEntitySelection(entity);
@@ -1509,16 +1511,16 @@ void Editor::addPointLight() {
 
   entt::entity entity = registry.create();
 
-  auto& transform       = registry.emplace<Transform>(entity);
+  auto& transform       = registry.emplace<ecs::Transform>(entity);
   transform.translation = getPositionInFrontOfCamera_();
   transform.rotation    = math::Vector3f(0.0f, 0.0f, 0.0f);
   transform.scale       = math::Vector3f(1.0f, 1.0f, 1.0f);
 
-  auto& light     = registry.emplace<Light>(entity);
+  auto& light     = registry.emplace<ecs::Light>(entity);
   light.color     = math::Vector3f(1.0f, 1.0f, 1.0f);
   light.intensity = 1.0f;
 
-  auto& pointLight = registry.emplace<PointLight>(entity);
+  auto& pointLight = registry.emplace<ecs::PointLight>(entity);
   pointLight.range = 10.0f;
 
   handleEntitySelection(entity);
@@ -1539,16 +1541,16 @@ void Editor::addSpotLight() {
 
   entt::entity entity = registry.create();
 
-  auto& transform       = registry.emplace<Transform>(entity);
+  auto& transform       = registry.emplace<ecs::Transform>(entity);
   transform.translation = getPositionInFrontOfCamera_();
   transform.rotation    = math::Vector3f(0.0f, 0.0f, 0.0f);
   transform.scale       = math::Vector3f(1.0f, 1.0f, 1.0f);
 
-  auto& light     = registry.emplace<Light>(entity);
+  auto& light     = registry.emplace<ecs::Light>(entity);
   light.color     = math::Vector3f(1.0f, 1.0f, 1.0f);
   light.intensity = 1.0f;
 
-  auto& spotLight          = registry.emplace<SpotLight>(entity);
+  auto& spotLight          = registry.emplace<ecs::SpotLight>(entity);
   spotLight.range          = 10.0f;
   spotLight.innerConeAngle = 15.0f;
   spotLight.outerConeAngle = 30.0f;
@@ -1580,21 +1582,21 @@ void Editor::removeSelectedEntity() {
   }
 
   std::string entityType = "Entity";
-  if (registry.all_of<Light, DirectionalLight>(m_selectedEntity)) {
+  if (registry.all_of<ecs::Light, ecs::DirectionalLight>(m_selectedEntity)) {
     entityType = "Directional Light";
-  } else if (registry.all_of<Light, PointLight>(m_selectedEntity)) {
+  } else if (registry.all_of<ecs::Light, ecs::PointLight>(m_selectedEntity)) {
     entityType = "Point Light";
-  } else if (registry.all_of<Light, SpotLight>(m_selectedEntity)) {
+  } else if (registry.all_of<ecs::Light, ecs::SpotLight>(m_selectedEntity)) {
     entityType = "Spot Light";
-  } else if (registry.all_of<Camera>(m_selectedEntity)) {
+  } else if (registry.all_of<ecs::Camera>(m_selectedEntity)) {
     entityType = "Camera";
   }
 
-  if (registry.all_of<RenderModel*>(m_selectedEntity)) {
-    RenderModel* model = registry.get<RenderModel*>(m_selectedEntity);
+  if (registry.all_of<ecs::RenderModel*>(m_selectedEntity)) {
+    ecs::RenderModel* model = registry.get<ecs::RenderModel*>(m_selectedEntity);
 
     size_t referenceCount = 0;
-    registry.view<RenderModel*>().each([&](auto entity, RenderModel* entityModel) {
+    registry.view<ecs::RenderModel*>().each([&](auto entity, ecs::RenderModel* entityModel) {
       if (entityModel == model) {
         referenceCount++;
       }
@@ -1643,15 +1645,15 @@ math::Vector3f Editor::getPositionInFrontOfCamera_() {
 
   auto& registry = scene->getEntityRegistry();
 
-  auto cameraView = registry.view<Camera, CameraMatrices, Transform>();
+  auto cameraView = registry.view<ecs::Camera, ecs::CameraMatrices, ecs::Transform>();
   if (cameraView.begin() == cameraView.end()) {
     GlobalLogger::Log(LogLevel::Warning, "No camera found for positioning");
     return position;
   }
 
   auto        cameraEntity    = *cameraView.begin();
-  const auto& cameraTransform = registry.get<Transform>(cameraEntity);
-  const auto& cameraMatrices  = registry.get<CameraMatrices>(cameraEntity);
+  const auto& cameraTransform = registry.get<ecs::Transform>(cameraEntity);
+  const auto& cameraMatrices  = registry.get<ecs::CameraMatrices>(cameraEntity);
 
   math::Vector3f cameraForward = cameraMatrices.view.getColumn<2>().resizedCopy<3>();
   cameraForward.normalize();
@@ -1787,7 +1789,7 @@ void Editor::handleAddModelDialog() {
     }
 
     if (ImGui::Button("Reset Transform")) {
-      m_newModelTransform       = Transform();
+      m_newModelTransform       = ecs::Transform();
       m_newModelTransform.scale = math::Vector3f(1.0f, 1.0f, 1.0f);
     }
 
@@ -1856,7 +1858,7 @@ void Editor::handleAddModelDialog() {
   ImGui::End();
 }
 
-void Editor::createModelEntity(const std::filesystem::path& modelPath, const Transform& transform) {
+void Editor::createModelEntity(const std::filesystem::path& modelPath, const ecs::Transform& transform) {
   auto sceneManager = ServiceLocator::s_get<SceneManager>();
   auto scene        = sceneManager->getCurrentScene();
 
@@ -1868,12 +1870,12 @@ void Editor::createModelEntity(const std::filesystem::path& modelPath, const Tra
   auto& registry = scene->getEntityRegistry();
 
   entt::entity entity = registry.create();
-  registry.emplace<Transform>(entity, transform);
+  registry.emplace<ecs::Transform>(entity, transform);
 
   auto assetLoader = ServiceLocator::s_get<AssetLoader>();
 
   if (assetLoader) {
-    registry.emplace<ModelLoadingTag>(entity, modelPath);
+    registry.emplace<ecs::ModelLoadingTag>(entity, modelPath);
 
     assetLoader->loadModel(modelPath.string(), [this, entity, modelPath](bool success) {
       auto sceneManager = ServiceLocator::s_get<SceneManager>();
@@ -1893,19 +1895,19 @@ void Editor::createModelEntity(const std::filesystem::path& modelPath, const Tra
         return;
       }
 
-      if (registry.any_of<ModelLoadingTag>(entity)) {
-        registry.remove<ModelLoadingTag>(entity);
+      if (registry.any_of<ecs::ModelLoadingTag>(entity)) {
+        registry.remove<ecs::ModelLoadingTag>(entity);
       }
 
       if (success) {
         auto modelManager = ServiceLocator::s_get<RenderModelManager>();
         if (modelManager) {
-          Model* model       = nullptr;
+          ecs::Model* model       = nullptr;
           auto   renderModel = modelManager->getRenderModel(modelPath.string(), &model);
 
           if (renderModel && model) {
-            registry.emplace<Model*>(entity, model);
-            registry.emplace<RenderModel*>(entity, renderModel);
+            registry.emplace<ecs::Model*>(entity, model);
+            registry.emplace<ecs::RenderModel*>(entity, renderModel);
 
             handleEntitySelection(entity);
             GlobalLogger::Log(LogLevel::Info, "Model loaded successfully: " + modelPath.string());
@@ -1923,12 +1925,12 @@ void Editor::createModelEntity(const std::filesystem::path& modelPath, const Tra
   } else {
     auto modelManager = ServiceLocator::s_get<RenderModelManager>();
     if (modelManager) {
-      Model* model       = nullptr;
+      ecs::Model* model       = nullptr;
       auto   renderModel = modelManager->getRenderModel(modelPath.string(), &model);
 
       if (renderModel && model) {
-        registry.emplace<Model*>(entity, model);
-        registry.emplace<RenderModel*>(entity, renderModel);
+        registry.emplace<ecs::Model*>(entity, model);
+        registry.emplace<ecs::RenderModel*>(entity, renderModel);
 
         handleEntitySelection(entity);
         GlobalLogger::Log(LogLevel::Info, "Model loaded successfully: " + modelPath.string());
@@ -1958,13 +1960,13 @@ void Editor::renderEntityList_(Registry& registry) {
   std::vector<EntityInfo> entityInfos;
 
   auto getEntityBgColor = [&registry](entt::entity e) -> ImU32 {
-    if (registry.all_of<Camera>(e)) {
+    if (registry.all_of<ecs::Camera>(e)) {
       return IM_COL32(255, 0, 0, 60);
     }
-    if (registry.all_of<Light>(e)) {
+    if (registry.all_of<ecs::Light>(e)) {
       return IM_COL32(255, 255, 0, 60);
     }
-    if (registry.all_of<RenderModel*>(e)) {
+    if (registry.all_of<ecs::RenderModel*>(e)) {
       return IM_COL32(0, 255, 0, 60);
     }
     return 0;
@@ -1978,26 +1980,26 @@ void Editor::renderEntityList_(Registry& registry) {
 
     std::string label = "Entity " + std::to_string(static_cast<uint32_t>(entity));
 
-    if (registry.all_of<ModelLoadingTag>(entity)) {
-      auto& loadingTag  = registry.get<ModelLoadingTag>(entity);
+    if (registry.all_of<ecs::ModelLoadingTag>(entity)) {
+      auto& loadingTag   = registry.get<ecs::ModelLoadingTag>(entity);
       label            += " (Loading: " + loadingTag.modelPath.filename().string() + ")";
       info.isLoading    = true;
-    } else if (registry.all_of<RenderModel*>(entity)) {
-      auto* model = registry.get<RenderModel*>(entity);
+    } else if (registry.all_of<ecs::RenderModel*>(entity)) {
+      auto* model = registry.get<ecs::RenderModel*>(entity);
       if (model && !model->filePath.empty()) {
         label += " (" + model->filePath.filename().string() + ")";
       }
-    } else if (registry.all_of<Camera>(entity)) {
+    } else if (registry.all_of<ecs::Camera>(entity)) {
       label += " (Camera)";
-    } else if (registry.all_of<Light>(entity)) {
-      auto& light     = registry.get<Light>(entity);
+    } else if (registry.all_of<ecs::Light>(entity)) {
+      auto& light     = registry.get<ecs::Light>(entity);
       info.isDisabled = !light.enabled;
 
-      if (registry.all_of<DirectionalLight>(entity)) {
+      if (registry.all_of<ecs::DirectionalLight>(entity)) {
         label += info.isDisabled ? " (Directional Light - Disabled)" : " (Directional Light)";
-      } else if (registry.all_of<PointLight>(entity)) {
+      } else if (registry.all_of<ecs::PointLight>(entity)) {
         label += info.isDisabled ? " (Point Light - Disabled)" : " (Point Light)";
-      } else if (registry.all_of<SpotLight>(entity)) {
+      } else if (registry.all_of<ecs::SpotLight>(entity)) {
         label += info.isDisabled ? " (Spot Light - Disabled)" : " (Spot Light)";
       }
     }
@@ -2167,13 +2169,13 @@ void Editor::createDefaultCamera_() {
 
   entt::entity cameraEntity = registry.create();
 
-  auto& transform       = registry.emplace<Transform>(cameraEntity);
+  auto& transform       = registry.emplace<ecs::Transform>(cameraEntity);
   transform.translation = math::Vector3f(0.0f, 0.0f, 0.0f);
   transform.rotation    = math::Vector3f(0.0f, 0.0f, 0.0f);
   transform.scale       = math::Vector3f(1.0f, 1.0f, 1.0f);
 
-  auto& camera    = registry.emplace<Camera>(cameraEntity);
-  camera.type     = CameraType::Perspective;
+  auto& camera    = registry.emplace<ecs::Camera>(cameraEntity);
+  camera.type     = ecs::CameraType::Perspective;
   camera.fov      = math::g_degreeToRadian(60.0f);
   camera.nearClip = 0.01f;
   camera.farClip  = 1000.0f;
@@ -2188,7 +2190,7 @@ void Editor::createDefaultCamera_() {
     camera.height = 1080.0f;
   }
 
-  registry.emplace<Movement>(cameraEntity);
+  registry.emplace<ecs::Movement>(cameraEntity);
 
   GlobalLogger::Log(LogLevel::Info, "Created default camera with input components");
 }
@@ -2246,7 +2248,7 @@ bool Editor::hasLoadingModels_() const {
   }
 
   auto& registry    = scene->getEntityRegistry();
-  auto  loadingView = registry.view<ModelLoadingTag>();
+  auto  loadingView = registry.view<ecs::ModelLoadingTag>();
 
   return !loadingView.empty();
 }

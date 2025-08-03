@@ -97,7 +97,7 @@ class Editor {
   math::Vector3f getPositionInFrontOfCamera_();
 
   void handleAddModelDialog();
-  void createModelEntity(const std::filesystem::path& modelPath, const Transform& transform);
+  void createModelEntity(const std::filesystem::path& modelPath, const ecs::Transform& transform);
 
   void renderEntityList_(Registry& registry);
 
@@ -143,7 +143,7 @@ class Editor {
   bool m_setInspectorFocus = false;
 
   bool                  m_openAddModelDialog = false;
-  Transform             m_newModelTransform;
+  ecs::Transform        m_newModelTransform;
   std::filesystem::path m_modelPath;
   // TODO: consider using standard c++ library
   char                  m_modelPathBuffer[MAX_PATH_BUFFER_SIZE] = "";

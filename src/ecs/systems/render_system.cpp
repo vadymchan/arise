@@ -6,6 +6,7 @@
 #include "utils/logger/global_logger.h"
 
 namespace arise {
+namespace ecs {
 
 // TODO: currently not implemented and not used (it's responsible for organizing
 // and preparing entity data for rendering (different render passes), applying
@@ -38,4 +39,5 @@ void RenderSystem::update(Scene* scene, float deltaTime) {
   }
 }
 
+}  // namespace ecs
 }  // namespace arise

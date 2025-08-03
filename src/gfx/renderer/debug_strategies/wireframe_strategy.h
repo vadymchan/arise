@@ -7,7 +7,9 @@
 #include <vector>
 
 namespace arise {
+namespace ecs {
 struct RenderModel;
+}  // namespace ecs
 }  // namespace arise
 
 namespace arise::gfx::rhi {
@@ -63,11 +65,11 @@ class WireframeStrategy : public DebugDrawStrategy {
   void setupRenderPass_();
   void createFramebuffers_(const math::Dimension2i& dimension);
   void prepareDrawCalls_(const RenderContext& context);
-  void updateInstanceBuffer_(RenderModel*                         model,
+  void updateInstanceBuffer_(ecs::RenderModel*                         model,
                              const std::vector<math::Matrix4f<>>& matrices,
                              ModelBufferCache&                    cache);
   void cleanupUnusedBuffers_(
-      const std::unordered_map<RenderModel*, std::vector<math::Matrix4f<>>>& currentFrameInstances);
+    const std::unordered_map<ecs::RenderModel*, std::vector<math::Matrix4f<>>>& currentFrameInstances);
 
   const std::string m_vertexShaderPath_ = "assets/shaders/debug/wireframe/shader_instancing.vs.hlsl";
   const std::string m_pixelShaderPath_  = "assets/shaders/debug/wireframe/shader.ps.hlsl";
@@ -86,7 +88,7 @@ class WireframeStrategy : public DebugDrawStrategy {
   rhi::RenderPass*               m_renderPass = nullptr;
   std::vector<rhi::Framebuffer*> m_framebuffers;
 
-  std::unordered_map<RenderModel*, ModelBufferCache> m_instanceBufferCache;
+  std::unordered_map<ecs::RenderModel*, ModelBufferCache> m_instanceBufferCache;
   std::vector<DrawData>                              m_drawData;
 };
 

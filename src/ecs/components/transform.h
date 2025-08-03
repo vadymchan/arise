@@ -5,6 +5,7 @@
 #include <math_library/quaternion.h>
 
 namespace arise {
+namespace ecs {
 
 struct Transform {
   // translation is position relative to the some origin (world origin, parent
@@ -51,6 +52,7 @@ inline math::Matrix4f<> calculateTransformMatrix(const Transform& transform) {
   return transformMatrix;
 }
 
+}  // namespace ecs
 }  // namespace arise
 
 #endif  // ARISE_TRANSFORM_H

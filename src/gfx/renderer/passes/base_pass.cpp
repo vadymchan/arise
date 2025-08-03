@@ -61,8 +61,8 @@ void BasePass::resize(const math::Dimension2i& newDimension) {
 void BasePass::prepareFrame(const RenderContext& context) {
   CPU_ZONE_NC("BasePass::prepareFrame", color::YELLOW);
 
-  std::unordered_map<RenderModel*, std::vector<math::Matrix4f<>>> currentFrameInstances;
-  std::unordered_map<RenderModel*, bool>                          modelDirtyFlags;
+  std::unordered_map<ecs::RenderModel*, std::vector<math::Matrix4f<>>> currentFrameInstances;
+  std::unordered_map<ecs::RenderModel*, bool>                          modelDirtyFlags;
 
   for (const auto& instance : m_frameResources->getModels()) {
     currentFrameInstances[instance->model].push_back(instance->modelMatrix);
@@ -245,7 +245,7 @@ void BasePass::createFramebuffer_(const math::Dimension2i& dimension) {
   }
 }
 
-void BasePass::updateInstanceBuffer_(RenderModel*                         model,
+void BasePass::updateInstanceBuffer_(ecs::RenderModel*                         model,
                                      const std::vector<math::Matrix4f<>>& matrices,
                                      ModelBufferCache&                    cache) {
   if (!cache.instanceBuffer || matrices.size() > cache.capacity) {
@@ -312,7 +312,7 @@ void BasePass::prepareDrawCalls_(const RenderContext& context) {
                                                         pipelineDesc.vertexBindings,
                                                         pipelineDesc.vertexAttributes,
                                                         m_device->getApiType(),
-                                                        sizeof(Vertex),
+                                                        sizeof(ecs::Vertex),
                                                         sizeof(math::Matrix4f<>));
 
           GlobalLogger::Log(
@@ -394,8 +394,8 @@ void BasePass::prepareDrawCalls_(const RenderContext& context) {
 }
 
 void BasePass::cleanupUnusedBuffers_(
-    const std::unordered_map<RenderModel*, std::vector<math::Matrix4f<>>>& currentFrameInstances) {
-  std::vector<RenderModel*> modelsToRemove;
+    const std::unordered_map<ecs::RenderModel*, std::vector<math::Matrix4f<>>>& currentFrameInstances) {
+  std::vector<ecs::RenderModel*> modelsToRemove;
   for (const auto& [model, cache] : m_instanceBufferCache) {
     if (!currentFrameInstances.contains(model)) {
       modelsToRemove.push_back(model);
@@ -406,7 +406,7 @@ void BasePass::cleanupUnusedBuffers_(
     m_instanceBufferCache.erase(model);
   }
 
-  std::unordered_set<Material*> activeMaterials;
+  std::unordered_set<ecs::Material*> activeMaterials;
 
   for (const auto& [model, matrices] : currentFrameInstances) {
     for (const auto& renderMesh : model->renderMeshes) {
@@ -416,7 +416,7 @@ void BasePass::cleanupUnusedBuffers_(
     }
   }
 
-  std::vector<Material*> materialsToRemove;
+  std::vector<ecs::Material*> materialsToRemove;
   for (const auto& [material, cache] : m_materialCache) {
     if (!activeMaterials.contains(material)) {
       materialsToRemove.push_back(material);
@@ -431,7 +431,7 @@ void BasePass::cleanupUnusedBuffers_(
   }
 }
 
-rhi::DescriptorSet* BasePass::getOrCreateMaterialDescriptorSet_(Material* material) {
+rhi::DescriptorSet* BasePass::getOrCreateMaterialDescriptorSet_(ecs::Material* material) {
   if (!material) {
     GlobalLogger::Log(LogLevel::Error, "Material is null");
     return nullptr;

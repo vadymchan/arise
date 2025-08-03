@@ -15,10 +15,10 @@ class ModelManager {
   public:
   ModelManager() = default;
 
-  Model* getModel(const std::filesystem::path& filepath);
+  ecs::Model* getModel(const std::filesystem::path& filepath);
 
   private:
-  std::unordered_map<std::filesystem::path, std::unique_ptr<Model>> modelCache_;
+  std::unordered_map<std::filesystem::path, std::unique_ptr<ecs::Model>> modelCache_;
   std::mutex                                                        mutex_;
 };
 

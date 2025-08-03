@@ -6,6 +6,7 @@
 #include "utils/memory/align.h"
 
 namespace arise {
+namespace ecs {
 
 LightSystem::LightSystem(gfx::rhi::Device* device, gfx::renderer::RenderResourceManager* resourceManager)
     : m_device(device)
@@ -427,4 +428,5 @@ void LightSystem::ensureAllBuffersExist_() {
     m_spotLightCapacity  = 1;
   }
 }
+}  // namespace ecs
 }  // namespace arise

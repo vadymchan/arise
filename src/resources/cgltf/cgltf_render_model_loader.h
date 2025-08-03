@@ -13,15 +13,15 @@ class CgltfRenderModelLoader : public IRenderModelLoader {
   CgltfRenderModelLoader()  = default;
   ~CgltfRenderModelLoader() = default;
 
-  std::unique_ptr<RenderModel> loadRenderModel(const std::filesystem::path& filePath,
-                                               Model**                      outModel = nullptr) override;
+  std::unique_ptr<ecs::RenderModel> loadRenderModel(const std::filesystem::path& filePath,
+                                                    ecs::Model**                 outModel = nullptr) override;
 
   private:
   // GPU-side geometry mesh
-  std::unique_ptr<RenderGeometryMesh> createRenderGeometryMesh(Mesh* mesh);
+  std::unique_ptr<ecs::RenderGeometryMesh> createRenderGeometryMesh(ecs::Mesh* mesh);
 
-  gfx::rhi::Buffer* createVertexBuffer(const Mesh* mesh);
-  gfx::rhi::Buffer* createIndexBuffer(const Mesh* mesh);
+  gfx::rhi::Buffer* createVertexBuffer(const ecs::Mesh* mesh);
+  gfx::rhi::Buffer* createIndexBuffer(const ecs::Mesh* mesh);
 };
 
 }  // namespace arise

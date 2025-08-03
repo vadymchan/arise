@@ -18,7 +18,7 @@ class ModelLoaderManager {
 
   void registerLoader(ModelType modelType, std::shared_ptr<IModelLoader> loader);
 
-  std::unique_ptr<Model> loadModel(const std::filesystem::path& filePath);
+  std::unique_ptr<ecs::Model> loadModel(const std::filesystem::path& filePath);
 
   private:
   std::unordered_map<ModelType, std::shared_ptr<IModelLoader>> loaderMap_;

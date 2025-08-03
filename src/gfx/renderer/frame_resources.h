@@ -16,7 +16,9 @@
 #include <vector>
 
 namespace arise {
+namespace ecs {
 class LightSystem;
+}  // namespace ecs
 }  // namespace arise
 
 namespace arise {
@@ -40,9 +42,9 @@ class FrameResources {
    * Resize resources when viewport (window / editor viewport) changes
    */
   void resize(const math::Dimension2i& newDimension);
-  
+
   void updatePerFrameResources(const RenderContext& context);
-  
+
   void clearSceneResources();
   void cleanup();
 
@@ -64,15 +66,15 @@ class FrameResources {
   rhi::DescriptorSet* getViewDescriptorSet() const { return m_viewDescriptorSet; }
   rhi::DescriptorSet* getDefaultSamplerDescriptorSet() const { return m_defaultSamplerDescriptorSet; }
   rhi::DescriptorSet* getLightDescriptorSet() const;
-  rhi::DescriptorSet* getOrCreateModelMatrixDescriptorSet(RenderMesh* renderMesh);
+  rhi::DescriptorSet* getOrCreateModelMatrixDescriptorSet(ecs::RenderMesh* renderMesh);
 
   rhi::Sampler* getDefaultSampler() const { return m_defaultSampler; }
 
   struct ModelInstance {
-    RenderModel*     model;
-    Transform        transform;
-    math::Matrix4f<> modelMatrix;
-    entt::entity     entityId;
+    ecs::RenderModel* model;
+    ecs::Transform    transform;
+    math::Matrix4f<>  modelMatrix;
+    entt::entity      entityId;
 
     uint32_t materialId = 0;  // for sorting
 
@@ -90,7 +92,7 @@ class FrameResources {
   rhi::DescriptorSetLayout* getLightDescriptorSetLayout() const;
   rhi::DescriptorSetLayout* getMaterialDescriptorSetLayout() const { return m_materialDescriptorSetLayout; }
 
-  rhi::Buffer* getOrCreateMaterialParamBuffer(Material* material);
+  rhi::Buffer* getOrCreateMaterialParamBuffer(ecs::Material* material);
 
   rhi::Texture* getDefaultWhiteTexture() const { return m_defaultWhiteTexture; }
   rhi::Texture* getDefaultNormalTexture() const { return m_defaultNormalTexture; }
@@ -143,26 +145,26 @@ class FrameResources {
     rhi::DescriptorSet* descriptorSet = nullptr;
   };
 
-  std::unordered_map<RenderMesh*, ModelMatrixCache> m_modelMatrixCache;
+  std::unordered_map<ecs::RenderMesh*, ModelMatrixCache> m_modelMatrixCache;
 
   struct MaterialParametersData {
     math::Vector4f baseColor;
-    float           metallic;
-    float           roughness;
-    float           opacity;
-    float           padding;
+    float          metallic;
+    float          roughness;
+    float          opacity;
+    float          padding;
   };
 
   struct MaterialParamCache {
     rhi::Buffer* paramBuffer = nullptr;
   };
 
-  std::unordered_map<Material*, MaterialParamCache> m_materialParamCache;
+  std::unordered_map<ecs::Material*, MaterialParamCache> m_materialParamCache;
 
   std::unordered_map<entt::entity, ModelInstance> m_modelsMap;
   std::vector<ModelInstance*>                     m_sortedModels;
 
-  LightSystem* m_lightSystem = nullptr;
+  ecs::LightSystem* m_lightSystem = nullptr;
 };
 
 }  // namespace renderer

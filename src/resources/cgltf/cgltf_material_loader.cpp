@@ -13,7 +13,7 @@
 
 namespace arise {
 
-std::vector<std::unique_ptr<Material>> CgltfMaterialLoader::loadMaterials(const std::filesystem::path& filePath) {
+std::vector<std::unique_ptr<ecs::Material>> CgltfMaterialLoader::loadMaterials(const std::filesystem::path& filePath) {
   GlobalLogger::Log(LogLevel::Info, "Loading materials from " + filePath.string());
 
   auto scene = CgltfSceneCache::getOrLoad(filePath);
@@ -32,9 +32,9 @@ std::vector<std::unique_ptr<Material>> CgltfMaterialLoader::loadMaterials(const 
   return materials;
 }
 
-std::vector<std::unique_ptr<Material>> CgltfMaterialLoader::processMaterials(const cgltf_data*            data,
-                                                                             const std::filesystem::path& filePath) {
-  std::vector<std::unique_ptr<Material>> materials;
+std::vector<std::unique_ptr<ecs::Material>> CgltfMaterialLoader::processMaterials(
+    const cgltf_data* data, const std::filesystem::path& filePath) {
+  std::vector<std::unique_ptr<ecs::Material>> materials;
   materials.reserve(data->materials_count);
 
   for (size_t i = 0; i < data->materials_count; ++i) {
@@ -47,10 +47,10 @@ std::vector<std::unique_ptr<Material>> CgltfMaterialLoader::processMaterials(con
   return materials;
 }
 
-std::unique_ptr<Material> CgltfMaterialLoader::processMaterial(const cgltf_material*        material,
-                                                               const std::filesystem::path& filePath,
-                                                               size_t                       materialIndex) {
-  auto outMaterial = std::make_unique<Material>();
+std::unique_ptr<ecs::Material> CgltfMaterialLoader::processMaterial(const cgltf_material*        material,
+                                                                    const std::filesystem::path& filePath,
+                                                                    size_t                       materialIndex) {
+  auto outMaterial = std::make_unique<ecs::Material>();
 
   outMaterial->materialName = material->name ? material->name : "Material_" + std::to_string(materialIndex);
 
@@ -79,7 +79,7 @@ std::unique_ptr<Material> CgltfMaterialLoader::processMaterial(const cgltf_mater
 }
 
 void CgltfMaterialLoader::loadTextures(const cgltf_material*        material,
-                                       Material*                    outMaterial,
+                                       ecs::Material*               outMaterial,
                                        const std::filesystem::path& basePath) {
   // base color
   if (material->pbr_metallic_roughness.base_color_texture.texture) {

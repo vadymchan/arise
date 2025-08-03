@@ -4,7 +4,7 @@
 
 namespace arise {
 
-Mesh* MeshManager::addMesh(std::unique_ptr<Mesh> mesh, const std::filesystem::path& sourcePath) {
+ecs::Mesh* MeshManager::addMesh(std::unique_ptr<ecs::Mesh> mesh, const std::filesystem::path& sourcePath) {
   std::lock_guard<std::mutex> lock(m_mutex);
 
   if (!mesh) {
@@ -20,14 +20,14 @@ Mesh* MeshManager::addMesh(std::unique_ptr<Mesh> mesh, const std::filesystem::pa
                       "Mesh '" + mesh->meshName + "' from " + sourcePath.string() + " already exists. Overwriting.");
   }
 
-  Mesh* meshPtr = mesh.get();
+  ecs::Mesh* meshPtr = mesh.get();
 
   m_meshes[key] = std::move(mesh);
 
   return meshPtr;
 }
 
-Mesh* MeshManager::getMesh(const std::filesystem::path& sourcePath, const std::string& meshName) {
+ecs::Mesh* MeshManager::getMesh(const std::filesystem::path& sourcePath, const std::string& meshName) {
   std::lock_guard<std::mutex> lock(m_mutex);
 
   std::string key = createKey(sourcePath, meshName);

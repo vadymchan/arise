@@ -11,6 +11,7 @@
 #include <entt/entt.hpp>
 
 namespace arise {
+namespace ecs {
 
 class CameraInputSystem : public IUpdatableSystem {
   public:
@@ -38,6 +39,7 @@ class CameraInputSystem : public IUpdatableSystem {
   float            m_maxMovingSpeed    = 100.0f;
 };
 
+}  // namespace ecs
 }  // namespace arise
 
 #endif  // ARISE_CAMERA_INPUT_SYSTEM_H

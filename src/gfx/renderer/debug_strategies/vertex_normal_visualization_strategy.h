@@ -7,8 +7,10 @@
 #include <vector>
 
 namespace arise {
+namespace ecs {
 struct RenderModel;
 struct Material;
+}  // namespace ecs
 }  // namespace arise
 
 namespace arise::gfx::rhi {
@@ -31,7 +33,7 @@ class VertexNormalVisualizationStrategy : public DebugDrawStrategy {
 
   ~VertexNormalVisualizationStrategy() override { cleanup(); }
 
-  void initialize(rhi::Device*           device,
+  void initialize(rhi::Device*           device,  
                   RenderResourceManager* resourceManager,
                   FrameResources*        frameResources,
                   rhi::ShaderManager*    shaderManager) override;
@@ -64,11 +66,11 @@ class VertexNormalVisualizationStrategy : public DebugDrawStrategy {
   void setupRenderPass_();
   void createFramebuffers_(const math::Dimension2i& dimension);
   void prepareDrawCalls_(const RenderContext& context);
-  void updateInstanceBuffer_(RenderModel*                         model,
+  void updateInstanceBuffer_(ecs::RenderModel*                         model,
                              const std::vector<math::Matrix4f<>>& matrices,
                              ModelBufferCache&                    cache);
   void cleanupUnusedBuffers_(
-      const std::unordered_map<RenderModel*, std::vector<math::Matrix4f<>>>& currentFrameInstances);
+      const std::unordered_map<ecs::RenderModel*, std::vector<math::Matrix4f<>>>& currentFrameInstances);
 
   // clang-format off
 
@@ -93,7 +95,7 @@ class VertexNormalVisualizationStrategy : public DebugDrawStrategy {
   rhi::RenderPass*               m_renderPass = nullptr;
   std::vector<rhi::Framebuffer*> m_framebuffers;
 
-  std::unordered_map<RenderModel*, ModelBufferCache> m_instanceBufferCache;
+  std::unordered_map<ecs::RenderModel*, ModelBufferCache> m_instanceBufferCache;
   std::vector<DrawData>                              m_drawData;
 };
 

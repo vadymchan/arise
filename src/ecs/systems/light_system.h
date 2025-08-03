@@ -20,6 +20,7 @@ class RenderResourceManager;
 }  // namespace arise::gfx
 
 namespace arise {
+namespace ecs {
 
 class LightSystem : public IUpdatableSystem {
   public:
@@ -118,6 +119,7 @@ class LightSystem : public IUpdatableSystem {
   bool m_initialized        = false;
 };
 
+}  // namespace ecs
 }  // namespace arise
 
 #endif  // ARISE_LIGHT_SYSTEM_H

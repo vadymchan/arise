@@ -19,7 +19,7 @@
 
 namespace arise {
 
-std::unique_ptr<Model> CgltfModelLoader::loadModel(const std::filesystem::path& filePath) {
+std::unique_ptr<ecs::Model> CgltfModelLoader::loadModel(const std::filesystem::path& filePath) {
   auto scene = CgltfSceneCache::getOrLoad(filePath);
   if (!scene) {
     GlobalLogger::Log(LogLevel::Error, "Failed to load GLTF scene: " + filePath.string());
@@ -27,12 +27,12 @@ std::unique_ptr<Model> CgltfModelLoader::loadModel(const std::filesystem::path& 
   }
   const cgltf_data* data = scene.get();
 
-  auto model      = std::make_unique<Model>();
+  auto model      = std::make_unique<ecs::Model>();
   model->filePath = filePath;
 
-  model->boundingBox = bounds::createInvalid();
+  model->boundingBox = ecs::bounds::createInvalid();
 
-  std::vector<BoundingBox> meshBoundingBoxes;
+  std::vector<ecs::BoundingBox> meshBoundingBoxes;
 
   auto meshManager = ServiceLocator::s_get<MeshManager>();
   if (!meshManager) {
@@ -71,8 +71,8 @@ std::unique_ptr<Model> CgltfModelLoader::loadModel(const std::filesystem::path& 
 
           mesh->transformMatrix = worldMatrix;
 
-          if (bounds::isValid(mesh->boundingBox)) {
-            BoundingBox transformedBounds = bounds::transformAABB(mesh->boundingBox, mesh->transformMatrix);
+          if (ecs::bounds::isValid(mesh->boundingBox)) {
+            ecs::BoundingBox transformedBounds = ecs::bounds::transformAABB(mesh->boundingBox, mesh->transformMatrix);
             meshBoundingBoxes.push_back(transformedBounds);
 
             GlobalLogger::Log(LogLevel::Debug,
@@ -86,14 +86,14 @@ std::unique_ptr<Model> CgltfModelLoader::loadModel(const std::filesystem::path& 
           }
         }
 
-        Mesh* meshPtr = meshManager->addMesh(std::move(mesh), filePath);
+        auto* meshPtr = meshManager->addMesh(std::move(mesh), filePath);
         model->meshes.push_back(meshPtr);
       }
     }
   }
 
   if (!meshBoundingBoxes.empty()) {
-    model->boundingBox = bounds::combineAABBs(meshBoundingBoxes);
+    model->boundingBox = ecs::bounds::combineAABBs(meshBoundingBoxes);
     GlobalLogger::Log(LogLevel::Info,
                       "Model '" + filePath.filename().string() + "' combined bounding box calculated from "
                           + std::to_string(meshBoundingBoxes.size()) + " meshes");
@@ -181,8 +181,8 @@ math::Matrix4f<> CgltfModelLoader::getNodeTransformMatrix(const cgltf_node* node
   }
 }
 
-std::unique_ptr<Mesh> CgltfModelLoader::processPrimitive(const cgltf_primitive* primitive) {
-  auto mesh = std::make_unique<Mesh>();
+std::unique_ptr<ecs::Mesh> CgltfModelLoader::processPrimitive(const cgltf_primitive* primitive) {
+  auto mesh = std::make_unique<ecs::Mesh>();
 
   if (primitive->type != cgltf_primitive_type_triangles) {
     GlobalLogger::Log(LogLevel::Warning, "Skipping non-triangle primitive");
@@ -212,7 +212,7 @@ std::unique_ptr<Mesh> CgltfModelLoader::processPrimitive(const cgltf_primitive* 
   return mesh;
 }
 
-void CgltfModelLoader::processVertices(const cgltf_primitive* primitive, Mesh* mesh) {
+void CgltfModelLoader::processVertices(const cgltf_primitive* primitive, ecs::Mesh* mesh) {
   const cgltf_accessor* position_accessor = nullptr;
   const cgltf_accessor* normal_accessor   = nullptr;
   const cgltf_accessor* texcoord_accessor = nullptr;
@@ -244,7 +244,7 @@ void CgltfModelLoader::processVertices(const cgltf_primitive* primitive, Mesh* m
   mesh->vertices.reserve(vertex_count);
 
   for (size_t i = 0; i < vertex_count; ++i) {
-    Vertex vertex;
+    ecs::Vertex vertex;
 
     float position[3] = {0, 0, 0};
     cgltf_accessor_read_float(position_accessor, i, position, 3);
@@ -289,7 +289,7 @@ void CgltfModelLoader::processVertices(const cgltf_primitive* primitive, Mesh* m
   }
 }
 
-void CgltfModelLoader::processIndices(const cgltf_primitive* primitive, Mesh* mesh) {
+void CgltfModelLoader::processIndices(const cgltf_primitive* primitive, ecs::Mesh* mesh) {
   if (primitive->indices) {
     const cgltf_accessor* indices     = primitive->indices;
     size_t                index_count = indices->count;
@@ -309,7 +309,7 @@ void CgltfModelLoader::processIndices(const cgltf_primitive* primitive, Mesh* me
 }
 
 // TODO: the same implementation is in asssimp. Consider moving it to a common place and use in both loaders.
-void CgltfModelLoader::calculateTangents(Mesh* mesh) {
+void CgltfModelLoader::calculateTangents(ecs::Mesh* mesh) {
   if (mesh->indices.size() % 3 != 0) {
     GlobalLogger::Log(LogLevel::Warning, "Index count is not a multiple of 3, cannot calculate tangents");
     return;
@@ -320,9 +320,9 @@ void CgltfModelLoader::calculateTangents(Mesh* mesh) {
     uint32_t i1 = mesh->indices[i + 1];
     uint32_t i2 = mesh->indices[i + 2];
 
-    Vertex& v0 = mesh->vertices[i0];
-    Vertex& v1 = mesh->vertices[i1];
-    Vertex& v2 = mesh->vertices[i2];
+    ecs::Vertex& v0 = mesh->vertices[i0];
+    ecs::Vertex& v1 = mesh->vertices[i1];
+    ecs::Vertex& v2 = mesh->vertices[i2];
 
     math::Vector3f edge1 = v1.position - v0.position;
     math::Vector3f edge2 = v2.position - v0.position;
@@ -362,7 +362,7 @@ void CgltfModelLoader::calculateTangents(Mesh* mesh) {
 #ifdef ARISE_USE_MIKKTS
 
 struct MikkTSpaceContext {
-  Mesh* mesh;
+  ecs::Mesh* mesh;
 };
 
 static int getNumFaces(const SMikkTSpaceContext* context) {
@@ -410,7 +410,7 @@ static void setTangent(const SMikkTSpaceContext* context, const float tangent[],
   userContext->mesh->vertices[index].bitangent = normal.cross(userContext->mesh->vertices[index].tangent) * sign;
 }
 
-void CgltfModelLoader::generateMikkTSpaceTangents(Mesh* mesh) {
+void CgltfModelLoader::generateMikkTSpaceTangents(ecs::Mesh* mesh) {
   if (mesh->vertices.empty() || mesh->indices.empty()) {
     return;
   }
@@ -438,12 +438,12 @@ void CgltfModelLoader::generateMikkTSpaceTangents(Mesh* mesh) {
 }
 #endif  // ARISE_USE_MIKKTS
 
-BoundingBox CgltfModelLoader::extractBoundingBoxFromAccessor(const cgltf_accessor* positionAccessor) {
+ecs::BoundingBox CgltfModelLoader::extractBoundingBoxFromAccessor(const cgltf_accessor* positionAccessor) {
   if (!positionAccessor || !positionAccessor->has_min || !positionAccessor->has_max) {
-    return bounds::createInvalid();
+    return ecs::bounds::createInvalid();
   }
 
-  BoundingBox box;
+  ecs::BoundingBox box;
   box.min = math::Vector3f(static_cast<float>(positionAccessor->min[0]),
                            static_cast<float>(positionAccessor->min[1]),
                            static_cast<float>(positionAccessor->min[2]));
@@ -455,16 +455,16 @@ BoundingBox CgltfModelLoader::extractBoundingBoxFromAccessor(const cgltf_accesso
   return box;
 }
 
-BoundingBox CgltfModelLoader::calculateBoundingBoxFromVertices(const Mesh* mesh) {
+ecs::BoundingBox CgltfModelLoader::calculateBoundingBoxFromVertices(const ecs::Mesh* mesh) {
   if (!mesh || mesh->vertices.empty()) {
     GlobalLogger::Log(LogLevel::Warning, "Cannot calculate bounding box from empty mesh");
-    return bounds::createInvalid();
+    return ecs::bounds::createInvalid();
   }
 
-  return bounds::calculateAABB(mesh->vertices);
+  return ecs::bounds::calculateAABB(mesh->vertices);
 }
 
-void CgltfModelLoader::processBoundingBox(Mesh* mesh, const cgltf_primitive* primitive) {
+void CgltfModelLoader::processBoundingBox(ecs::Mesh* mesh, const cgltf_primitive* primitive) {
   if (!mesh || !primitive) {
     return;
   }
@@ -481,7 +481,7 @@ void CgltfModelLoader::processBoundingBox(Mesh* mesh, const cgltf_primitive* pri
   if (positionAccessor) {
     mesh->boundingBox = extractBoundingBoxFromAccessor(positionAccessor);
 
-    if (bounds::isValid(mesh->boundingBox)) {
+    if (ecs::bounds::isValid(mesh->boundingBox)) {
       GlobalLogger::Log(LogLevel::Debug, "Bounding box extracted from GLTF accessor data");
       return;
     }
@@ -489,7 +489,7 @@ void CgltfModelLoader::processBoundingBox(Mesh* mesh, const cgltf_primitive* pri
 
   mesh->boundingBox = calculateBoundingBoxFromVertices(mesh);
 
-  if (bounds::isValid(mesh->boundingBox)) {
+  if (ecs::bounds::isValid(mesh->boundingBox)) {
     GlobalLogger::Log(LogLevel::Debug, "Bounding box calculated from vertex data");
   } else {
     GlobalLogger::Log(LogLevel::Warning, "Failed to calculate valid bounding box for mesh");

@@ -7,7 +7,7 @@ void ModelLoaderManager::registerLoader(ModelType modelType, std::shared_ptr<IMo
   loaderMap_[modelType] = std::move(loader);
 }
 
-std::unique_ptr<Model> ModelLoaderManager::loadModel(const std::filesystem::path& filePath) {
+std::unique_ptr<ecs::Model> ModelLoaderManager::loadModel(const std::filesystem::path& filePath) {
   std::string extension = filePath.extension().string();
   std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
   ModelType modelType = getModelTypeFromExtension(extension);

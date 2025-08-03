@@ -7,8 +7,10 @@
 #include <vector>
 
 namespace arise {
+namespace ecs {
 struct RenderModel;
 struct Material;
+}  // namespace ecs
 }  // namespace arise
 
 namespace arise::gfx::rhi {
@@ -63,12 +65,12 @@ class NormalMapVisualizationStrategy : public DebugDrawStrategy {
   void setupRenderPass_();
   void createFramebuffers_(const math::Dimension2i& dimension);
   void prepareDrawCalls_(const RenderContext& context);
-  void updateInstanceBuffer_(RenderModel*                         model,
+  void updateInstanceBuffer_(ecs::RenderModel*                    model,
                              const std::vector<math::Matrix4f<>>& matrices,
                              ModelBufferCache&                    cache);
   void cleanupUnusedBuffers_(
-      const std::unordered_map<RenderModel*, std::vector<math::Matrix4f<>>>& currentFrameInstances);
-  rhi::DescriptorSet* getOrCreateMaterialDescriptorSet_(Material* material);
+      const std::unordered_map<ecs::RenderModel*, std::vector<math::Matrix4f<>>>& currentFrameInstances);
+  rhi::DescriptorSet* getOrCreateMaterialDescriptorSet_(ecs::Material* material);
 
   const std::string m_vertexShaderPath_ = "assets/shaders/debug/normal_map_visualization/shader_instancing.vs.hlsl";
   const std::string m_pixelShaderPath_  = "assets/shaders/debug/normal_map_visualization/shader.ps.hlsl";
@@ -92,9 +94,9 @@ class NormalMapVisualizationStrategy : public DebugDrawStrategy {
     rhi::DescriptorSet* descriptorSet = nullptr;
   };
 
-  std::unordered_map<Material*, MaterialCache> m_materialCache;
+  std::unordered_map<ecs::Material*, MaterialCache> m_materialCache;
 
-  std::unordered_map<RenderModel*, ModelBufferCache> m_instanceBufferCache;
+  std::unordered_map<ecs::RenderModel*, ModelBufferCache> m_instanceBufferCache;
   std::vector<DrawData>                              m_drawData;
 };
 }  // namespace renderer

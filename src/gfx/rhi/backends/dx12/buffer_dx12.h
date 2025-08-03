@@ -34,10 +34,6 @@ class BufferDx12 : public Buffer {
 
   void updateCurrentState(D3D12_RESOURCE_STATES newState) { m_currentState_ = newState; }
 
-  bool isMapped() const { return m_isMapped_; }
-
-  void* getMappedData() const { return m_mappedData_; }
-
   D3D12MA::Allocation* getAllocation() const { return m_allocation_.Get(); }
 
   protected:

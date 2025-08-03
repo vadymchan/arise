@@ -23,10 +23,6 @@ class BufferVk : public Buffer {
 
   uint32_t getStride() const { return m_stride_; }
 
-  bool isMapped() const { return m_isMapped_; }
-
-  void* getMappedData() const { return m_mappedData_; }
-
   private:
   friend class DeviceVk;
   // update_ method is called from DeviceVk

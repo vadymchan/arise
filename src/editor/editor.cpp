@@ -252,15 +252,110 @@ void Editor::renderPerformanceWindow() {
   ImGui::Text("FPS: %.1f", fps);
   ImGui::Text("Frame Time: %.1f ms", frameTime);
 
-  static const int historyCount                   = 300;
-  static float     frameTimeHistory[historyCount] = {0};
-  static int       historyIndex                   = 0;
 
-  frameTimeHistory[historyIndex] = frameTime;
-  historyIndex                   = (historyIndex + 1) % historyCount;
+  static constexpr float graphTimeWindow = 5.0f; // Show last 5 seconds of data
+  static constexpr float bucketSize      = 0.025f; // 25ms buckets (40 samples per second)
+  static constexpr int   maxBuckets      = static_cast<int>(graphTimeWindow / bucketSize);
+  
+  struct PerformanceBucket {
+    float minFrameTime = FLT_MAX;
+    float maxFrameTime = 0.0f;
+    float avgFrameTime = 0.0f;
+    int   frameCount   = 0;
+    float totalTime    = 0.0f;
+  };
+  
+  static std::vector<PerformanceBucket> buckets(maxBuckets);
+  static float accumulatedTime = 0.0f;
+  static int   currentBucket = 0;
+  static bool  initialized = false;
 
-  ImGui::PlotLines(
-      "Frame Time (ms)", frameTimeHistory, historyCount, historyIndex, nullptr, 0.0f, FLT_MAX, ImVec2(0, 80));
+  if (fps > 0.0f) {
+    float deltaTime = timingManager->getDeltaTime();
+    accumulatedTime += deltaTime;
+    
+    // Determine which bucket this frame belongs to
+    int targetBucket = static_cast<int>(accumulatedTime / bucketSize) % maxBuckets;
+    
+    // If we moved to a new bucket, reset it
+    if (targetBucket != currentBucket || !initialized) {
+      if (initialized && targetBucket != currentBucket) {
+        // Clear future buckets when we wrap around
+        for (int i = 0; i < maxBuckets; ++i) {
+          int clearIdx = (currentBucket + 1 + i) % maxBuckets;
+          if (clearIdx == targetBucket) break;
+          buckets[clearIdx] = PerformanceBucket();
+        }
+      }
+      currentBucket = targetBucket;
+      if (!initialized) {
+        // first bucket - clear all buckets
+        for (auto& bucket : buckets) {
+          bucket = PerformanceBucket();
+        }
+        initialized = true;
+      }
+    }
+    
+    // Add current frame to the bucket (NEVER skip frames!)
+    auto& bucket = buckets[currentBucket];
+    bucket.minFrameTime = std::min(bucket.minFrameTime, frameTime);
+    bucket.maxFrameTime = std::max(bucket.maxFrameTime, frameTime);
+    bucket.totalTime += frameTime;
+    bucket.frameCount++;
+    bucket.avgFrameTime = bucket.totalTime / bucket.frameCount;
+  }
+  
+  // Prepare display data from buckets
+  static std::vector<float> avgBuffer(maxBuckets);
+  static std::vector<float> maxBuffer(maxBuckets);
+  int validBuckets = 0;
+  
+  // Go through buckets in chronological order
+  for (int i = 0; i < maxBuckets; ++i) {
+    int bucketIdx = (currentBucket + 1 + i) % maxBuckets;
+    const auto& bucket = buckets[bucketIdx];
+    
+    if (bucket.frameCount > 0) {
+      avgBuffer[validBuckets] = bucket.avgFrameTime;
+      maxBuffer[validBuckets] = bucket.maxFrameTime;
+      validBuckets++;
+    }
+  }
+
+  int totalFrames = 0;
+  float totalHitches = 0;
+  for (const auto& bucket : buckets) {
+    totalFrames += bucket.frameCount;
+    if (bucket.maxFrameTime > bucket.avgFrameTime * 2.0f) {
+      totalHitches++;
+    }
+  }
+  
+  ImGui::Text("Time Window: %.1fs | Buckets: %d | Bucket Size: %.0fms", 
+              graphTimeWindow, validBuckets, bucketSize * 1000.0f);
+  ImGui::Text("Total Frames: %d | Hitches Detected: %.0f | Bucket: %d", 
+              totalFrames, totalHitches, currentBucket);
+
+  static int metricType = 0; // 0 = avg, 1 = max
+  ImGui::RadioButton("Average", &metricType, 0); ImGui::SameLine();
+  ImGui::RadioButton("Max (shows hitches)", &metricType, 1);
+  
+  if (validBuckets > 0) {
+    const char* label = (metricType == 0) ? "Frame Time Average (ms)" : "Frame Time Max (ms)";
+    float* data = (metricType == 0) ? avgBuffer.data() : maxBuffer.data();
+    
+    ImGui::PlotLines(label, data, validBuckets, 0, nullptr, 0.0f, FLT_MAX, ImVec2(0, 80));
+
+    const auto& curBucket = buckets[currentBucket];
+    if (curBucket.frameCount > 0) {
+      ImGui::Text("Current Bucket: Avg=%.2fms, Max=%.2fms, Min=%.2fms, Frames=%d",
+                  curBucket.avgFrameTime, curBucket.maxFrameTime, 
+                  curBucket.minFrameTime, curBucket.frameCount);
+    }
+  } else {
+    ImGui::Text("Accumulating data...");
+  }
 
   ImGui::End();
 }

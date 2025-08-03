@@ -4,6 +4,8 @@
 // TODO: consider moving this file to another directory
 
 #include "gfx/rhi/common/rhi_enums.h"
+#include "gfx/rhi/common/rhi_types.h"
+#include "gfx/rhi/shader_reflection/shader_reflection_types.h"
 #include "platform/windows/windows_platform_setup.h"
 #include "utils/logger/global_logger.h"
 
@@ -94,117 +96,11 @@ class DxcUtil {
                                             gfx::rhi::ShaderStageFlag   stage,
                                             const std::wstring&         entryPoint,
                                             ShaderBackend               backend,
-                                            const OptionalShaderParams& optionalParams = {}) {
-    if (!m_dxcCreateFn) {
-      GlobalLogger::Log(LogLevel::Error, "DXC library not loaded properly.");
-      return nullptr;
-    }
+                                            const OptionalShaderParams& optionalParams = {});
 
-    std::wstring targetProfile = getTargetProfile_(stage);
-    if (targetProfile.empty()) {
-      GlobalLogger::Log(LogLevel::Error, "Invalid shader stage provided.");
-      return nullptr;
-    }
-
-    GlobalLogger::Log(LogLevel::Info, "Compiling shader for target: " + wstring_to_utf8(targetProfile));
-
-    IDxcCompiler3* compilerRaw = nullptr;
-    IDxcUtils*     utilsRaw    = nullptr;
-    if (FAILED(m_dxcCreateFn(CLSID_DxcCompiler, IID_PPV_ARGS(&compilerRaw)))
-        || FAILED(m_dxcCreateFn(CLSID_DxcUtils, IID_PPV_ARGS(&utilsRaw)))) {
-      GlobalLogger::Log(LogLevel::Error, "Failed to create DXC instances.");
-      return nullptr;
-    }
-
-    auto compiler = MakeDxcSharedPtr(compilerRaw);
-    auto utils    = MakeDxcSharedPtr(utilsRaw);
-
-    IDxcIncludeHandler* includeHandlerRaw = nullptr;
-    if (FAILED(utils->CreateDefaultIncludeHandler(&includeHandlerRaw))) {
-      return nullptr;
-    }
-    auto includeHandler = MakeDxcSharedPtr(includeHandlerRaw);
-
-    DxcBuffer sourceBuf;
-    sourceBuf.Ptr      = hlslCode.data();
-    sourceBuf.Size     = hlslCode.size();
-    sourceBuf.Encoding = DXC_CP_UTF8;
-
-    std::vector<std::wstring> argStrings;
-    std::vector<LPCWSTR>      args;
-
-    argStrings.push_back(L"-E");
-    argStrings.push_back(entryPoint);
-    argStrings.push_back(L"-T");
-    argStrings.push_back(targetProfile);
-
-#ifdef _DEBUG
-    argStrings.push_back(L"-Zi");
-    argStrings.push_back(L"-Qembed_debug");
-    argStrings.push_back(L"-Od");
-#else
-    argStrings.push_back(L"-O3");
-#endif
-
-    if (backend == ShaderBackend::SPIRV) {
-      argStrings.push_back(L"-spirv");
-    }
-
-    // includes
-    for (auto& inc : optionalParams.includeDirs) {
-      argStrings.push_back(L"-I");
-      argStrings.push_back(inc);
-    }
-    // defines
-    for (auto& def : optionalParams.preprocessorDefs) {
-      argStrings.push_back(L"-D");
-      argStrings.push_back(def);
-    }
-    // extra
-    for (auto& ex : optionalParams.extraArgs) {
-      argStrings.push_back(ex);
-    }
-
-    // gather pointers
-    args.reserve(argStrings.size());
-    for (auto& s : argStrings) {
-      args.push_back(s.c_str());
-    }
-
-    IDxcResult* resultRaw = nullptr;
-    HRESULT     hr
-        = compiler->Compile(&sourceBuf, args.data(), (UINT)args.size(), includeHandler.get(), IID_PPV_ARGS(&resultRaw));
-    if (FAILED(hr) || !resultRaw) {
-      GlobalLogger::Log(LogLevel::Error, "Failed to compile shader.");
-      return nullptr;
-    }
-    auto result = MakeDxcSharedPtr(resultRaw);
-
-    IDxcBlobUtf8* errorsRaw = nullptr;
-    hr                      = result->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&errorsRaw), nullptr);
-    auto errorsPtr          = MakeDxcSharedPtr(errorsRaw);
-    if (errorsPtr && errorsPtr->GetStringLength() > 0) {
-      GlobalLogger::Log(
-          LogLevel::Warning,
-          std::string(errorsPtr->GetStringPointer(), errorsPtr->GetStringPointer() + errorsPtr->GetStringLength()));
-    }
-
-    HRESULT status;
-    result->GetStatus(&status);
-    if (FAILED(status)) {
-      GlobalLogger::Log(LogLevel::Error, "Shader compilation failed.");
-      return nullptr;
-    }
-
-    IDxcBlob* blobRaw = nullptr;
-    hr                = result->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&blobRaw), nullptr);
-    if (FAILED(hr) || !blobRaw) {
-      GlobalLogger::Log(LogLevel::Error, "Failed to retrieve shader blob.");
-      return nullptr;
-    }
-
-    return MakeDxcSharedPtr(blobRaw);
-  }
+  gfx::rhi::ShaderMeta reflectShader(const std::shared_ptr<IDxcBlob>& shaderBlob,
+                                     gfx::rhi::ShaderStageFlag        stage,
+                                     ShaderBackend                    backend);
 
   private:
   DxcUtil() = default;
@@ -223,78 +119,21 @@ class DxcUtil {
   DxcUtil(const DxcUtil&)            = delete;
   DxcUtil& operator=(const DxcUtil&) = delete;
 
-  bool initialize() {
-    if (m_libHandle) {
-      return true;
-    }
+  bool initialize();
 
-#if defined(_WIN32)
-    m_libHandle = LoadLibraryW(DXC_COMPILER_LIBRARY);
-#else
-    m_libHandle = dlopen(DXC_COMPILER_LIBRARY, RTLD_LAZY);
-#endif
+  std::wstring getTargetProfile_(gfx::rhi::ShaderStageFlag stage);
 
-    if (!m_libHandle) {
-      return false;
-    }
+  static std::string readFile_(const std::filesystem::path& path);
 
-    m_dxcCreateFn = reinterpret_cast<DxcCreateInstanceProc>(GET_DXC_SYMBOL(m_libHandle, "DxcCreateInstance"));
+  static std::string wstring_to_utf8_(const std::wstring& wstr);
 
-    if (!m_dxcCreateFn) {
-#if defined(_WIN32)
-      FreeLibrary(m_libHandle);
-#else
-      dlclose(m_libHandle);
-#endif
-      m_libHandle = nullptr;
-      return false;
-    }
+  gfx::rhi::ShaderMeta reflectDxil_(const std::shared_ptr<IDxcBlob>& shaderBlob,
+                                    gfx::rhi::ShaderStageFlag        stage);
 
-    return true;
-  }
+  gfx::rhi::ShaderMeta reflectSpirv_(const std::shared_ptr<IDxcBlob>& shaderBlob,
+                                     gfx::rhi::ShaderStageFlag        stage);
 
-  std::wstring getTargetProfile_(gfx::rhi::ShaderStageFlag stage) {
-    static const std::wstring suffix = L"_6_7";
-    switch (stage) {
-      case gfx::rhi::ShaderStageFlag::Vertex:
-        return L"vs" + suffix;
-      case gfx::rhi::ShaderStageFlag::Fragment:
-        return L"ps" + suffix;
-      case gfx::rhi::ShaderStageFlag::Compute:
-        return L"cs" + suffix;
-      case gfx::rhi::ShaderStageFlag::Geometry:
-        return L"gs" + suffix;
-      case gfx::rhi::ShaderStageFlag::TessellationControl:
-        return L"hs" + suffix;
-      case gfx::rhi::ShaderStageFlag::TessellationEvaluation:
-        return L"ds" + suffix;
-
-      case gfx::rhi::ShaderStageFlag::Raytracing:
-      case gfx::rhi::ShaderStageFlag::RaytracingRaygen:
-      case gfx::rhi::ShaderStageFlag::RaytracingMiss:
-      case gfx::rhi::ShaderStageFlag::RaytracingClosesthit:
-      case gfx::rhi::ShaderStageFlag::RaytracingAnyhit:
-        return L"lib" + suffix;
-      default:
-        return L"";  // unsupported combination
-    }
-  }
-
-  static std::string readFile_(const std::filesystem::path& path) {
-    std::ifstream ifs(path, std::ios::binary);
-    if (!ifs) {
-      GlobalLogger::Log(LogLevel::Error, "Failed to open shader file: " + path.string());
-      return {};
-    }
-    std::stringstream ss;
-    ss << ifs.rdbuf();
-    return ss.str();
-  }
-
-  static std::string wstring_to_utf8(const std::wstring& wstr) {
-    std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
-    return conv.to_bytes(wstr);
-  }
+  gfx::rhi::ShaderBindingType convertDxilResourceType_(D3D_SHADER_INPUT_TYPE type);
 
   DxcLibHandle          m_libHandle   = nullptr;
   DxcCreateInstanceProc m_dxcCreateFn = nullptr;

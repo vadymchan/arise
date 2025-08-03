@@ -80,7 +80,7 @@ class ImGuiRHIContext {
   std::unique_ptr<rhi::DescriptorPoolManager> m_imguiPoolManager;
 #endif  // ARISE_USE_VULKAN
 
-#ifdef ARISE_RHI_DX12
+#ifdef ARISE_USE_DX12
   std::unique_ptr<rhi::DescriptorHeapDx12> m_dx12ImGuiDescriptorHeap;
 #endif
 

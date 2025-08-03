@@ -4,7 +4,7 @@
 #include "gfx/rhi/interface/command_buffer.h"
 #include "platform/windows/windows_platform_setup.h"
 
-#ifdef ARISE_RHI_DX12
+#ifdef ARISE_USE_DX12
 
 namespace arise {
 namespace gfx {
@@ -134,5 +134,5 @@ class CommandAllocatorManager {
 }  // namespace gfx
 }  // namespace arise
 
-#endif  // ARISE_RHI_DX12
+#endif  // ARISE_USE_DX12
 #endif  // ARISE_COMMAND_BUFFER_DX12_H

@@ -3,6 +3,7 @@
 
 #include "gfx/renderer/render_pass.h"
 #include "gfx/rhi/interface/render_pass.h"
+#include "gfx/rhi/shader_reflection/pipeline_layout_manager.h"
 
 #include <unordered_map>
 #include <vector>
@@ -105,6 +106,8 @@ class BasePass : public RenderPass {
   std::unordered_map<Material*, MaterialCache> m_materialCache;
 
   rhi::ShaderManager* m_shaderManager = nullptr;
+
+  rhi::PipelineLayoutManager m_layoutManager;
 };
 
 }  // namespace renderer

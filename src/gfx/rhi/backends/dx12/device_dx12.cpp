@@ -2,7 +2,7 @@
 
 #include "platform/windows/windows_platform_setup.h"
 
-#ifdef ARISE_RHI_DX12
+#ifdef ARISE_USE_DX12
 
 #include "gfx/rhi/backends/dx12/buffer_dx12.h"
 #include "gfx/rhi/backends/dx12/command_buffer_dx12.h"
@@ -16,8 +16,9 @@
 #include "gfx/rhi/backends/dx12/swap_chain_dx12.h"
 #include "gfx/rhi/backends/dx12/synchronization_dx12.h"
 #include "gfx/rhi/backends/dx12/texture_dx12.h"
+#include "gfx/rhi/shader_reflection/pipeline_utils.h"
 #include "platform/common/window.h"
-//#include "profiler/backends/gpu_profiler_dx12.h"
+// #include "profiler/backends/gpu_profiler_dx12.h"
 #include "profiler/backends/gpu_profiler.h"
 #include "utils/logger/global_logger.h"
 #include "utils/service/service_locator.h"
@@ -276,6 +277,20 @@ std::unique_ptr<GraphicsPipeline> DeviceDx12::createGraphicsPipeline(const Graph
   return std::make_unique<GraphicsPipelineDx12>(desc, this);
 }
 
+std::unique_ptr<GraphicsPipeline> DeviceDx12::createGraphicsPipelineWithReflection(const GraphicsPipelineDesc& desc) {
+  PipelineLayoutDesc reflectionLayout = pipeline_utils::generatePipelineLayoutFromShaders(desc.shaders);
+
+  std::vector<std::unique_ptr<DescriptorSetLayout>> ownedLayouts;
+  auto layoutPtrs = pipeline_utils::createDescriptorSetLayouts(this, reflectionLayout, ownedLayouts);
+
+  GraphicsPipelineDesc modifiedDesc = desc;
+  modifiedDesc.setLayouts           = layoutPtrs;
+
+  auto pipeline = std::make_unique<GraphicsPipelineDx12>(modifiedDesc, this);
+
+  return std::move(pipeline);
+}
+
 std::unique_ptr<DescriptorSetLayout> DeviceDx12::createDescriptorSetLayout(const DescriptorSetLayoutDesc& desc) {
   return std::make_unique<DescriptorSetLayoutDx12>(desc, this);
 }
@@ -466,4 +481,4 @@ void DeviceDx12::waitIdle() {
 }  // namespace gfx
 }  // namespace arise
 
-#endif  // ARISE_RHI_DX12
+#endif  // ARISE_USE_DX12

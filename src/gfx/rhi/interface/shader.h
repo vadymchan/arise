@@ -3,6 +3,7 @@
 
 #include "gfx/rhi/common/rhi_enums.h"
 #include "gfx/rhi/common/rhi_types.h"
+#include "gfx/rhi/shader_reflection/shader_reflection_types.h"
 
 #include <string>
 #include <vector>
@@ -23,6 +24,9 @@ class Shader {
   ShaderStageFlag    getStage() const { return m_desc_.stage; }
   const std::string& getEntryPoint() const { return m_desc_.entryPoint; }
   const ShaderDesc&  getDesc() const { return m_desc_; }
+  const ShaderMeta&  getMeta() const { return m_meta_; }
+  
+  void               setMeta(const ShaderMeta& meta) { m_meta_ = meta; }
 
   virtual void initialize(const std::vector<uint8_t>& code) = 0;
   virtual void release()                                    = 0;
@@ -34,6 +38,7 @@ class Shader {
 
   protected:
   ShaderDesc m_desc_;
+  ShaderMeta m_meta_;
 };
 
 }  // namespace rhi

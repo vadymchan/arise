@@ -1,6 +1,6 @@
 #include "gfx/rhi/backends/dx12/synchronization_dx12.h"
 
-#ifdef ARISE_RHI_DX12
+#ifdef ARISE_USE_DX12
 
 #include "gfx/rhi/backends/dx12/device_dx12.h"
 #include "utils/logger/global_logger.h"
@@ -132,4 +132,4 @@ void SemaphoreDx12::wait() {
 }  // namespace gfx
 }  // namespace arise
 
-#endif  // ARISE_RHI_DX12
+#endif  // ARISE_USE_DX12

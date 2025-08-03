@@ -4,7 +4,7 @@
 #include "gfx/rhi/interface/sampler.h"
 #include "platform/windows/windows_platform_setup.h"
 
-#ifdef ARISE_RHI_DX12
+#ifdef ARISE_USE_DX12
 
 namespace arise {
 namespace gfx {
@@ -40,5 +40,5 @@ class SamplerDx12 : public Sampler {
 }  // namespace gfx
 }  // namespace arise
 
-#endif  // ARISE_RHI_DX12
+#endif  // ARISE_USE_DX12
 #endif  // ARISE_SAMPLER_DX12_H

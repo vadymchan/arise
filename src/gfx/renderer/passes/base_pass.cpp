@@ -9,7 +9,16 @@
 #include "gfx/rhi/interface/descriptor.h"
 #include "gfx/rhi/interface/pipeline.h"
 #include "gfx/rhi/shader_manager.h"
+#include "gfx/rhi/shader_reflection/pipeline_layout_builder.h"
+#include "gfx/rhi/shader_reflection/pipeline_layout_manager.h"
+#include "gfx/rhi/shader_reflection/pipeline_utils.h"
+#include "gfx/rhi/shader_reflection/shader_reflection_utils.h"
+#include "gfx/rhi/shader_reflection/vertex_input_builder.h"
 #include "profiler/profiler.h"
+#include "utils/logger/global_logger.h"
+
+#include <algorithm>
+#include <cstring>
 
 namespace arise {
 namespace gfx {
@@ -162,13 +171,16 @@ void BasePass::clearSceneResources() {
 }
 
 void BasePass::cleanup() {
-  m_instanceBufferCache.clear();
-  m_materialCache.clear();
-  m_drawData.clear();
-  m_renderPass = nullptr;
+  clearSceneResources();
+
   m_framebuffers.clear();
+
+  m_renderPass = nullptr;
+
   m_vertexShader = nullptr;
   m_pixelShader  = nullptr;
+
+  m_layoutManager.cleanup();
 }
 
 void BasePass::setupRenderPass_() {
@@ -295,74 +307,21 @@ void BasePass::prepareDrawCalls_(const RenderContext& context) {
         pipelineDesc.shaders.push_back(m_vertexShader);
         pipelineDesc.shaders.push_back(m_pixelShader);
 
-        rhi::VertexInputBindingDesc vertexBinding;
-        vertexBinding.binding   = 0;
-        vertexBinding.stride    = sizeof(Vertex);
-        vertexBinding.inputRate = rhi::VertexInputRate::Vertex;
-        pipelineDesc.vertexBindings.push_back(vertexBinding);
+        if (m_vertexShader && !m_vertexShader->getMeta().vertexInputs.empty()) {
+          rhi::VertexInputBuilder::createFromReflection(m_vertexShader->getMeta().vertexInputs,
+                                                        pipelineDesc.vertexBindings,
+                                                        pipelineDesc.vertexAttributes,
+                                                        m_device->getApiType(),
+                                                        sizeof(Vertex),
+                                                        sizeof(math::Matrix4f<>));
 
-        rhi::VertexInputBindingDesc instanceBinding;
-        instanceBinding.binding   = 1;
-        instanceBinding.stride    = sizeof(math::Matrix4f<>);
-        instanceBinding.inputRate = rhi::VertexInputRate::Instance;
-        pipelineDesc.vertexBindings.push_back(instanceBinding);
-
-        rhi::VertexInputAttributeDesc positionAttr;
-        positionAttr.location     = 0;
-        positionAttr.binding      = 0;
-        positionAttr.format       = rhi::TextureFormat::Rgb32f;
-        positionAttr.offset       = offsetof(Vertex, position);
-        positionAttr.semanticName = "POSITION";
-        pipelineDesc.vertexAttributes.push_back(positionAttr);
-
-        rhi::VertexInputAttributeDesc uvAttr;
-        uvAttr.location     = 1;
-        uvAttr.binding      = 0;
-        uvAttr.format       = rhi::TextureFormat::Rg32f;
-        uvAttr.offset       = offsetof(Vertex, texCoords);
-        uvAttr.semanticName = "TEXCOORD";
-        pipelineDesc.vertexAttributes.push_back(uvAttr);
-
-        rhi::VertexInputAttributeDesc normalAttr;
-        normalAttr.location     = 2;
-        normalAttr.binding      = 0;
-        normalAttr.format       = rhi::TextureFormat::Rgb32f;
-        normalAttr.offset       = offsetof(Vertex, normal);
-        normalAttr.semanticName = "NORMAL";
-        pipelineDesc.vertexAttributes.push_back(normalAttr);
-
-        rhi::VertexInputAttributeDesc tangentAttr;
-        tangentAttr.location     = 3;
-        tangentAttr.binding      = 0;
-        tangentAttr.format       = rhi::TextureFormat::Rgb32f;
-        tangentAttr.offset       = offsetof(Vertex, tangent);
-        tangentAttr.semanticName = "TANGENT";
-        pipelineDesc.vertexAttributes.push_back(tangentAttr);
-
-        rhi::VertexInputAttributeDesc bitangentAttr;
-        bitangentAttr.location     = 4;
-        bitangentAttr.binding      = 0;
-        bitangentAttr.format       = rhi::TextureFormat::Rgb32f;
-        bitangentAttr.offset       = offsetof(Vertex, bitangent);
-        bitangentAttr.semanticName = "BITANGENT";
-        pipelineDesc.vertexAttributes.push_back(bitangentAttr);
-
-        rhi::VertexInputAttributeDesc colorAttr;
-        colorAttr.location     = 5;
-        colorAttr.binding      = 0;
-        colorAttr.format       = rhi::TextureFormat::Rgba32f;
-        colorAttr.offset       = offsetof(Vertex, color);
-        colorAttr.semanticName = "COLOR";
-        pipelineDesc.vertexAttributes.push_back(colorAttr);
-
-        for (uint32_t i = 0; i < 4; i++) {
-          rhi::VertexInputAttributeDesc matrixCol;
-          matrixCol.location     = 6 + i;
-          matrixCol.binding      = 1;
-          matrixCol.format       = rhi::TextureFormat::Rgba32f;
-          matrixCol.offset       = i * 16;
-          matrixCol.semanticName = "INSTANCE";
-          pipelineDesc.vertexAttributes.push_back(matrixCol);
+          GlobalLogger::Log(
+              LogLevel::Info,
+              "Generated vertex input from shader reflection: " + std::to_string(pipelineDesc.vertexBindings.size())
+                  + " bindings, " + std::to_string(pipelineDesc.vertexAttributes.size()) + " attributes");
+        } else {
+          GlobalLogger::Log(LogLevel::Error, "Shader reflection vertex inputs not available - cannot create pipeline");
+          continue; 
         }
 
         pipelineDesc.inputAssembly.topology               = rhi::PrimitiveType::Triangles;
@@ -393,17 +352,18 @@ void BasePass::prepareDrawCalls_(const RenderContext& context) {
 
         pipelineDesc.multisample.rasterizationSamples = rhi::MSAASamples::Count1;
 
-        auto viewLayout        = m_frameResources->getViewDescriptorSetLayout();
-        auto lightLayout       = m_frameResources->getLightDescriptorSetLayout();
-        auto modelMatrixLayout = m_frameResources->getModelMatrixDescriptorSetLayout();
-        auto materialLayout    = m_frameResources->getMaterialDescriptorSetLayout();
-        auto samplerLayout     = m_frameResources->getDefaultSamplerDescriptorSet()->getLayout();
+        std::vector<rhi::Shader*> shaders;
+        if (m_vertexShader) {
+          shaders.push_back(m_vertexShader);
+        }
+        if (m_pixelShader) {
+          shaders.push_back(m_pixelShader);
+        }
 
-        pipelineDesc.setLayouts.push_back(viewLayout);
-        pipelineDesc.setLayouts.push_back(modelMatrixLayout);
-        pipelineDesc.setLayouts.push_back(lightLayout);
-        pipelineDesc.setLayouts.push_back(materialLayout);
-        pipelineDesc.setLayouts.push_back(samplerLayout);
+        rhi::PipelineLayoutDesc reflectionLayout = rhi::pipeline_utils::generatePipelineLayoutFromShaders(shaders);
+
+        auto layoutPtrs         = m_layoutManager.createAndManageLayouts(m_device, reflectionLayout);
+        pipelineDesc.setLayouts = layoutPtrs;
 
         pipelineDesc.renderPass = m_renderPass;
 
@@ -412,6 +372,10 @@ void BasePass::prepareDrawCalls_(const RenderContext& context) {
 
         m_shaderManager->registerPipelineForShader(pipeline, m_vertexShaderPath_);
         m_shaderManager->registerPipelineForShader(pipeline, m_pixelShaderPath_);
+
+        GlobalLogger::Log(LogLevel::Info,
+                          "BasePass: Created pipeline with " + std::to_string(layoutPtrs.size())
+                              + " automatically generated descriptor sets");
       }
 
       DrawData drawData;

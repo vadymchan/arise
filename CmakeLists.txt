@@ -29,6 +29,7 @@ option(USE_DIRECTX "Use DirectX as the rendering API"          ${WIN32})
 option(FORCE_RHI_API "Force specific RHI API at compile time (disables runtime selection)" OFF)
 
 option(USE_PROFILING "Enable profiling support (CPU + GPU)" OFF)
+set(USE_SHADER_REFLECTION ON CACHE BOOL "Enable runtime shader reflection (always ON)" FORCE)
 
 # Choose tools
 option(BUILD_ASSET_TOOLS "Build offline asset conversion tools (gltfpack & toktx)" OFF)
@@ -417,6 +418,20 @@ if(USE_GLTF_SAMPLE_MODELS)
         gltf_sample_models
         GIT_REPOSITORY https://github.com/KhronosGroup/glTF-Sample-Models.git
         GIT_TAG        d7a3cc8e51d7c573771ae77a57f16b0662a905c6
+        GIT_SHALLOW    TRUE
+    )
+endif()
+
+if(USE_SHADER_REFLECTION AND USE_VULKAN)
+    message(STATUS "Fetching SPIRV-Reflect...")
+
+    set(SPIRV_REFLECT_STATIC_LIB  ON  CACHE BOOL "" FORCE)
+    set(SPIRV_REFLECT_EXECUTABLE  OFF CACHE BOOL "" FORCE) 
+    set(SPIRV_REFLECT_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+    FetchContent_Declare(
+        spirv_reflect
+        GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Reflect.git
+        GIT_TAG        vulkan-sdk-1.4.321.0
         GIT_SHALLOW    TRUE
     )
 endif()
@@ -869,6 +884,17 @@ endif()
 
 if(USE_TRACY_GPU_PROFILING)
     target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_TRACY_GPU_PROFILING)
+endif()
+
+
+if(USE_SHADER_REFLECTION)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_SHADER_REFLECTION)
+    if(USE_VULKAN)
+        FetchContent_MakeAvailable(spirv_reflect)
+        target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${spirv_reflect_SOURCE_DIR})
+        target_link_libraries(${PROJECT_NAME} PRIVATE spirv-reflect-static)
+        target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_SPIRV_REFLECT)
+    endif()
 endif()
 
 if(USE_VULKAN)

@@ -12,6 +12,7 @@
 #include "gfx/rhi/backends/vulkan/swap_chain_vk.h"
 #include "gfx/rhi/backends/vulkan/synchronization_vk.h"
 #include "gfx/rhi/backends/vulkan/texture_vk.h"
+#include "gfx/rhi/shader_reflection/pipeline_utils.h"
 #include "platform/common/window.h"
 // #include "profiler/backends/gpu_profiler_vk.h"
 #include "profiler/backends/gpu_profiler.h"
@@ -93,7 +94,7 @@ bool DeviceVk::createInstance_() {
   appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
   appInfo.pEngineName        = "arise";
   appInfo.engineVersion      = VK_MAKE_VERSION(1, 0, 0);
-  appInfo.apiVersion         = VK_API_VERSION_1_3;
+  appInfo.apiVersion         = VK_API_VERSION_1_3;  // TODO: consider switching to 1.4
 
   VkInstanceCreateInfo createInfo = {};
   createInfo.sType                = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -365,6 +366,20 @@ std::unique_ptr<Shader> DeviceVk::createShader(const ShaderDesc& desc) {
 
 std::unique_ptr<GraphicsPipeline> DeviceVk::createGraphicsPipeline(const GraphicsPipelineDesc& desc) {
   return std::make_unique<GraphicsPipelineVk>(desc, this);
+}
+
+std::unique_ptr<GraphicsPipeline> DeviceVk::createGraphicsPipelineWithReflection(const GraphicsPipelineDesc& desc) {
+  PipelineLayoutDesc reflectionLayout = pipeline_utils::generatePipelineLayoutFromShaders(desc.shaders);
+
+  std::vector<std::unique_ptr<DescriptorSetLayout>> ownedLayouts;
+  auto layoutPtrs = pipeline_utils::createDescriptorSetLayouts(this, reflectionLayout, ownedLayouts);
+
+  GraphicsPipelineDesc modifiedDesc = desc;
+  modifiedDesc.setLayouts           = layoutPtrs;
+
+  auto pipeline = std::make_unique<GraphicsPipelineVk>(modifiedDesc, this);
+
+  return std::move(pipeline);
 }
 
 std::unique_ptr<DescriptorSetLayout> DeviceVk::createDescriptorSetLayout(const DescriptorSetLayoutDesc& desc) {

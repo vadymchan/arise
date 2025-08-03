@@ -4,7 +4,7 @@
 #include "gfx/rhi/interface/shader.h"
 #include "platform/windows/windows_platform_setup.h"
 
-#ifdef ARISE_RHI_DX12
+#ifdef ARISE_USE_DX12
 
 #include<mutex>
 
@@ -44,6 +44,6 @@ class ShaderDx12 : public Shader {
 }  // namespace gfx
 }  // namespace arise
 
-#endif  // ARISE_RHI_DX12
+#endif  // ARISE_USE_DX12
 
 #endif  // ARISE_SHADER_DX12_H

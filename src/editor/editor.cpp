@@ -378,6 +378,21 @@ void Editor::renderModeSelectionWindow() {
     m_renderParams.renderMode = gfx::renderer::RenderMode::BoundingBoxVisualization;
   }
 
+  ImGui::Separator();
+  
+  bool preserveMode = m_preserveRenderModeOnSelection;
+  if (ImGui::Checkbox("Preserve render mode on selection", &preserveMode)) {
+    m_preserveRenderModeOnSelection = preserveMode;
+    
+    std::string mode = preserveMode ? "enabled" : "disabled";
+    GlobalLogger::Log(LogLevel::Info, "Render mode preservation " + mode);
+  }
+  
+  if (ImGui::IsItemHovered()) {
+    ImGui::SetTooltip("When enabled, selecting entities won't change the current render mode.\n"
+                      "Selected entities will still be highlighted with outlines.");
+  }
+
   ImGui::End();
 }
 
@@ -1241,10 +1256,12 @@ void Editor::handleEntitySelection(entt::entity entity) {
     }
   }
 
-  if (hasSelectedRenderModel) {
-    m_renderParams.renderMode = gfx::renderer::RenderMode::MeshHighlight;
-  } else {
-    m_renderParams.renderMode = gfx::renderer::RenderMode::Solid;
+  if (!m_preserveRenderModeOnSelection) {
+    if (hasSelectedRenderModel) {
+      m_renderParams.renderMode = gfx::renderer::RenderMode::MeshHighlight;
+    } else {
+      m_renderParams.renderMode = gfx::renderer::RenderMode::Solid;
+    }
   }
 }
 
@@ -1574,8 +1591,10 @@ void Editor::removeSelectedEntity() {
 
   if (!registry.valid(m_selectedEntity)) {
     m_selectedEntity = entt::null;
-    // TODO: maybe switch to Solid only if it was MeshHighlight
-    m_renderParams.renderMode = gfx::renderer::RenderMode::Solid;
+    // Reset to Solid mode only if we're not preserving render mode
+    if (!m_preserveRenderModeOnSelection) {
+      m_renderParams.renderMode = gfx::renderer::RenderMode::Solid;
+    }
     return;
   }
 
@@ -1626,8 +1645,10 @@ void Editor::removeSelectedEntity() {
 
   m_selectedEntity = entt::null;
 
-  // TODO: maybe switch to Solid only if it was RenderMode::MeshHighlight
-  m_renderParams.renderMode = gfx::renderer::RenderMode::Solid;
+  // Reset to Solid mode only if we're not preserving render mode and we were in MeshHighlight
+  if (!m_preserveRenderModeOnSelection) {
+    m_renderParams.renderMode = gfx::renderer::RenderMode::Solid;
+  }
 }
 
 math::Vector3f Editor::getPositionInFrontOfCamera_() {

@@ -12,6 +12,7 @@
 #include "gfx/rhi/interface/sampler.h"
 #include "gfx/rhi/interface/texture.h"
 #include "platform/common/window.h"
+#include "utils/resource/resource_deletion_manager.h"
 
 #include <imgui.h>
 
@@ -37,10 +38,10 @@ class ImGuiRHIContext {
 
   void beginFrame();
 
-  void endFrame(rhi::CommandBuffer*       cmdBuffer,
-                rhi::Texture*             targetTexture,
+  void endFrame(rhi::CommandBuffer*      cmdBuffer,
+                rhi::Texture*            targetTexture,
                 const math::Dimension2i& viewportDimension,
-                uint32_t                  currentFrameIndex);
+                uint32_t                 currentFrameIndex);
 
   void resize(const math::Dimension2i& newDimensions);
 
@@ -48,24 +49,26 @@ class ImGuiRHIContext {
 
   void releaseTextureID(ImTextureID textureID);
 
+  void updateFrame(uint64_t currentFrame);
+
   private:
   bool initializeVulkan(rhi::Device* device, uint32_t swapChainBufferCount);
   bool initializeDx12(rhi::Device* device, uint32_t swapChainBufferCount);
 
-  void renderImGuiVulkan(rhi::CommandBuffer*       cmdBuffer,
-                         rhi::Texture*             targetTexture,
+  void renderImGuiVulkan(rhi::CommandBuffer*      cmdBuffer,
+                         rhi::Texture*            targetTexture,
                          const math::Dimension2i& viewportDimension,
-                         uint32_t                  currentFrameIndex);
+                         uint32_t                 currentFrameIndex);
 
-  void renderImGuiDx12(rhi::CommandBuffer*       cmdBuffer,
-                       rhi::Texture*             targetTexture,
+  void renderImGuiDx12(rhi::CommandBuffer*      cmdBuffer,
+                       rhi::Texture*            targetTexture,
                        const math::Dimension2i& viewportDimension,
-                       uint32_t                  currentFrameIndex);
+                       uint32_t                 currentFrameIndex);
 
   void              createRenderPass();
-  rhi::Framebuffer* getOrCreateFramebuffer(rhi::Texture*             targetTexture,
+  rhi::Framebuffer* getOrCreateFramebuffer(rhi::Texture*            targetTexture,
                                            const math::Dimension2i& dimensions,
-                                           uint32_t                  frameIndex);
+                                           uint32_t                 frameIndex);
 
   Window*           m_window       = nullptr;
   rhi::Device*      m_device       = nullptr;
@@ -86,7 +89,9 @@ class ImGuiRHIContext {
 
   math::Dimension2i m_currentFramebufferSize;
 
-  bool m_initialized = false;
+  ResourceDeletionManager m_deletionManager;
+  uint32_t                m_framesInFlight = 2;
+  bool                    m_initialized    = false;
 };
 
 }  // namespace gfx

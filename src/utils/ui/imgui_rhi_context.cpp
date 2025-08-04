@@ -29,9 +29,10 @@ bool ImGuiRHIContext::initialize(Window* window, rhi::Device* device, uint32_t s
     return false;
   }
 
-  m_window       = window;
-  m_device       = device;
-  m_renderingApi = device->getApiType();
+  m_window         = window;
+  m_device         = device;
+  m_renderingApi   = device->getApiType();
+  m_framesInFlight = swapChainBufferCount;
 
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
@@ -153,10 +154,10 @@ void ImGuiRHIContext::beginFrame() {
   ImGui::NewFrame();
 }
 
-void ImGuiRHIContext::endFrame(rhi::CommandBuffer*       cmdBuffer,
-                               rhi::Texture*             targetTexture,
+void ImGuiRHIContext::endFrame(rhi::CommandBuffer*      cmdBuffer,
+                               rhi::Texture*            targetTexture,
                                const math::Dimension2i& viewportDimension,
-                               uint32_t                  currentFrameIndex) {
+                               uint32_t                 currentFrameIndex) {
   if (!m_initialized || !cmdBuffer || !targetTexture) {
     if (!m_initialized) {
       GlobalLogger::Log(LogLevel::Warning, "ImGuiRHIContext not initialized in endFrame");
@@ -171,6 +172,8 @@ void ImGuiRHIContext::endFrame(rhi::CommandBuffer*       cmdBuffer,
   }
 
   ImGui::Render();
+
+  updateFrame(static_cast<uint64_t>(currentFrameIndex));
 
   GPU_ZONE_NC(cmdBuffer, "ImGui Render", color::ORANGE);
 
@@ -187,9 +190,9 @@ void ImGuiRHIContext::endFrame(rhi::CommandBuffer*       cmdBuffer,
   }
 }
 
-rhi::Framebuffer* ImGuiRHIContext::getOrCreateFramebuffer(rhi::Texture*             targetTexture,
+rhi::Framebuffer* ImGuiRHIContext::getOrCreateFramebuffer(rhi::Texture*            targetTexture,
                                                           const math::Dimension2i& dimensions,
-                                                          uint32_t                  frameIndex) {
+                                                          uint32_t                 frameIndex) {
   if (frameIndex >= m_framebuffers.size()) {
     m_framebuffers.resize(frameIndex + 1);
   }
@@ -275,9 +278,19 @@ void ImGuiRHIContext::releaseTextureID(ImTextureID textureID) {
   if (m_renderingApi == rhi::RenderingApi::Vulkan) {
     auto deviceVk = static_cast<rhi::DeviceVk*>(m_device);
 
-    // TODO: in future, consider ring buffer for descriptor sets
-    VkDescriptorSet set = reinterpret_cast<VkDescriptorSet>(textureID);
-    vkFreeDescriptorSets(deviceVk->getDevice(), m_imguiPoolManager->getPool(), 1, &set);
+    VkDescriptorSet  set  = reinterpret_cast<VkDescriptorSet>(textureID);
+    VkDescriptorPool pool = m_imguiPoolManager->getPool();
+
+    uint32_t frameDelay = m_framesInFlight + 1;
+
+    m_deletionManager.enqueueForDeletion<VkDescriptorSet>(
+        &set,
+        [deviceVk, pool](VkDescriptorSet* descriptorSet) {
+          vkFreeDescriptorSets(deviceVk->getDevice(), pool, 1, descriptorSet);
+        },
+        "ImGui_DescriptorSet_" + std::to_string(reinterpret_cast<uintptr_t>(set)),
+        "VkDescriptorSet",
+        frameDelay);
   }
 
   // For DirectX 12, we don't need to do anything special since we're
@@ -285,6 +298,10 @@ void ImGuiRHIContext::releaseTextureID(ImTextureID textureID) {
 #ifdef ARISE_USE_DX12
   // No cleanup needed for DX12 in this simple approach
 #endif
+}
+
+void ImGuiRHIContext::updateFrame(uint64_t currentFrame) {
+  m_deletionManager.setCurrentFrame(currentFrame);
 }
 
 bool ImGuiRHIContext::initializeVulkan(rhi::Device* device, uint32_t swapChainBufferCount) {
@@ -359,10 +376,10 @@ bool ImGuiRHIContext::initializeDx12(rhi::Device* device, uint32_t swapChainBuff
   return true;
 }
 
-void ImGuiRHIContext::renderImGuiVulkan(rhi::CommandBuffer*       cmdBuffer,
-                                        rhi::Texture*             targetTexture,
+void ImGuiRHIContext::renderImGuiVulkan(rhi::CommandBuffer*      cmdBuffer,
+                                        rhi::Texture*            targetTexture,
                                         const math::Dimension2i& viewportDimension,
-                                        uint32_t                  currentFrameIndex) {
+                                        uint32_t                 currentFrameIndex) {
   auto cmdBufferVk = static_cast<rhi::CommandBufferVk*>(cmdBuffer);
 
   {
@@ -408,10 +425,10 @@ void ImGuiRHIContext::renderImGuiVulkan(rhi::CommandBuffer*       cmdBuffer,
   cmdBuffer->endRenderPass();
 }
 
-void ImGuiRHIContext::renderImGuiDx12(rhi::CommandBuffer*       cmdBuffer,
-                                      rhi::Texture*             targetTexture,
+void ImGuiRHIContext::renderImGuiDx12(rhi::CommandBuffer*      cmdBuffer,
+                                      rhi::Texture*            targetTexture,
                                       const math::Dimension2i& viewportDimension,
-                                      uint32_t                  currentFrameIndex) {
+                                      uint32_t                 currentFrameIndex) {
   auto cmdBufferDx12 = static_cast<rhi::CommandBufferDx12*>(cmdBuffer);
 
   rhi::Framebuffer* framebuffer = getOrCreateFramebuffer(targetTexture, viewportDimension, currentFrameIndex);

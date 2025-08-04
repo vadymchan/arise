@@ -16,6 +16,7 @@
 #include "event/application_event_manager.h"
 #include "event/window_event_manager.h"
 #include "gfx/renderer/render_resource_manager.h"
+#include "gfx/renderer/render_settings.h"
 #include "gfx/renderer/renderer.h"
 #include "gfx/rhi/shader_manager.h"
 #include "input/input_manager.h"
@@ -381,7 +382,8 @@ auto Engine::initialize() -> bool {
   if (m_editor_) {
     m_editor_->setWindowRecreationCallback(
         [this](gfx::rhi::RenderingApi newApi) -> Window* { return this->recreateWindow_(newApi); });
-    GlobalLogger::Log(LogLevel::Info, "Window recreation callback set for Editor");
+
+    m_editor_->setApplicationModeToggleCallback([this]() { this->toggleApplicationMode_(); });
   }
 
   if (successfullyInitialized) {
@@ -399,15 +401,11 @@ void Engine::render() {
     return;
   }
 
-  auto& renderSettings = m_editor_->getRenderParams();
-
-  auto context = m_renderer_->beginFrame(ServiceLocator::s_get<SceneManager>()->getCurrentScene(), renderSettings);
-
-  m_renderer_->renderFrame(context);
-
-  m_editor_->render(context);
-
-  m_renderer_->endFrame(context);
+  if (m_applicationMode == ApplicationMode::Editor) {
+    renderEditor_();
+  } else {
+    renderStandalone_();
+  }
 }
 
 void Engine::run() {
@@ -478,6 +476,31 @@ void Engine::update_(float deltaTime) {
   systemManager->updateSystems(scene, deltaTime);
 }
 
+ApplicationMode Engine::getCurrentApplicationMode_() const {
+  return m_applicationMode;
+}
+
+void Engine::toggleApplicationMode_() {
+  if (m_applicationMode == ApplicationMode::Editor) {
+    m_applicationMode = ApplicationMode::Standalone;
+    GlobalLogger::Log(LogLevel::Info, "Switched to Standalone mode");
+
+    if (m_editor_) {
+      m_editor_->clearViewportTextureIDs();
+    }
+
+  } else {
+    m_applicationMode = ApplicationMode::Editor;
+    GlobalLogger::Log(LogLevel::Info, "Switched to Editor mode");
+  }
+
+  updateCameraForMode_(m_applicationMode);
+
+  if (m_editor_) {
+    m_editor_->setApplicationMode(m_applicationMode);
+  }
+}
+
 Window* Engine::recreateWindow_(gfx::rhi::RenderingApi newApi) {
   if (!m_window_) {
     GlobalLogger::Log(LogLevel::Error, "Cannot recreate null window");
@@ -529,6 +552,44 @@ Window* Engine::recreateWindow_(gfx::rhi::RenderingApi newApi) {
 
   GlobalLogger::Log(LogLevel::Info, "Window recreated successfully");
   return m_window_.get();
+}
+
+void Engine::renderEditor_() {
+  auto& renderSettings = m_editor_->getRenderParams();
+  auto  context = m_renderer_->beginFrame(ServiceLocator::s_get<SceneManager>()->getCurrentScene(), renderSettings);
+  m_renderer_->renderFrame(context);
+  m_editor_->render(context);
+  m_renderer_->endFrame(context);
+}
+
+void Engine::renderStandalone_() {
+  auto                          windowSize = m_window_->getSize();
+  gfx::renderer::RenderSettings standaloneParams;
+  standaloneParams.appMode                 = ApplicationMode::Standalone;
+  standaloneParams.renderViewportDimension = math::Dimension2i(windowSize.width(), windowSize.height());
+
+  auto context = m_renderer_->beginFrame(ServiceLocator::s_get<SceneManager>()->getCurrentScene(), standaloneParams);
+  m_renderer_->renderFrame(context);
+  m_renderer_->endFrame(context);
+}
+
+void Engine::updateCameraForMode_(ApplicationMode mode) {
+  auto  scene    = ServiceLocator::s_get<SceneManager>()->getCurrentScene();
+  auto& registry = scene->getEntityRegistry();
+  auto  view     = registry.view<ecs::Camera>();
+
+  if (view.empty()) {
+    return;
+  }
+
+  auto  entity = view.front();
+  auto& camera = view.get<ecs::Camera>(entity);
+
+  if (mode == ApplicationMode::Standalone) {
+    auto windowSize = m_window_->getSize();
+    camera.width    = windowSize.width();
+    camera.height   = windowSize.height();
+  }
 }
 
 void Engine::setGame(Application* game) {

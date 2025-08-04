@@ -9,5 +9,6 @@
   "GizmoToggleVisibility": "5",
   "ZoomIn": "Z",
   "ZoomOut": "X",
-  "ZoomReset": "Shift+Z"
+  "ZoomReset": "Shift+Z",
+  "ToggleApplicationMode": "F11"
 } 

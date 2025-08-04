@@ -36,7 +36,20 @@ bool EditorInputProcessor::handleKeyboard(const SDL_Event& event) {
 }
 
 bool EditorInputProcessor::shouldProcess(const SDL_Event& event) const {
+  // Always allow processing toggle mode action regardless of current mode
   if (event.type == SDL_KEYDOWN) {
+    auto actionOpt = m_inputMap->getEditorAction(event.key);
+    if (actionOpt && *actionOpt == EditorAction::ToggleApplicationMode) {
+      return true;
+    }
+  }
+
+  if (m_getCurrentMode() != ApplicationMode::Editor) {
+    return false;
+  }
+
+  if (event.type == SDL_KEYDOWN) {
+    // In Editor mode, check if ImGui wants to capture keyboard
     return !ImGui::GetIO().WantCaptureKeyboard;
   }
 

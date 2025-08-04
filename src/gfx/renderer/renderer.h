@@ -1,6 +1,7 @@
 #ifndef ARISE_RENDERER_H
 #define ARISE_RENDERER_H
 
+#include "core/application_mode.h"
 #include "gfx/renderer/frame_resources.h"
 #include "gfx/renderer/passes/base_pass.h"
 #include "gfx/renderer/passes/debug_pass.h"

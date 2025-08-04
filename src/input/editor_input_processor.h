@@ -1,6 +1,7 @@
 #ifndef ARISE_EDITOR_INPUT_PROCESSOR_H
 #define ARISE_EDITOR_INPUT_PROCESSOR_H
 
+#include "core/application_mode.h"
 #include "input/actions.h"
 #include "input/input_map.h"
 #include "input/input_processor.h"
@@ -17,8 +18,9 @@ using EditorCallback = std::function<void(EditorAction)>;
 
 class EditorInputProcessor : public InputProcessor {
   public:
-  explicit EditorInputProcessor(InputMap* inputMap)
-      : m_inputMap(inputMap) {}
+  explicit EditorInputProcessor(InputMap* inputMap, std::function<ApplicationMode()> getCurrentMode)
+      : m_inputMap(inputMap)
+      , m_getCurrentMode(std::move(getCurrentMode)) {}
 
   void subscribe(EditorAction action, EditorCallback cb) { m_callbacks[action].push_back(std::move(cb)); }
 
@@ -30,6 +32,7 @@ class EditorInputProcessor : public InputProcessor {
   bool handleKeyboard(const SDL_Event& event);
 
   InputMap*                                                     m_inputMap;
+  std::function<ApplicationMode()>                              m_getCurrentMode;
   std::unordered_map<EditorAction, std::vector<EditorCallback>> m_callbacks;
 };
 

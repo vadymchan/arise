@@ -34,6 +34,14 @@ class Engine {
   auto recreateWindow_(gfx::rhi::RenderingApi newApi) -> Window*;
 
   void update_(float deltaTime);
+  
+  void renderEditor_();
+  void renderStandalone_();
+  void updateCameraForMode_(ApplicationMode mode);
+  
+  void toggleApplicationMode_();
+  
+  ApplicationMode getCurrentApplicationMode_() const;
 
   bool                                     m_isRunning_{false};
   ApplicationMode                          m_applicationMode = ApplicationMode::Standalone;

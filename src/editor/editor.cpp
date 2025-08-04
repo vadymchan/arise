@@ -153,12 +153,7 @@ void Editor::resizeViewport(const gfx::renderer::RenderContext& context) {
 
   m_device->waitIdle();
 
-  for (size_t i = 0; i < m_viewportTextureIDs.size(); i++) {
-    if (m_viewportTextureIDs[i]) {
-      m_imguiContext->releaseTextureID(m_viewportTextureIDs[i]);
-      m_viewportTextureIDs[i] = 0;
-    }
-  }
+  clearViewportTextureIDs();
 
   // We'll create new texture IDs on-demand in the render method
 }
@@ -979,6 +974,7 @@ void Editor::renderControlsWindow() {
     ImGui::BulletText("Ctrl+S: Save scene");
     ImGui::BulletText("I: Focus Inspector window");
     ImGui::BulletText("F1: Show this help window");
+    ImGui::BulletText("F11: Toggle between Editor and Standalone mode");
   }
   ImGui::End();
 }
@@ -1534,7 +1530,8 @@ void Editor::saveCurrentScene_() {
 
 void Editor::setupInputHandlers_() {
   auto inputManager    = ServiceLocator::s_get<InputManager>();
-  auto editorProcessor = std::make_unique<EditorInputProcessor>(inputManager->getInputMap());
+  auto getCurrentMode  = [this]() { return this->m_renderParams.appMode; };
+  auto editorProcessor = std::make_unique<EditorInputProcessor>(inputManager->getInputMap(), getCurrentMode);
 
   editorProcessor->subscribe(EditorAction::SaveScene, [this](EditorAction) { saveCurrentScene_(); });
 
@@ -1554,6 +1551,12 @@ void Editor::setupInputHandlers_() {
   editorProcessor->subscribe(EditorAction::GizmoScale, [this](EditorAction a) { handleGizmoInput(a); });
   editorProcessor->subscribe(EditorAction::GizmoToggleSpace, [this](EditorAction a) { handleGizmoInput(a); });
   editorProcessor->subscribe(EditorAction::GizmoToggleVisibility, [this](EditorAction a) { handleGizmoInput(a); });
+
+  editorProcessor->subscribe(EditorAction::ToggleApplicationMode, [this](EditorAction) {
+    if (m_applicationModeToggleCallback) {
+      m_applicationModeToggleCallback();
+    }
+  });
 
   inputManager->addProcessor(std::move(editorProcessor));
   GlobalLogger::Log(LogLevel::Info, "Editor input handlers configured with new architecture");
@@ -2399,12 +2402,7 @@ bool Editor::switchRenderingApi_(gfx::rhi::RenderingApi newApi) {
     m_device->waitIdle();
   }
 
-  for (auto& textureID : m_viewportTextureIDs) {
-    if (textureID && m_imguiContext) {
-      m_imguiContext->releaseTextureID(textureID);
-    }
-    textureID = 0;
-  }
+  clearViewportTextureIDs();
 
   if (m_imguiContext) {
     m_imguiContext->shutdown();
@@ -2492,6 +2490,19 @@ bool Editor::recreateImGuiContext_() {
   ImGuizmo::SetImGuiContext(ImGui::GetCurrentContext());
   GlobalLogger::Log(LogLevel::Info, "ImGui context recreated successfully");
   return true;
+}
+
+void Editor::clearViewportTextureIDs() {
+  if (!m_imguiContext) {
+    return;
+  }
+
+  for (auto& textureID : m_viewportTextureIDs) {
+    if (textureID) {
+      m_imguiContext->releaseTextureID(textureID);
+      textureID = 0;
+    }
+  }
 }
 
 }  // namespace arise

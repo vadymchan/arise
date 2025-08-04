@@ -5,15 +5,16 @@
 namespace arise {
 
 const std::unordered_map<std::string, InputAction> InputMap::s_stringToInputAction = {
-  { "MoveForward",  InputAction::MoveForward},
-  {"MoveBackward", InputAction::MoveBackward},
-  {    "MoveLeft",     InputAction::MoveLeft},
-  {   "MoveRight",    InputAction::MoveRight},
-  {      "MoveUp",       InputAction::MoveUp},
-  {    "MoveDown",     InputAction::MoveDown},
-  {      "ZoomIn",       InputAction::ZoomIn},
-  {     "ZoomOut",      InputAction::ZoomOut},
-  {   "ZoomReset",    InputAction::ZoomReset}
+  {          "MoveForward",           InputAction::MoveForward},
+  {         "MoveBackward",          InputAction::MoveBackward},
+  {             "MoveLeft",              InputAction::MoveLeft},
+  {            "MoveRight",             InputAction::MoveRight},
+  {               "MoveUp",                InputAction::MoveUp},
+  {             "MoveDown",              InputAction::MoveDown},
+  {               "ZoomIn",                InputAction::ZoomIn},
+  {              "ZoomOut",               InputAction::ZoomOut},
+  {            "ZoomReset",             InputAction::ZoomReset},
+  {"ToggleApplicationMode", InputAction::ToggleApplicationMode}
 };
 
 const std::unordered_map<std::string, EditorAction> InputMap::s_stringToEditorAction = {
@@ -25,7 +26,8 @@ const std::unordered_map<std::string, EditorAction> InputMap::s_stringToEditorAc
   {           "GizmoScale",            EditorAction::GizmoScale},
   {     "GizmoToggleSpace",      EditorAction::GizmoToggleSpace},
   {"GizmoToggleVisibility", EditorAction::GizmoToggleVisibility},
-  {            "MousePick",             EditorAction::MousePick}  // TODO: not completely implemented yet
+  {            "MousePick",             EditorAction::MousePick}, // TODO: not completely implemented yet
+  {"ToggleApplicationMode", EditorAction::ToggleApplicationMode}
 };
 
 const std::unordered_map<std::string, SDL_Scancode> InputMap::s_keyNameToScancode = {

@@ -164,8 +164,6 @@ RenderContext Renderer::beginFrame(Scene* scene, const RenderSettings& renderSet
     math::Dimension2i viewportDimension;
     switch (renderSettings.appMode) {
       case ApplicationMode::Standalone:
-        viewportDimension = m_window->getSize();
-        break;
       case ApplicationMode::Editor:
         viewportDimension = renderSettings.renderViewportDimension;
         onViewportResize(viewportDimension);
@@ -507,7 +505,7 @@ void Renderer::cleanupResources_() {
     m_debugPass->cleanup();
     m_debugPass.reset();
   }
-  
+
   if (m_basePass) {
     m_basePass->cleanup();
     m_basePass.reset();
@@ -699,7 +697,7 @@ void Renderer::reloadSceneModels_() {
     }
 
     ecs::Model* cpuModel       = nullptr;
-    auto*  newRenderModel = renderModelManager->getRenderModel(modelPath.string(), &cpuModel);
+    auto*       newRenderModel = renderModelManager->getRenderModel(modelPath.string(), &cpuModel);
 
     if (newRenderModel) {
       registry.emplace<ecs::RenderModel*>(entity, newRenderModel);

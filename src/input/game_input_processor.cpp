@@ -5,6 +5,7 @@
 #include "ecs/components/movement.h"
 #include "ecs/components/transform.h"
 #include "ecs/components/viewport_tag.h"
+#include "input/input_manager.h"
 #include "scene/scene_manager.h"
 #include "utils/service/service_locator.h"
 
@@ -12,9 +13,10 @@
 
 namespace arise {
 
-GameInputProcessor::GameInputProcessor(InputMap* inputMap, ViewportContext* viewportContext)
+GameInputProcessor::GameInputProcessor(InputMap* inputMap, ViewportContext* viewportContext, InputManager* inputManager)
     : m_inputMap(inputMap)
-    , m_viewportContext(viewportContext) {
+    , m_viewportContext(viewportContext)
+    , m_inputManager(inputManager) {
 }
 
 bool GameInputProcessor::process(const SDL_Event& event) {
@@ -122,9 +124,19 @@ bool GameInputProcessor::handleMouse(const SDL_Event& event) {
 }
 
 bool GameInputProcessor::shouldProcessInput(const SDL_Event& e) const {
-  // standalone mode: process all events - we don't care about viewport focus
-  if (!m_viewportContext) {
+  ApplicationMode currentMode = ApplicationMode::Standalone;
+  if (m_inputManager) {
+    currentMode = m_inputManager->getCurrentApplicationMode();
+  }
+
+  // In standalone mode: process all events - we don't care about viewport focus
+  if (currentMode == ApplicationMode::Standalone) {
     return true;
+  }
+
+  // In editor mode: only process if viewport context exists and we have focus
+  if (!m_viewportContext) {
+    return false;
   }
 
   // process release button event even if we are not in viewport

@@ -13,6 +13,7 @@ enum class InputAction {
   ZoomIn,
   ZoomOut,
   ZoomReset,
+  ToggleApplicationMode,
   Count
 };
 
@@ -26,6 +27,7 @@ enum class EditorAction {
   GizmoToggleSpace,
   GizmoToggleVisibility,
   MousePick,
+  ToggleApplicationMode,
   Count
 };
 

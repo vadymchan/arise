@@ -9,9 +9,9 @@
 #include <math_library/dimension.h>
 #include <math_library/point.h>
 
+#include <filesystem>
 #include <string>
 #include <utility>
-#include <filesystem>
 
 namespace arise {
 
@@ -94,11 +94,11 @@ class Window {
   auto operator=(Window&&) -> Window&      = delete;
 
   private:
-  std::string        m_title_;
+  std::string       m_title_;
   math::Dimension2i m_size_;
   math::Point2i     m_position_;
-  Flags              m_flags_;
-  SDL_Window*        m_window_{nullptr};
+  Flags             m_flags_;
+  SDL_Window*       m_window_{nullptr};
 };
 
 DECLARE_ENUM_BIT_OPERATORS(Window::Flags)

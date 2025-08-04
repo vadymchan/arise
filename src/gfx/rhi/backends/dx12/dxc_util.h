@@ -127,11 +127,9 @@ class DxcUtil {
 
   static std::string wstring_to_utf8_(const std::wstring& wstr);
 
-  gfx::rhi::ShaderMeta reflectDxil_(const std::shared_ptr<IDxcBlob>& shaderBlob,
-                                    gfx::rhi::ShaderStageFlag        stage);
+  gfx::rhi::ShaderMeta reflectDxil_(const std::shared_ptr<IDxcBlob>& shaderBlob, gfx::rhi::ShaderStageFlag stage);
 
-  gfx::rhi::ShaderMeta reflectSpirv_(const std::shared_ptr<IDxcBlob>& shaderBlob,
-                                     gfx::rhi::ShaderStageFlag        stage);
+  gfx::rhi::ShaderMeta reflectSpirv_(const std::shared_ptr<IDxcBlob>& shaderBlob, gfx::rhi::ShaderStageFlag stage);
 
   gfx::rhi::ShaderBindingType convertDxilResourceType_(D3D_SHADER_INPUT_TYPE type);
 

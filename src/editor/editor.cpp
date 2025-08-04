@@ -2117,8 +2117,8 @@ void Editor::renderEntityList_(Registry& registry) {
     std::string label = "Entity " + std::to_string(static_cast<uint32_t>(entity));
 
     if (auto* loadingTag = registry.try_get<ecs::ModelLoadingTag>(entity)) {
-      label            += " (Loading: " + loadingTag->modelPath.filename().string() + ")";
-      info.isLoading    = true;
+      label          += " (Loading: " + loadingTag->modelPath.filename().string() + ")";
+      info.isLoading  = true;
     } else if (registry.all_of<ecs::RenderModel*>(entity)) {
       auto* model = registry.get<ecs::RenderModel*>(entity);
       if (model && !model->filePath.empty()) {

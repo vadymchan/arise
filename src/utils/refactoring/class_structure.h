@@ -266,5 +266,3 @@ class ClassStructure {
 };
 
 // clang-format on
-
-

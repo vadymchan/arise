@@ -7,7 +7,7 @@ namespace arise {
 
 class IMaterialLoader {
   public:
-  virtual ~IMaterialLoader() = default;
+  virtual ~IMaterialLoader()                                                                               = default;
   virtual std::vector<std::unique_ptr<ecs::Material>> loadMaterials(const std::filesystem::path& filepath) = 0;
 };
 

@@ -97,7 +97,7 @@ class NormalMapVisualizationStrategy : public DebugDrawStrategy {
   std::unordered_map<ecs::Material*, MaterialCache> m_materialCache;
 
   std::unordered_map<ecs::RenderModel*, ModelBufferCache> m_instanceBufferCache;
-  std::vector<DrawData>                              m_drawData;
+  std::vector<DrawData>                                   m_drawData;
 };
 }  // namespace renderer
 }  // namespace gfx

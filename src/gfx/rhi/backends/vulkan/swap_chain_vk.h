@@ -43,7 +43,7 @@ class SwapChainVk : public SwapChain {
   VkExtent2D         chooseSwapExtent_(const VkSurfaceCapabilitiesKHR& capabilities);
 
   private:
-  DeviceVk*     m_device_;
+  DeviceVk* m_device_;
 
   VkSwapchainKHR     m_swapChain_     = VK_NULL_HANDLE;
   VkFormat           m_depthFormat_   = VK_FORMAT_D32_SFLOAT;

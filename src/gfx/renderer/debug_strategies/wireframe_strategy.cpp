@@ -208,7 +208,7 @@ void WireframeStrategy::createFramebuffers_(const math::Dimension2i& dimension) 
   }
 }
 
-void WireframeStrategy::updateInstanceBuffer_(ecs::RenderModel*                         model,
+void WireframeStrategy::updateInstanceBuffer_(ecs::RenderModel*                    model,
                                               const std::vector<math::Matrix4f<>>& matrices,
                                               ModelBufferCache&                    cache) {
   if (!cache.instanceBuffer || matrices.size() > cache.capacity) {
@@ -346,7 +346,7 @@ void WireframeStrategy::prepareDrawCalls_(const RenderContext& context) {
 }
 
 void WireframeStrategy::cleanupUnusedBuffers_(
-  const std::unordered_map<ecs::RenderModel*, std::vector<math::Matrix4f<>>>& currentFrameInstances) {
+    const std::unordered_map<ecs::RenderModel*, std::vector<math::Matrix4f<>>>& currentFrameInstances) {
   std::vector<ecs::RenderModel*> modelsToRemove;
 
   for (const auto& [model, cache] : m_instanceBufferCache) {

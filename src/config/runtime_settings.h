@@ -23,7 +23,7 @@ class RuntimeSettings {
 
   private:
   RuntimeSettings();
-  math::Vector3f        m_worldUp_;
+  math::Vector3f m_worldUp_;
 };
 
 }  // namespace arise

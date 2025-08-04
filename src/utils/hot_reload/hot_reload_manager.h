@@ -10,8 +10,7 @@ class HotReloadManager {
   // TODO: consider using FileWatcherManager Callback
   using Callback = std::function<void(const wtr::event&)>;
 
-  void watchFileModifications(const std::filesystem::path& dirPath,
-                              const Callback&              onChange);
+  void watchFileModifications(const std::filesystem::path& dirPath, const Callback& onChange);
 };
 
 }  // namespace arise

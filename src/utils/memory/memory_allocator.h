@@ -10,7 +10,6 @@
 // behavior of the standard global operator new[], but can be modified for
 // custom allocation strategies or debugging purposes.
 
-
 inline void* operator new[](std::size_t size,
                             const char* /*name*/,
                             int /*flags*/,

@@ -16,7 +16,7 @@ struct RenderGeometryMesh {
   gfx::rhi::Buffer* indexBuffer;
 
   // TODO
-  //for convenience
+  // for convenience
   // uint32_t vertexCount = 0;
   // uint32_t indexCount  = 0;
   // for vertex binding

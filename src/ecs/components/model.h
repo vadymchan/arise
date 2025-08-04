@@ -15,7 +15,7 @@ struct Model {
   // TODO: no modelNames (consider adding it, maybe filename is already okay)
   std::filesystem::path filePath;
   std::vector<Mesh*>    meshes;
-  BoundingBox           boundingBox; // in model space
+  BoundingBox           boundingBox;  // in model space
 };
 
 }  // namespace ecs

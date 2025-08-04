@@ -9,14 +9,14 @@ namespace ecs {
 // TODO: consider adding a base class inside all light types(Directional, Point, Spot) for better cache locality
 struct Light {
   math::Vector3f color;
-  float           intensity;
-  bool            isDirty = true;
-  bool            enabled = true;
+  float          intensity;
+  bool           isDirty = true;
+  bool           enabled = true;
 };
 
 struct DirectionalLight {
   math::Vector3f direction;
-  bool            isDirty = true;
+  bool           isDirty = true;
 };
 
 struct PointLight {

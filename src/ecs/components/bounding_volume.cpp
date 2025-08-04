@@ -88,7 +88,7 @@ BoundingBox transformAABB(const BoundingBox& aabb, const math::Matrix4f<>& trans
 
   for (const auto& corner : corners) {
     math::Vector4f homogeneous(corner.x(), corner.y(), corner.z(), 1.0f);
-    math::Vector4f transformed = homogeneous;
+    math::Vector4f transformed  = homogeneous;
     transformed                *= transform;
     transformedCorners.emplace_back(transformed.x(), transformed.y(), transformed.z());
   }

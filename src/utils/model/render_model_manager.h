@@ -24,7 +24,7 @@ class RenderModelManager {
 
   private:
   std::unordered_map<std::filesystem::path, std::unique_ptr<ecs::RenderModel>> renderModelCache_;
-  mutable std::shared_mutex                                               mutex_;
+  mutable std::shared_mutex                                                    mutex_;
 };
 
 }  // namespace arise

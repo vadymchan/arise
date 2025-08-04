@@ -102,7 +102,7 @@ void CameraInputSystem::handleMovement(const InputActions& actions,
 
 void CameraInputSystem::handleZoom(const InputActions& actions, Camera& camera, float deltaTime) {
   float zoomDelta = s_kZoomSpeed * deltaTime;
-  
+
   if (actions.isActive(InputAction::ZoomIn)) {
     camera.fov = std::clamp(camera.fov - zoomDelta, s_kMinFov, s_kMaxFov);
   }

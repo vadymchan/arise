@@ -29,7 +29,7 @@ void Stopwatch::pause() {
 }
 
 void Stopwatch::reset() {
-  m_startTime_ = Clock::now();
+  m_startTime_  = Clock::now();
   m_pausedTime_ = TimePoint{};
 }
 

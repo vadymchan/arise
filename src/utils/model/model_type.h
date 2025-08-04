@@ -11,7 +11,7 @@ enum class ModelType {
   OBJ,
   FBX,
   GLTF,
-  GLB, 
+  GLB,
   UNKNOWN,
 };
 

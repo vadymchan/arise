@@ -2,8 +2,9 @@
 #define ARISE_SHADER_REFLECTION_TYPES_H
 
 #include "gfx/rhi/common/rhi_types.h"
-#include <vector>
+
 #include <string>
+#include <vector>
 
 namespace arise {
 namespace gfx {

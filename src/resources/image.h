@@ -11,11 +11,11 @@
 namespace arise {
 
 struct SubImage {
-  size_t                                 width;
-  size_t                                 height;
-  size_t                                 rowPitch;    // width * height * bytes per pixel (also known as stride)
-  size_t                                 slicePitch;  // width * height * bytes per pixel
-  size_t                                 pixelOffset;
+  size_t width;
+  size_t height;
+  size_t rowPitch;    // width * height * bytes per pixel (also known as stride)
+  size_t slicePitch;  // width * height * bytes per pixel
+  size_t pixelOffset;
 };
 
 struct Image {

@@ -5,6 +5,7 @@
 #include "input/viewport_context.h"
 
 #include <math_library/graphics.h>
+
 #include <vector>
 
 namespace arise {
@@ -43,13 +44,15 @@ class MousePickingSystem : public IUpdatableSystem {
   entt::entity performRaycast_(Scene* scene, const math::Rayf<>& ray);
 
   std::vector<AABBCandidate> performAABBRaycast_(Scene* scene, const math::Rayf<>& ray);
-  
-  entt::entity performTriangleRaycast_(Scene* scene, const math::Rayf<>& ray, const std::vector<AABBCandidate>& candidates);
-  
-  bool rayIntersectsMesh_(const math::Rayf<>& ray, 
-                         const Mesh* mesh, 
-                         const math::Matrix4f<>& meshToWorldTransform,
-                         float& outDistance);
+
+  entt::entity performTriangleRaycast_(Scene*                            scene,
+                                       const math::Rayf<>&               ray,
+                                       const std::vector<AABBCandidate>& candidates);
+
+  bool rayIntersectsMesh_(const math::Rayf<>&     ray,
+                          const Mesh*             mesh,
+                          const math::Matrix4f<>& meshToWorldTransform,
+                          float&                  outDistance);
 
   ViewportContext* m_viewportContext = nullptr;
 };

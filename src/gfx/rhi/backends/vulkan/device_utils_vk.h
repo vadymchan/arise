@@ -31,9 +31,9 @@ struct SwapChainSupportDetails {
 };
 
 VKAPI_ATTR VkBool32 VKAPI_CALL g_debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT      messageSeverity,
-                                             VkDebugUtilsMessageTypeFlagsEXT             messageType,
-                                             const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-                                             void*                                       pUserData);
+                                               VkDebugUtilsMessageTypeFlagsEXT             messageType,
+                                               const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+                                               void*                                       pUserData);
 
 void g_populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
 
@@ -41,7 +41,9 @@ QueueFamilyIndices g_findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR sur
 
 bool g_isDeviceExtensionSupport(VkPhysicalDevice device, const std::vector<const char*>& deviceExtensions);
 
-bool g_isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface, const std::vector<const char*>& deviceExtensions);
+bool g_isDeviceSuitable(VkPhysicalDevice                device,
+                        VkSurfaceKHR                    surface,
+                        const std::vector<const char*>& deviceExtensions);
 
 SwapChainSupportDetails g_querySwapChainSupport(VkPhysicalDevice device, VkSurfaceKHR surface);
 

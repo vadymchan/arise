@@ -61,9 +61,9 @@ void MeshHighlightStrategy::resize(const math::Dimension2i& newDimension) {
 }
 
 void MeshHighlightStrategy::prepareFrame(const RenderContext& context) {
-  std::unordered_map<ecs::RenderModel*, std::vector<math::Matrix4f<>>>     currentFrameInstances;
+  std::unordered_map<ecs::RenderModel*, std::vector<math::Matrix4f<>>>    currentFrameInstances;
   std::unordered_map<ecs::RenderModel*, std::pair<math::Vector4f, float>> highlightParams;
-  std::unordered_map<ecs::RenderModel*, bool>                              modelDirtyFlags;
+  std::unordered_map<ecs::RenderModel*, bool>                             modelDirtyFlags;
 
   auto& registry = context.scene->getEntityRegistry();
   auto  view     = registry.view<ecs::Selected, ecs::RenderModel*>();
@@ -129,7 +129,7 @@ void MeshHighlightStrategy::render(const RenderContext& context) {
 
   rhi::ClearValue depthStencilClear      = {};
   depthStencilClear.depthStencil.depth   = 1.0f;
-  depthStencilClear.depthStencil.stencil = 0; // clear only stencil
+  depthStencilClear.depthStencil.stencil = 0;  // clear only stencil
   clearValues.push_back(depthStencilClear);
 
   commandBuffer->beginRenderPass(m_renderPass, currentFramebuffer, clearValues);
@@ -299,7 +299,7 @@ void MeshHighlightStrategy::createFramebuffers_(const math::Dimension2i& dimensi
   }
 }
 
-void MeshHighlightStrategy::updateInstanceBuffer_(ecs::RenderModel*                         model,
+void MeshHighlightStrategy::updateInstanceBuffer_(ecs::RenderModel*                    model,
                                                   const std::vector<math::Matrix4f<>>& matrices,
                                                   ModelBufferCache&                    cache) {
   if (!cache.instanceBuffer || matrices.size() > cache.capacity) {
@@ -327,8 +327,8 @@ void MeshHighlightStrategy::updateInstanceBuffer_(ecs::RenderModel*             
 }
 
 rhi::DescriptorSet* MeshHighlightStrategy::getOrCreateHighlightParamsDescriptorSet_(const math::Vector4f& color,
-                                                                                    float                  thickness,
-                                                                                    bool                   xRay) {
+                                                                                    float                 thickness,
+                                                                                    bool                  xRay) {
   uint64_t colorAsInt     = *reinterpret_cast<const uint64_t*>(&color);
   uint64_t thicknessAsInt = *reinterpret_cast<const uint64_t*>(&thickness);
   uint64_t xRayAsInt      = xRay ? 1 : 0;

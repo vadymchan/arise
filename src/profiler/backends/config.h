@@ -7,7 +7,8 @@
 #elif defined(ARISE_FORCE_DIRECTX)
 #define ARISE_TRACY_GPU_PROFILING_DX12
 #else
-#error "Tracy GPU profiling requires FORCE_RHI_API to be enabled. Please set FORCE_RHI_API=ON in cmake and select specific API."
+#error \
+    "Tracy GPU profiling requires FORCE_RHI_API to be enabled. Please set FORCE_RHI_API=ON in cmake and select specific API."
 #endif
 #endif
 

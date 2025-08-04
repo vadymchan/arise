@@ -80,10 +80,10 @@ std::unique_ptr<Image> DirectXTexImageLoader::loadImage(const std::filesystem::p
         }
 
         SubImage subImage;
-        subImage.width      = img->width;
-        subImage.height     = img->height;
-        subImage.rowPitch   = img->rowPitch;
-        subImage.slicePitch = img->slicePitch;
+        subImage.width       = img->width;
+        subImage.height      = img->height;
+        subImage.rowPitch    = img->rowPitch;
+        subImage.slicePitch  = img->slicePitch;
         subImage.pixelOffset = reinterpret_cast<const std::byte*>(img->pixels)
                              - reinterpret_cast<const std::byte*>(scratchImage.GetPixels());
 

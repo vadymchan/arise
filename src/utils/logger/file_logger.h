@@ -25,7 +25,6 @@ class FileLogger : public ILogger {
            const std::string&          message,
            const std::source_location& loc = std::source_location::current()) override;
 
-
   [[nodiscard]] const std::string& getPattern() const;
   [[nodiscard]] LogLevel           getLogLevel() const;
   [[nodiscard]] const std::string& getFilePath() const;

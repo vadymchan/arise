@@ -29,7 +29,6 @@ void WorldGridStrategy::initialize(rhi::Device*           device,
   createPipeline_();
 }
 
-
 void WorldGridStrategy::resize(const math::Dimension2i& newDimension) {
   m_viewport.x        = 0.0f;
   m_viewport.y        = 0.0f;
@@ -47,7 +46,7 @@ void WorldGridStrategy::resize(const math::Dimension2i& newDimension) {
 }
 
 void WorldGridStrategy::prepareFrame(const RenderContext& context) {
-  //updateGridParameters_(context);
+  // updateGridParameters_(context);
 }
 
 void WorldGridStrategy::render(const RenderContext& context) {
@@ -88,8 +87,7 @@ void WorldGridStrategy::render(const RenderContext& context) {
     commandBuffer->bindDescriptorSet(0, m_frameResources->getViewDescriptorSet());
   }
 
-
-  //commandBuffer->bindDescriptorSet(0, m_gridDescriptorSet);
+  // commandBuffer->bindDescriptorSet(0, m_gridDescriptorSet);
 
   // Draw fullscreen triangle
   commandBuffer->draw(3, 0);
@@ -98,15 +96,17 @@ void WorldGridStrategy::render(const RenderContext& context) {
 }
 
 void WorldGridStrategy::clearSceneResources() {
-  GlobalLogger::Log(LogLevel::Warning, "World grid strategy tried to clear resources after scene switch (it doesn't have anything dependent on that)");
+  GlobalLogger::Log(
+      LogLevel::Warning,
+      "World grid strategy tried to clear resources after scene switch (it doesn't have anything dependent on that)");
 }
 
 void WorldGridStrategy::cleanup() {
-  //m_gridDescriptorSet    = nullptr;
-  //m_gridLayout           = nullptr;
-  //m_gridParametersBuffer = nullptr;
-  m_pipeline             = nullptr;
-  m_renderPass           = nullptr;
+  // m_gridDescriptorSet    = nullptr;
+  // m_gridLayout           = nullptr;
+  // m_gridParametersBuffer = nullptr;
+  m_pipeline   = nullptr;
+  m_renderPass = nullptr;
   m_framebuffers.clear();
   m_vertexShader = nullptr;
   m_pixelShader  = nullptr;
@@ -214,7 +214,6 @@ void WorldGridStrategy::createPipeline_() {
   m_shaderManager->registerPipelineForShader(m_pipeline, m_vertexShaderPath_);
   m_shaderManager->registerPipelineForShader(m_pipeline, m_pixelShaderPath_);
 }
-
 
 }  // namespace renderer
 }  // namespace gfx

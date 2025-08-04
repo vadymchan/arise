@@ -39,6 +39,6 @@
 #define PROFILE_NAME(name)
 #define PROFILE_APP_INFO(name, size)
 
-#endif 
+#endif
 
 #endif  // ARISE_PROFILER_H

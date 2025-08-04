@@ -11,10 +11,10 @@ namespace arise {
 namespace ecs {
 
 void CameraSystem::update(Scene* scene, float deltaTime) {
-  Registry&              registry        = scene->getEntityRegistry();
-  auto&                  runtimeSettings = RuntimeSettings::s_get();
+  Registry&             registry        = scene->getEntityRegistry();
+  auto&                 runtimeSettings = RuntimeSettings::s_get();
   const math::Vector3f& worldUp         = runtimeSettings.getWorldUp();
-  auto                   view            = registry.view<Transform, Camera>();
+  auto                  view            = registry.view<Transform, Camera>();
 
   for (auto entity : view) {
     if (!registry.any_of<CameraMatrices>(entity)) {
@@ -32,7 +32,7 @@ void CameraSystem::update(Scene* scene, float deltaTime) {
     pitch      = math::g_degreeToRadian(pitch);
     yaw        = math::g_degreeToRadian(yaw);
     roll       = math::g_degreeToRadian(roll);
-    //auto q     = math::Quaternionf::fromEulerAngles(roll, pitch, yaw, math::EulerRotationOrder::ZXY);
+    // auto q     = math::Quaternionf::fromEulerAngles(roll, pitch, yaw, math::EulerRotationOrder::ZXY);
     auto q = math::Quaternionf::fromEulerAngles(pitch, yaw, roll, math::EulerRotationOrder::XYZ);
     // Assume that the forward vector is (0, 0, 1)
     auto forward   = math::g_forwardVector<float, 3>();

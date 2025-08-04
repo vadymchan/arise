@@ -23,16 +23,15 @@ bool Window::setWindowIcon(const std::filesystem::path& iconPath) {
     return false;
   }
 
-  SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(
-      const_cast<void*>(static_cast<const void*>(image->pixels.data())),
-      static_cast<int>(image->width),
-      static_cast<int>(image->height),
-      32,  // 32 bits per pixel (RGBA)
-      static_cast<int>(image->width * 4),  // pitch (bytes per row)
-      0x000000FF,  // R mask
-      0x0000FF00,  // G mask
-      0x00FF0000,  // B mask
-      0xFF000000   // A mask
+  SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(const_cast<void*>(static_cast<const void*>(image->pixels.data())),
+                                                  static_cast<int>(image->width),
+                                                  static_cast<int>(image->height),
+                                                  32,                                  // 32 bits per pixel (RGBA)
+                                                  static_cast<int>(image->width * 4),  // pitch (bytes per row)
+                                                  0x00'00'00'FF,                       // R mask
+                                                  0x00'00'FF'00,                       // G mask
+                                                  0x00'FF'00'00,                       // B mask
+                                                  0xFF'00'00'00                        // A mask
   );
 
   if (!surface) {
@@ -41,7 +40,7 @@ bool Window::setWindowIcon(const std::filesystem::path& iconPath) {
   }
 
   SDL_SetWindowIcon(m_window_, surface);
-  
+
   SDL_FreeSurface(surface);
 
   GlobalLogger::Log(LogLevel::Info, "Window icon set successfully from: " + iconPath.string());

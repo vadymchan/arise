@@ -17,7 +17,6 @@ namespace math {
 
 // ----------------------------------------------------------------------------
 
-
 inline float normalizeAngle(float angle) {
   // Get the angle to be within the range [0, 360)
   angle = std::fmod(angle, 360.0f);

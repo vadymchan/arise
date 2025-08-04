@@ -2,6 +2,7 @@
 
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/stdout_sinks.h>
+
 #include <filesystem>
 
 namespace arise {
@@ -92,7 +93,7 @@ void ConsoleLogger::log(LogLevel logLevel, const std::string& message, const std
   auto file = std::filesystem::path(loc.file_name()).filename().string();
 
   std::string_view functionName{loc.function_name()};
-  // strip off the parameter list (remove everything from '(' onward) 
+  // strip off the parameter list (remove everything from '(' onward)
   if (auto p = functionName.find('('); p != std::string_view::npos) {
     functionName.remove_suffix(functionName.size() - p);
   }

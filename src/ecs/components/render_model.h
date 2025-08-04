@@ -1,9 +1,8 @@
 #ifndef ARISE_RENDER_MODEL_H
 #define ARISE_RENDER_MODEL_H
 
-#include "render_mesh.h"
-
 #include "gfx/rhi/interface/buffer.h"
+#include "render_mesh.h"
 
 #include <filesystem>
 #include <memory>

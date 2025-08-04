@@ -15,7 +15,7 @@ class CgltfSceneCache {
   public:
   static std::shared_ptr<cgltf_data> getOrLoad(const std::filesystem::path& path) {
     auto absolutePath = std::filesystem::absolute(path).string();
-    auto it = s_cache.find(absolutePath);
+    auto it           = s_cache.find(absolutePath);
     if (it != s_cache.end()) {
       if (auto ptr = it->second.lock()) {
         return ptr;
@@ -32,7 +32,7 @@ class CgltfSceneCache {
       return {};
     }
 
-    auto scene   = std::shared_ptr<cgltf_data>(raw, [](cgltf_data* d) { cgltf_free(d); });
+    auto scene            = std::shared_ptr<cgltf_data>(raw, [](cgltf_data* d) { cgltf_free(d); });
     s_cache[absolutePath] = scene;
     return scene;
   }
@@ -43,6 +43,6 @@ class CgltfSceneCache {
 
 }  // namespace arise
 
-#endif // ARISE_USE_CGLTF
+#endif  // ARISE_USE_CGLTF
 
 #endif  // ARISE_CGLTF_COMMON_H

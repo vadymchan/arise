@@ -38,17 +38,11 @@ class Texture {
   TextureType getType() const { return m_desc_.type; }
 
   // Get texture creation flags
-  bool hasRtvUsage() const {
-    return (m_desc_.createFlags & TextureCreateFlag::Rtv) != TextureCreateFlag::None;
-  }
+  bool hasRtvUsage() const { return (m_desc_.createFlags & TextureCreateFlag::Rtv) != TextureCreateFlag::None; }
 
-  bool hasUavUsage() const {
-    return (m_desc_.createFlags & TextureCreateFlag::Uav) != TextureCreateFlag::None;
-  }
+  bool hasUavUsage() const { return (m_desc_.createFlags & TextureCreateFlag::Uav) != TextureCreateFlag::None; }
 
-  bool hasDsvUsage() const {
-    return (m_desc_.createFlags & TextureCreateFlag::Dsv) != TextureCreateFlag::None;
-  }
+  bool hasDsvUsage() const { return (m_desc_.createFlags & TextureCreateFlag::Dsv) != TextureCreateFlag::None; }
 
   virtual ResourceLayout getCurrentLayoutType() const { return m_currentLayout_; }
 

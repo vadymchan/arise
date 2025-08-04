@@ -3,7 +3,7 @@
 
 #include "utils/logger/i_logger.h"
 
-#include<spdlog/fmt/fmt.h>
+#include <spdlog/fmt/fmt.h>
 
 #include <memory>
 #include <vector>

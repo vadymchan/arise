@@ -5,8 +5,7 @@
 
 namespace arise {
 void Config::reloadAsync() {
-  GlobalLogger::Log(LogLevel::Info,
-                    "Reloading config due to file modification...");
+  GlobalLogger::Log(LogLevel::Info, "Reloading config due to file modification...");
   loadFromFileAsync(m_filePath_);
   return;
 }
@@ -15,8 +14,7 @@ void Config::loadFromFileAsync(const std::filesystem::path& filePath) {
   // Check that previous async load is complete
   asyncLoadComplete_();
 
-  m_future_
-      = std::async(std::launch::async, &Config::loadFromFile, this, filePath);
+  m_future_ = std::async(std::launch::async, &Config::loadFromFile, this, filePath);
 }
 
 bool Config::loadFromFile(const std::filesystem::path& filePath) {
@@ -24,16 +22,14 @@ bool Config::loadFromFile(const std::filesystem::path& filePath) {
 
   auto fileContent = FileSystemManager::readFile(filePath);
   if (!fileContent) {
-    GlobalLogger::Log(LogLevel::Error,
-                      "Failed to read file: " + filePath.string());
+    GlobalLogger::Log(LogLevel::Error, "Failed to read file: " + filePath.string());
     return false;
   }
 
   m_root_.Parse(fileContent->c_str());
 
   if (m_root_.HasParseError()) {
-    GlobalLogger::Log(LogLevel::Error,
-                      "Failed to parse JSON in file: " + filePath.string());
+    GlobalLogger::Log(LogLevel::Error, "Failed to parse JSON in file: " + filePath.string());
     return false;
   }
 
@@ -43,8 +39,7 @@ bool Config::loadFromFile(const std::filesystem::path& filePath) {
 [[nodiscard]] std::string Config::toString() const {
   asyncLoadComplete_();
   if (!m_root_.IsObject()) {
-    GlobalLogger::Log(LogLevel::Error,
-                      "Configuration not loaded or root is not an object.");
+    GlobalLogger::Log(LogLevel::Error, "Configuration not loaded or root is not an object.");
     return "";
   }
 
@@ -67,38 +62,35 @@ void Config::asyncLoadComplete_() const {
 
 const ConfigValue& Config::getMember_(const std::string& key) const {
   if (key.find('.') != std::string::npos) {
-    std::string currentKey = key;
+    std::string        currentKey   = key;
     const ConfigValue* currentValue = &m_root_;
-    
+
     while (!currentKey.empty()) {
-      size_t dotPos = currentKey.find('.');
-      std::string keyPart = (dotPos != std::string::npos) ? 
-                           currentKey.substr(0, dotPos) : currentKey;
-      
+      size_t      dotPos  = currentKey.find('.');
+      std::string keyPart = (dotPos != std::string::npos) ? currentKey.substr(0, dotPos) : currentKey;
+
       if (!currentValue->IsObject() || !currentValue->HasMember(keyPart.c_str())) {
         static ConfigValue nullValue(rapidjson::kNullType);
-        GlobalLogger::Log(LogLevel::Error,
-                          "Key \"" + key + "\" not found in config (failed at \"" + keyPart + "\").");
+        GlobalLogger::Log(LogLevel::Error, "Key \"" + key + "\" not found in config (failed at \"" + keyPart + "\").");
         return nullValue;
       }
-      
+
       currentValue = &(*currentValue)[keyPart.c_str()];
-      
+
       if (dotPos != std::string::npos) {
         currentKey = currentKey.substr(dotPos + 1);
       } else {
         currentKey.clear();
       }
     }
-    
+
     return *currentValue;
   }
-  
+
   // Handle direct key access (original behavior)
   if (!m_root_.HasMember(key.c_str())) {
     static ConfigValue nullValue(rapidjson::kNullType);
-    GlobalLogger::Log(LogLevel::Error,
-                      "Key \"" + key + "\" not found in config.");
+    GlobalLogger::Log(LogLevel::Error, "Key \"" + key + "\" not found in config.");
     return nullValue;
   }
   return m_root_[key.c_str()];

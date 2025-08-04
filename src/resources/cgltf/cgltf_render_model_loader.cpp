@@ -20,7 +20,7 @@
 namespace arise {
 
 std::unique_ptr<ecs::RenderModel> CgltfRenderModelLoader::loadRenderModel(const std::filesystem::path& filePath,
-                                                                     ecs::Model**                      outModelPtr) {
+                                                                          ecs::Model**                 outModelPtr) {
   auto scene = CgltfSceneCache::getOrLoad(filePath);
   if (!scene) {
     GlobalLogger::Log(LogLevel::Error, "Failed to load GLTF scene for material mapping: " + filePath.string());
@@ -36,7 +36,8 @@ std::unique_ptr<ecs::RenderModel> CgltfRenderModelLoader::loadRenderModel(const 
   auto modelManager              = ServiceLocator::s_get<ModelManager>();
 
   if (!modelManager) {
-    GlobalLogger::Log(LogLevel::Error, "ModelManager not available in ServiceLocator while loading: " + filePath.string());
+    GlobalLogger::Log(LogLevel::Error,
+                      "ModelManager not available in ServiceLocator while loading: " + filePath.string());
     return nullptr;
   }
 
@@ -48,7 +49,7 @@ std::unique_ptr<ecs::RenderModel> CgltfRenderModelLoader::loadRenderModel(const 
   if (!materialManager || !renderGeometryMeshManager || !renderMeshManager || !bufferManager) {
     GlobalLogger::Log(LogLevel::Warning,
                       "GPU managers not available – loaded CPU model only for: " + filePath.string());
-    return nullptr;  
+    return nullptr;
   }
 
   auto materialPointers = materialManager->getMaterials(filePath);
@@ -144,7 +145,8 @@ gfx::rhi::Buffer* CgltfRenderModelLoader::createVertexBuffer(const ecs::Mesh* me
   std::string bufferName  = "VertexBuffer_";
   bufferName             += mesh->meshName.empty() ? "Unnamed" : mesh->meshName;
 
-  return bufferManager->createVertexBuffer(mesh->vertices.data(), mesh->vertices.size(), sizeof(ecs::Vertex), bufferName);
+  return bufferManager->createVertexBuffer(
+      mesh->vertices.data(), mesh->vertices.size(), sizeof(ecs::Vertex), bufferName);
 }
 
 gfx::rhi::Buffer* CgltfRenderModelLoader::createIndexBuffer(const ecs::Mesh* mesh) {

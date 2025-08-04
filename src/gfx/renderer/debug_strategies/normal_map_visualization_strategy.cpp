@@ -227,7 +227,7 @@ void NormalMapVisualizationStrategy::createFramebuffers_(const math::Dimension2i
   }
 }
 
-void NormalMapVisualizationStrategy::updateInstanceBuffer_(ecs::RenderModel*                         model,
+void NormalMapVisualizationStrategy::updateInstanceBuffer_(ecs::RenderModel*                    model,
                                                            const std::vector<math::Matrix4f<>>& matrices,
                                                            ModelBufferCache&                    cache) {
   if (!cache.instanceBuffer || matrices.size() > cache.capacity) {
@@ -400,7 +400,7 @@ void NormalMapVisualizationStrategy::prepareDrawCalls_(const RenderContext& cont
 }
 
 void NormalMapVisualizationStrategy::cleanupUnusedBuffers_(
-  const std::unordered_map<ecs::RenderModel*, std::vector<math::Matrix4f<>>>& currentFrameInstances) {
+    const std::unordered_map<ecs::RenderModel*, std::vector<math::Matrix4f<>>>& currentFrameInstances) {
   std::vector<ecs::RenderModel*> modelsToRemove;
   for (const auto& [model, cache] : m_instanceBufferCache) {
     if (!currentFrameInstances.contains(model)) {
@@ -454,7 +454,7 @@ rhi::DescriptorSet* NormalMapVisualizationStrategy::getOrCreateMaterialDescripto
   auto descriptorSetPtr = m_resourceManager->getDescriptorSet(descriptorKey);
   if (!descriptorSetPtr) {
     auto descriptorSet = m_device->createDescriptorSet(m_materialDescriptorSetLayout);
-    
+
     // Update the descriptor set BEFORE adding it to the resource manager
     rhi::Texture* normalMapTexture = nullptr;
     auto          normalMapIt      = material->textures.find("normal_map");
@@ -467,7 +467,7 @@ rhi::DescriptorSet* NormalMapVisualizationStrategy::getOrCreateMaterialDescripto
     }
 
     descriptorSet->setTexture(0, normalMapTexture);
-    
+
     descriptorSetPtr = m_resourceManager->addDescriptorSet(std::move(descriptorSet), descriptorKey);
   }
 

@@ -22,7 +22,7 @@ class MaterialManager {
 
   private:
   std::unordered_map<std::filesystem::path, std::vector<std::unique_ptr<ecs::Material>>> materialCache_;
-  std::mutex                                                                        m_mutex_;
+  std::mutex                                                                             m_mutex_;
 };
 
 }  // namespace arise

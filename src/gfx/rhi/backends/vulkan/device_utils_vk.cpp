@@ -7,9 +7,9 @@ namespace gfx {
 namespace rhi {
 
 VKAPI_ATTR VkBool32 VKAPI_CALL g_debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT      messageSeverity,
-                                             VkDebugUtilsMessageTypeFlagsEXT             messageType,
-                                             const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-                                             void*                                       pUserData) {
+                                               VkDebugUtilsMessageTypeFlagsEXT             messageType,
+                                               const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+                                               void*                                       pUserData) {
   LogLevel logLevel;
 
   if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
@@ -172,7 +172,9 @@ SwapChainSupportDetails g_querySwapChainSupport(VkPhysicalDevice device, VkSurfa
   return details;
 }
 
-bool g_isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface, const std::vector<const char*>& deviceExtensions) {
+bool g_isDeviceSuitable(VkPhysicalDevice                device,
+                        VkSurfaceKHR                    surface,
+                        const std::vector<const char*>& deviceExtensions) {
   QueueFamilyIndices indices = g_findQueueFamilies(device, surface);
 
   bool extensionsSupported = g_isDeviceExtensionSupport(device, deviceExtensions);

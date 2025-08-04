@@ -8,7 +8,7 @@ namespace ecs {
 
 struct Movement {
   math::Vector3f direction;
-  float           strength;
+  float          strength;
 };
 
 }  // namespace ecs

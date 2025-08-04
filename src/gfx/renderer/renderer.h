@@ -31,8 +31,8 @@ class Renderer {
   public:
   Renderer() = default;
 
-  ~Renderer() { 
-    waitForAllFrames_(); 
+  ~Renderer() {
+    waitForAllFrames_();
     cleanupResources_();
   }
 

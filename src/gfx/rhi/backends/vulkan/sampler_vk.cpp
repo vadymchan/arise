@@ -33,7 +33,6 @@ SamplerVk::SamplerVk(const SamplerDesc& desc, DeviceVk* device)
   samplerInfo.compareEnable = desc.compareEnable ? VK_TRUE : VK_FALSE;
   samplerInfo.compareOp     = g_getCompareOpVk(desc.compareOp);
 
-
   // TODO: consider use VK_EXT_custom_border_color if available
   if (desc.borderColor[0] == 0.0f && desc.borderColor[1] == 0.0f && desc.borderColor[2] == 0.0f
       && desc.borderColor[3] == 0.0f) {

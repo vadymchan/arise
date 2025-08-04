@@ -20,7 +20,6 @@ class ResourceDeletionManager {
 
   void setDefaultFrameDelay(uint32_t frameDelay) { m_defaultFrameDelay = frameDelay; }
 
-
   void setCurrentFrame(uint64_t currentFrame) {
     m_currentFrame = currentFrame;
     processPendingDeletions();
@@ -115,7 +114,7 @@ class ResourceDeletionManager {
 
   std::vector<PendingDeletion> m_pendingDeletions;
   uint64_t                     m_currentFrame      = 0;
-  uint32_t                     m_defaultFrameDelay = 2; 
+  uint32_t                     m_defaultFrameDelay = 2;
 };
 
 }  // namespace arise

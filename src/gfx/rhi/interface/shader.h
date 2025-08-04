@@ -25,8 +25,8 @@ class Shader {
   const std::string& getEntryPoint() const { return m_desc_.entryPoint; }
   const ShaderDesc&  getDesc() const { return m_desc_; }
   const ShaderMeta&  getMeta() const { return m_meta_; }
-  
-  void               setMeta(const ShaderMeta& meta) { m_meta_ = meta; }
+
+  void setMeta(const ShaderMeta& meta) { m_meta_ = meta; }
 
   virtual void initialize(const std::vector<uint8_t>& code) = 0;
   virtual void release()                                    = 0;

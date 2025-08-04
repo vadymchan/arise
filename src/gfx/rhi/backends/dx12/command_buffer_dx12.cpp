@@ -779,7 +779,6 @@ void CommandBufferDx12::endDebugMarker() {
 #endif
 }
 
-
 void CommandBufferDx12::insertDebugMarker(const std::string& name, const float color[4]) {
   if (name.empty()) {
     return;
@@ -797,7 +796,6 @@ void CommandBufferDx12::insertDebugMarker(const std::string& name, const float c
   m_commandList_->SetMarker(1, name.c_str(), static_cast<UINT>(name.length()));
 #endif
 }
-
 
 void CommandBufferDx12::bindDescriptorHeaps() {
   ID3D12DescriptorHeap* heaps[2];

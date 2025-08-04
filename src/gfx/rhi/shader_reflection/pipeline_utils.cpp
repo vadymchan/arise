@@ -1,7 +1,7 @@
 #include "pipeline_utils.h"
 
-#include "gfx/rhi/interface/device.h"
 #include "gfx/rhi/interface/descriptor.h"
+#include "gfx/rhi/interface/device.h"
 #include "gfx/rhi/interface/shader.h"
 #include "gfx/rhi/shader_reflection/pipeline_layout_builder.h"
 #include "gfx/rhi/shader_reflection/shader_reflection_utils.h"
@@ -25,7 +25,7 @@ PipelineLayoutDesc generatePipelineLayoutFromShaders(const std::vector<Shader*>&
 
   GlobalLogger::Log(LogLevel::Info, "Generated pipeline layout from shader reflection:");
   reflection_utils::logPipelineLayoutContents(result);
-  
+
   return result;
 }
 

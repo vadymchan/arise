@@ -21,7 +21,7 @@ int g_getTextureComponentCount(TextureFormat format, RenderingApi api) {
 #ifdef ARISE_USE_VULKAN
     case RenderingApi::Vulkan:
       return g_getTextureComponentCountVk(format);
-#endif 
+#endif
 
 #ifdef ARISE_USE_DX12
     case RenderingApi::Dx12:

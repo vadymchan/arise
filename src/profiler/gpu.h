@@ -133,15 +133,15 @@ inline void insertMarker(gfx::rhi::CommandBuffer* cmdBuffer, const std::string& 
 #endif
 
 // main macros (client will call these)
-#define GPU_ZONE_NC(cmdBuf, name, color)                                                   \
+#define GPU_ZONE_NC(cmdBuf, name, color)                                             \
   auto CONCAT(_gpu_zone_, __LINE__) = ::arise::gpu::createZone(cmdBuf, name, color); \
   GPU_TRACY_ZONE_NC(cmdBuf, name, color)
 
-#define GPU_ZONE_N(cmdBuf, name)                                                    \
+#define GPU_ZONE_N(cmdBuf, name)                                              \
   auto CONCAT(_gpu_zone_, __LINE__) = ::arise::gpu::createZone(cmdBuf, name); \
   GPU_TRACY_ZONE_N(cmdBuf, name)
 
-#define GPU_ZONE_C(cmdBuf, color)                                                        \
+#define GPU_ZONE_C(cmdBuf, color)                                                  \
   auto CONCAT(_gpu_zone_, __LINE__) = ::arise::gpu::createZone(cmdBuf, "", color); \
   GPU_TRACY_ZONE_C(cmdBuf, color)
 

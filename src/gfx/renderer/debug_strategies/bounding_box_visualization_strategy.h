@@ -74,7 +74,7 @@ class BoundingBoxVisualizationStrategy : public DebugDrawStrategy {
   void setupRenderPass_();
   void createFramebuffers_(const math::Dimension2i& dimension);
   void prepareDrawCalls_(const RenderContext& context);
-  void updateInstanceBuffer_(ecs::RenderModel*                        model,
+  void updateInstanceBuffer_(ecs::RenderModel*                   model,
                              const std::vector<BoundingBoxData>& boundingBoxData,
                              ModelBufferCache&                   cache);
   void cleanupUnusedBuffers_(
@@ -103,7 +103,7 @@ class BoundingBoxVisualizationStrategy : public DebugDrawStrategy {
   rhi::Buffer* m_cubeIndexBuffer  = nullptr;
 
   std::unordered_map<ecs::RenderModel*, ModelBufferCache> m_instanceBufferCache;
-  std::vector<DrawData>                              m_drawData;
+  std::vector<DrawData>                                   m_drawData;
 };
 
 }  // namespace renderer

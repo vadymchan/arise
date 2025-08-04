@@ -5,6 +5,7 @@
 
 #ifdef ARISE_USE_CPU_PROFILING
 #include "utils/color/color.h"
+
 #include <tracy/Tracy.hpp>
 
 #define CPU_ZONE()                         ZoneScoped
@@ -29,7 +30,6 @@
   ZoneScoped;        \
   ZoneName(__PRETTY_FUNCTION__, strlen(__PRETTY_FUNCTION__))
 
-
 #else
 #define CPU_ZONE()
 #define CPU_ZONE_N(name)
@@ -44,4 +44,3 @@
 #endif
 
 #endif  // ARISE_USE_CPU_PROFILING
-

@@ -51,20 +51,17 @@ void ConfigManager::saveAllConfigs() {
 
 bool ConfigManager::unloadConfig(const std::filesystem::path& filePath) {
   if (configs_.erase(filePath)) {
-    GlobalLogger::Log(LogLevel::Info,
-                      "Config " + filePath.string() + " unloaded from memory.");
+    GlobalLogger::Log(LogLevel::Info, "Config " + filePath.string() + " unloaded from memory.");
     return true;
   } else {
-    GlobalLogger::Log(LogLevel::Error,
-                      "Config " + filePath.string() + " not found.");
+    GlobalLogger::Log(LogLevel::Error, "Config " + filePath.string() + " not found.");
     return false;
   }
 }
 
 void ConfigManager::unloadAllConfigs() {
   configs_.clear();
-  GlobalLogger::Log(LogLevel::Info,
-                    "All configs have been unloaded from memory.");
+  GlobalLogger::Log(LogLevel::Info, "All configs have been unloaded from memory.");
 }
 
 }  // namespace arise

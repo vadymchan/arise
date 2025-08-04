@@ -36,9 +36,7 @@ std::unique_ptr<GpuProfiler> GpuProfilerFactory::create(gfx::rhi::RenderingApi a
   return profiler;
 }
 
-
 }  // namespace gpu
 }  // namespace arise
-
 
 #endif  // ARISE_USE_GPU_PROFILING

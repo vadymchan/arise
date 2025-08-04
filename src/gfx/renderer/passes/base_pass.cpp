@@ -245,7 +245,7 @@ void BasePass::createFramebuffer_(const math::Dimension2i& dimension) {
   }
 }
 
-void BasePass::updateInstanceBuffer_(ecs::RenderModel*                         model,
+void BasePass::updateInstanceBuffer_(ecs::RenderModel*                    model,
                                      const std::vector<math::Matrix4f<>>& matrices,
                                      ModelBufferCache&                    cache) {
   if (!cache.instanceBuffer || matrices.size() > cache.capacity) {
@@ -321,7 +321,7 @@ void BasePass::prepareDrawCalls_(const RenderContext& context) {
                   + " bindings, " + std::to_string(pipelineDesc.vertexAttributes.size()) + " attributes");
         } else {
           GlobalLogger::Log(LogLevel::Error, "Shader reflection vertex inputs not available - cannot create pipeline");
-          continue; 
+          continue;
         }
 
         pipelineDesc.inputAssembly.topology               = rhi::PrimitiveType::Triangles;

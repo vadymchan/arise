@@ -48,7 +48,7 @@ bool FenceVk::isSignaled() {
   }
 
   VkResult result = vkGetFenceStatus(m_device_->getDevice(), m_fence_);
-  m_signaled_      = (result == VK_SUCCESS);
+  m_signaled_     = (result == VK_SUCCESS);
   return m_signaled_;
 }
 

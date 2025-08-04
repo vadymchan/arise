@@ -43,7 +43,6 @@ BufferVk::BufferVk(const BufferDesc& desc, DeviceVk* device)
       fpSetDebugUtilsObjectName(m_device_->getDevice(), &nameInfo);
     }
   }
-
 }
 
 BufferVk::~BufferVk() {
@@ -159,7 +158,7 @@ bool BufferVk::createBuffer_(VkBufferUsageFlags usage, VkMemoryPropertyFlags pro
 }
 
 VkBufferUsageFlags BufferVk::getBufferUsageFlags_() const {
-  VkBufferUsageFlags usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT;  
+  VkBufferUsageFlags usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 
   if ((m_desc_.createFlags & BufferCreateFlag::Readback) != BufferCreateFlag::None) {
     usage |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;

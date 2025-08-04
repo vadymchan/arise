@@ -12,7 +12,7 @@ InputManager::InputManager()
 }
 
 void InputManager::createDefault() {
-  m_getCurrentMode = []() { return ApplicationMode::Standalone; };
+  m_getCurrentMode   = []() { return ApplicationMode::Standalone; };
   auto gameProcessor = std::make_unique<GameInputProcessor>(m_inputMap.get(), m_viewportContext.get(), this);
   m_router->addProcessor(std::move(gameProcessor));
   GlobalLogger::Log(LogLevel::Info, "InputManager: Created default GameInputProcessor");
@@ -47,7 +47,7 @@ ApplicationMode InputManager::getCurrentApplicationMode() const {
   if (m_getCurrentMode) {
     return m_getCurrentMode();
   }
-  return ApplicationMode::Standalone; // Default fallback
+  return ApplicationMode::Standalone;  // Default fallback
 }
 
 }  // namespace arise

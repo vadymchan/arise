@@ -61,7 +61,7 @@ bool FramebufferDx12::initialize_(const FramebufferDesc& desc) {
 }
 
 void FramebufferDx12::transitionToRenderTargetState(CommandBufferDx12* cmdBuffer) {
-  // color attachments 
+  // color attachments
   for (auto* texture : m_colorAttachments_) {
     ResourceBarrierDesc barrier = {};
     barrier.texture             = texture;

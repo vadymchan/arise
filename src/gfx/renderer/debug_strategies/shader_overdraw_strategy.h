@@ -90,7 +90,7 @@ class ShaderOverdrawStrategy : public DebugDrawStrategy {
   std::vector<rhi::Framebuffer*> m_framebuffers;
 
   std::unordered_map<ecs::RenderModel*, ModelBufferCache> m_instanceBufferCache;
-  std::vector<DrawData>                              m_drawData;
+  std::vector<DrawData>                                   m_drawData;
 };
 }  // namespace renderer
 }  // namespace gfx

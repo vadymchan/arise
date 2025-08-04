@@ -17,7 +17,7 @@ using MouseButtonEvent = SDL_MouseButtonEvent;
 using MouseMotionEvent = SDL_MouseMotionEvent;
 using MouseWheelEvent  = SDL_MouseWheelEvent;
 
-using ApplicationEvent = SDL_QuitEvent; // for now only quit event
+using ApplicationEvent     = SDL_QuitEvent;  // for now only quit event
 using ApplicationEventType = Uint32;
 
 }  // namespace arise

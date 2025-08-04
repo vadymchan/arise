@@ -4,8 +4,7 @@
 
 namespace arise {
 
-void HotReloadManager::watchFileModifications(
-    const std::filesystem::path& dirPath, const Callback& onChange) {
+void HotReloadManager::watchFileModifications(const std::filesystem::path& dirPath, const Callback& onChange) {
   auto fileWatcher = ServiceLocator::s_get<FileWatcherManager>();
   fileWatcher->addWatcher(dirPath, [onChange](const wtr::event& e) {
     if (e.effect_type == wtr::event::effect_type::modify) {

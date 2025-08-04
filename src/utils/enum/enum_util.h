@@ -43,9 +43,7 @@ namespace arise {
   }
 
 template <typename Key, typename Value>
-Value getEnumMapping(const std::unordered_map<Key, Value>& mapping,
-                     const Key&                            key,
-                     const Value&                          defaultValue) {
+Value getEnumMapping(const std::unordered_map<Key, Value>& mapping, const Key& key, const Value& defaultValue) {
   auto it = mapping.find(key);
   if (it != mapping.end()) {
     return it->second;
@@ -69,7 +67,6 @@ std::unordered_map<Value, Key> reverseMap(const std::unordered_map<Key, Value>& 
 
   return dst;
 }
-
 
 }  // namespace arise
 #endif  // ARISE_ENUM_UTIL_H

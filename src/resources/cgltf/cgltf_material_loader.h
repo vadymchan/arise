@@ -26,8 +26,8 @@ class CgltfMaterialLoader : public IMaterialLoader {
                                                                const std::filesystem::path& filePath);
 
   std::unique_ptr<ecs::Material> processMaterial(const cgltf_material*        material,
-                                            const std::filesystem::path& filePath,
-                                            size_t                       materialIndex);
+                                                 const std::filesystem::path& filePath,
+                                                 size_t                       materialIndex);
 
   void loadTextures(const cgltf_material* material, ecs::Material* outMaterial, const std::filesystem::path& basePath);
 

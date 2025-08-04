@@ -9,7 +9,7 @@ void MemoryLogger::log(LogLevel logLevel, const std::string& message, const std:
   auto file = std::filesystem::path(loc.file_name()).filename().string();
 
   std::string functionName{loc.function_name()};
-  // strip off the parameter list (remove everything from '(' onward) 
+  // strip off the parameter list (remove everything from '(' onward)
   if (auto p = functionName.find('('); p != std::string::npos) {
     functionName.erase(p);
   }

@@ -16,7 +16,7 @@ struct Mesh {
   std::vector<Vertex>   vertices;
   std::vector<uint32_t> indices;
   math::Matrix4f<>      transformMatrix = math::Matrix4f<>::Identity();
-  BoundingBox           boundingBox; // in mesh local space
+  BoundingBox           boundingBox;  // in mesh local space
 };
 
 }  // namespace ecs

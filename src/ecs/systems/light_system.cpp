@@ -23,7 +23,7 @@ void LightSystem::initialize() {
   }
 
   createDescriptorSetLayout_();
-  createEmptyBuffers_(); 
+  createEmptyBuffers_();
   m_initialized = true;
 
   GlobalLogger::Log(LogLevel::Info, "LightSystem initialized");
@@ -327,7 +327,7 @@ void LightSystem::createEmptyBuffers_() {
   m_device->updateBuffer(m_lightCountBuffer, &counts, sizeof(counts));
 
   gfx::rhi::BufferDesc dirDesc;
-  dirDesc.size        = alignConstantBufferSize(sizeof(DirectionalLightData));  
+  dirDesc.size        = alignConstantBufferSize(sizeof(DirectionalLightData));
   dirDesc.createFlags = gfx::rhi::BufferCreateFlag::CpuAccess | gfx::rhi::BufferCreateFlag::ShaderResource;
   dirDesc.type        = gfx::rhi::BufferType::Dynamic;
   dirDesc.stride      = sizeof(DirectionalLightData);

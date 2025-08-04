@@ -115,10 +115,10 @@ std::unique_ptr<Image> KtxImageLoader::copyToImageStruct_(ktxTexture* texture, T
         continue;
       }
       SubImage subImage;
-      subImage.width      = std::max<size_t>(1, texture->baseWidth >> level);
-      subImage.height     = std::max<size_t>(1, texture->baseHeight >> level);
-      subImage.rowPitch   = 0;
-      subImage.slicePitch = ktxTexture_GetImageSize(texture, level);
+      subImage.width       = std::max<size_t>(1, texture->baseWidth >> level);
+      subImage.height      = std::max<size_t>(1, texture->baseHeight >> level);
+      subImage.rowPitch    = 0;
+      subImage.slicePitch  = ktxTexture_GetImageSize(texture, level);
       subImage.pixelOffset = offset;
       image->subImages.emplace_back(subImage);
     }

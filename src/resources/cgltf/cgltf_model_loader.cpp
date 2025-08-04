@@ -75,14 +75,13 @@ std::unique_ptr<ecs::Model> CgltfModelLoader::loadModel(const std::filesystem::p
             ecs::BoundingBox transformedBounds = ecs::bounds::transformAABB(mesh->boundingBox, mesh->transformMatrix);
             meshBoundingBoxes.push_back(transformedBounds);
 
-            GlobalLogger::Log(LogLevel::Debug,
-                              "Mesh '" + mesh->meshName + "' bounding box: min("
-                                  + std::to_string(mesh->boundingBox.min.x()) + ", "
-                                  + std::to_string(mesh->boundingBox.min.y()) + ", "
-                                  + std::to_string(mesh->boundingBox.min.z()) + ") max("
-                                  + std::to_string(mesh->boundingBox.max.x()) + ", "
-                                  + std::to_string(mesh->boundingBox.max.y()) + ", "
-                                  + std::to_string(mesh->boundingBox.max.z()) + ")");
+            GlobalLogger::Log(
+                LogLevel::Debug,
+                "Mesh '" + mesh->meshName + "' bounding box: min(" + std::to_string(mesh->boundingBox.min.x()) + ", "
+                    + std::to_string(mesh->boundingBox.min.y()) + ", " + std::to_string(mesh->boundingBox.min.z())
+                    + ") max(" + std::to_string(mesh->boundingBox.max.x()) + ", "
+                    + std::to_string(mesh->boundingBox.max.y()) + ", " + std::to_string(mesh->boundingBox.max.z())
+                    + ")");
           }
         }
 

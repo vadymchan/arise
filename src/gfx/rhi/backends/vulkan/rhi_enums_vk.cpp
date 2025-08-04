@@ -350,7 +350,6 @@ VkShaderStageFlags g_getShaderStageFlagsVk(ShaderStageFlag stages) {
   return result;
 }
 
-
 VkShaderStageFlagBits g_getShaderStageBitsVk(ShaderStageFlag type) {
   switch (type) {
     case ShaderStageFlag::Vertex:

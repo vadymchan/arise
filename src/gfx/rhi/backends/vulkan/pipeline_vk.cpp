@@ -132,7 +132,6 @@ bool GraphicsPipelineVk::createPipeline_() {
   pipelineInfo.basePipelineHandle           = VK_NULL_HANDLE;
   pipelineInfo.basePipelineIndex            = -1;
 
-
   // Destroy existing pipeline if it exists
   if (m_pipeline_ != VK_NULL_HANDLE) {
     // TODO: temp, dirty fix. Consider add delayed destroy for old pipeline

@@ -33,11 +33,12 @@ DescriptorSetLayoutVk::DescriptorSetLayoutVk(const DescriptorSetLayoutDesc& desc
   }
 
   // Add binding flags to allow updating descriptor sets while in use
-  std::vector<VkDescriptorBindingFlags> bindingFlags(layoutBindings.size(), VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT);
+  std::vector<VkDescriptorBindingFlags> bindingFlags(layoutBindings.size(),
+                                                     VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT);
 
   VkDescriptorSetLayoutBindingFlagsCreateInfo bindingFlagsInfo = {};
-  bindingFlagsInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO;
-  bindingFlagsInfo.bindingCount = static_cast<uint32_t>(bindingFlags.size());
+  bindingFlagsInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO;
+  bindingFlagsInfo.bindingCount  = static_cast<uint32_t>(bindingFlags.size());
   bindingFlagsInfo.pBindingFlags = bindingFlags.data();
 
   VkDescriptorSetLayoutCreateInfo layoutInfo = {};
@@ -282,7 +283,7 @@ bool DescriptorPoolManager::createPool() {
   poolInfo.poolSizeCount              = static_cast<uint32_t>(poolSizes.size());
   poolInfo.pPoolSizes                 = poolSizes.data();
   poolInfo.maxSets                    = m_maxSets_;
-  poolInfo.flags                      = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT | VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT;
+  poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT | VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT;
 
   if (vkCreateDescriptorPool(m_device_, &poolInfo, nullptr, &m_currentPool_) != VK_SUCCESS) {
     return false;

@@ -24,23 +24,16 @@ template <typename T>
 concept IsNotArray = !IsArray<T>;
 
 template <typename T>
-concept HasEmplaceBack = requires(T container, typename T::value_type value) {
-  container.emplace_back(value);
-};
+concept HasEmplaceBack = requires(T container, typename T::value_type value) { container.emplace_back(value); };
 
 template <typename T>
-concept HasEmplaceFront = requires(T container, typename T::value_type value) {
-  container.emplace_front(value);
-};
+concept HasEmplaceFront = requires(T container, typename T::value_type value) { container.emplace_front(value); };
 
 template <typename T>
-concept HasEmplace = requires(T container, typename T::value_type value) {
-  container.emplace(value);
-};
+concept HasEmplace = requires(T container, typename T::value_type value) { container.emplace(value); };
 
 template <typename T>
-concept SupportsEmplace
-    = HasEmplaceBack<T> || HasEmplaceFront<T> || HasEmplace<T>;
+concept SupportsEmplace = HasEmplaceBack<T> || HasEmplaceFront<T> || HasEmplace<T>;
 
 class Config {
   public:
@@ -62,8 +55,7 @@ class Config {
   T get(const std::string& key) const {
     asyncLoadComplete_();
     if (!m_root_.IsObject()) {
-      GlobalLogger::Log(LogLevel::Error,
-                        "Configuration not loaded or root is not an object.");
+      GlobalLogger::Log(LogLevel::Error, "Configuration not loaded or root is not an object.");
       return T();
     }
 
@@ -71,20 +63,17 @@ class Config {
     return convert_<T>(value);
   }
 
-  template <SupportsEmplace Container,
-            typename T = typename Container::value_type>
+  template <SupportsEmplace Container, typename T = typename Container::value_type>
   Container getContainer(const std::string& key) const {
     asyncLoadComplete_();
     if (!m_root_.IsObject()) {
-      GlobalLogger::Log(LogLevel::Error,
-                        "Configuration not loaded or root is not an object.");
+      GlobalLogger::Log(LogLevel::Error, "Configuration not loaded or root is not an object.");
       return Container();
     }
 
     const ConfigValue& value = getMember_(key);
     if (!value.IsArray()) {
-      GlobalLogger::Log(LogLevel::Error,
-                        "Value for key \"" + key + "\" is not an array.");
+      GlobalLogger::Log(LogLevel::Error, "Value for key \"" + key + "\" is not an array.");
       return Container();
     }
 
@@ -111,9 +100,7 @@ class Config {
   void registerConverter(std::function<T(const ConfigValue&)> converter) {
     auto test = std::type_index(typeid(T));
     m_converters_[std::type_index(typeid(T))]
-        = [converter](const ConfigValue& value) -> std::any {
-      return converter(value);
-    };
+        = [converter](const ConfigValue& value) -> std::any { return converter(value); };
   }
 
   private:
@@ -139,8 +126,7 @@ class Config {
         return std::any_cast<T>(result);
       }
     } else {
-      GlobalLogger::Log(LogLevel::Error,
-                        "No converter registered for the requested type.");
+      GlobalLogger::Log(LogLevel::Error, "No converter registered for the requested type.");
     }
     return T();
   }
@@ -219,12 +205,10 @@ class Config {
     return "";
   }
 
-  std::filesystem::path     m_filePath_;
-  rapidjson::Document       m_root_;
-  mutable std::future<bool> m_future_;
-  mutable std::unordered_map<std::type_index,
-                             std::function<std::any(const ConfigValue&)>>
-      m_converters_;
+  std::filesystem::path                                                                    m_filePath_;
+  rapidjson::Document                                                                      m_root_;
+  mutable std::future<bool>                                                                m_future_;
+  mutable std::unordered_map<std::type_index, std::function<std::any(const ConfigValue&)>> m_converters_;
 };
 
 }  // namespace arise

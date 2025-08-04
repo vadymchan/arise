@@ -29,7 +29,6 @@ class MemoryLogger : public ILogger {
            const std::string&          message,
            const std::source_location& location = std::source_location::current()) override;
 
-
   const std::vector<LogEntry>& getLogEntries() const;
 
   void                 setMaxEntries(size_t maxEntries);

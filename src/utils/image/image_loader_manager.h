@@ -20,7 +20,7 @@ class ImageLoaderManager {
 
   private:
   std::unordered_map<ImageType, std::shared_ptr<IImageLoader>> loaderMap_;
-  std::mutex                                                    mutex_;
+  std::mutex                                                   mutex_;
 };
 
 }  // namespace arise

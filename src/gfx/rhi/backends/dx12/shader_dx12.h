@@ -6,7 +6,7 @@
 
 #ifdef ARISE_USE_DX12
 
-#include<mutex>
+#include <mutex>
 
 namespace arise {
 namespace gfx {
@@ -25,7 +25,7 @@ class ShaderDx12 : public Shader {
   ShaderDx12(const ShaderDx12&)            = delete;
   ShaderDx12& operator=(const ShaderDx12&) = delete;
 
-    void initialize(const std::vector<uint8_t>& code) override;
+  void initialize(const std::vector<uint8_t>& code) override;
   void release() override;
 
   // DX12-specific methods

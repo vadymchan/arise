@@ -379,11 +379,10 @@ void BoundingBoxVisualizationStrategy::prepareDrawCalls_(const RenderContext& co
   }
 }
 
-void BoundingBoxVisualizationStrategy::updateInstanceBuffer_(ecs::RenderModel*                        model,
+void BoundingBoxVisualizationStrategy::updateInstanceBuffer_(ecs::RenderModel*                   model,
                                                              const std::vector<BoundingBoxData>& boundingBoxData,
                                                              ModelBufferCache&                   cache) {
   if (!cache.instanceBuffer || boundingBoxData.size() > cache.capacity) {
-
     uint32_t newCapacity = std::max(static_cast<uint32_t>(boundingBoxData.size() * 1.5), 8u);
 
     std::string bufferKey = "bounding_box_instance_buffer_" + std::to_string(reinterpret_cast<uintptr_t>(model));
@@ -424,7 +423,6 @@ void BoundingBoxVisualizationStrategy::cleanupUnusedBuffers_(
 }
 
 void BoundingBoxVisualizationStrategy::createBoundingBoxGeometry_() {
-
   std::vector<math::Vector3f> cubeVertices = {
   // Bottom face
     {-0.5f, -0.5f, -0.5f},

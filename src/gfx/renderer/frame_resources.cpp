@@ -5,10 +5,9 @@
 #include "ecs/systems/light_system.h"
 #include "ecs/systems/system_manager.h"
 #include "gfx/renderer/render_resource_manager.h"
+#include "profiler/profiler.h"
 #include "utils/memory/align.h"
 #include "utils/service/service_locator.h"
-#include "profiler/profiler.h"
-
 
 namespace arise {
 namespace gfx {
@@ -390,7 +389,7 @@ void FrameResources::updateViewResources_(const RenderContext& context) {
     math::Matrix4f<> invView;
     math::Matrix4f<> invProjection;
     math::Matrix4f<> invViewProjection;
-    math::Vector3f  eyePosition;
+    math::Vector3f   eyePosition;
     float            padding;
   } viewData;
 
@@ -407,8 +406,8 @@ void FrameResources::updateViewResources_(const RenderContext& context) {
 }
 
 void FrameResources::updateModelList_(const RenderContext& context) {
-  bool                             needRebuildRenderArray = false;
-  std::unordered_set<entt::entity> currentEntityIds;
+  bool                               needRebuildRenderArray = false;
+  std::unordered_set<entt::entity>   currentEntityIds;
   std::unordered_set<ecs::Material*> activeMaterials;
 
   auto& registry = context.scene->getEntityRegistry();
@@ -428,15 +427,15 @@ void FrameResources::updateModelList_(const RenderContext& context) {
     auto it = m_modelsMap.find(entity);
     if (it != m_modelsMap.end()) {
       if (transform.isDirty) {
-              it->second.transform   = transform;
-      it->second.modelMatrix = ecs::calculateTransformMatrix(transform);
+        it->second.transform   = transform;
+        it->second.modelMatrix = ecs::calculateTransformMatrix(transform);
         it->second.isDirty     = true;
       }
     } else {
       ModelInstance instance;
       instance.model       = renderModel;
-          instance.transform   = transform;
-    instance.modelMatrix = ecs::calculateTransformMatrix(transform);
+      instance.transform   = transform;
+      instance.modelMatrix = ecs::calculateTransformMatrix(transform);
       instance.entityId    = entity;
       instance.isDirty     = true;
 

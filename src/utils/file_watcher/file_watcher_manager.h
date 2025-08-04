@@ -11,17 +11,14 @@ class FileWatcherManager {
   public:
   using Callback = std::function<void(const wtr::event&)>;
 
-  void addWatcher(const std::filesystem::path& dirPath,
-                  const Callback&              callback);
+  void addWatcher(const std::filesystem::path& dirPath, const Callback& callback);
 
   void removeWatcher(const std::filesystem::path& dirPath);
 
   void removeAllWatchers();
 
   private:
-  std::unordered_map<std::filesystem::path,
-                     std::unique_ptr<wtr::watcher::watch>>
-      m_watchers_;
+  std::unordered_map<std::filesystem::path, std::unique_ptr<wtr::watcher::watch>> m_watchers_;
 };
 
 }  // namespace arise

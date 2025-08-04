@@ -22,8 +22,8 @@ class SwapChainDx12 : public SwapChain {
   ~SwapChainDx12() override;
 
   Texture* getCurrentImage() override;
-  bool acquireNextImage(Semaphore* signalSemaphore = nullptr) override;
-  bool present(Semaphore* waitSemaphore = nullptr)            override;
+  bool     acquireNextImage(Semaphore* signalSemaphore = nullptr) override;
+  bool     present(Semaphore* waitSemaphore = nullptr) override;
   bool     resize(uint32_t width, uint32_t height) override;
 
   TextureFormat getFormat() const override;
@@ -46,9 +46,9 @@ class SwapChainDx12 : public SwapChain {
   std::vector<ComPtr<ID3D12Resource>>       m_backBuffers_;
   std::vector<std::unique_ptr<TextureDx12>> m_textures_;
 
-  std::vector<uint32_t> m_backBuferRtvDescriptorIndices; 
+  std::vector<uint32_t> m_backBuferRtvDescriptorIndices;
 
-  HANDLE   m_frameLatencyWaitableObject_ = nullptr;  // For better frame pacing
+  HANDLE m_frameLatencyWaitableObject_ = nullptr;  // For better frame pacing
 };
 
 }  // namespace rhi

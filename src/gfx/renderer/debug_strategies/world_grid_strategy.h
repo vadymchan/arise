@@ -34,18 +34,18 @@ class WorldGridStrategy : public DebugDrawStrategy {
   bool isExclusive() const override { return false; }
 
   private:
-  //struct GridParameters {
-  //  math::Matrix4f<> invViewProjection;
-  //  math::Vector3f  cameraPosition;
-  //  float            gridSize;
-  //  float            fadeDistance;
-  //  float            padding[2];
-  //};
+  // struct GridParameters {
+  //   math::Matrix4f<> invViewProjection;
+  //   math::Vector3f  cameraPosition;
+  //   float            gridSize;
+  //   float            fadeDistance;
+  //   float            padding[2];
+  // };
 
   void setupRenderPass_();
   void createFramebuffers_(const math::Dimension2i& dimension);
   void createPipeline_();
-  //void updateGridParameters_(const RenderContext& context);
+  // void updateGridParameters_(const RenderContext& context);
 
   const std::string m_vertexShaderPath_ = "assets/shaders/debug/world_grid/simple_grid.vs.hlsl";
   const std::string m_pixelShaderPath_  = "assets/shaders/debug/world_grid/simple_grid.ps.hlsl";
@@ -65,9 +65,9 @@ class WorldGridStrategy : public DebugDrawStrategy {
   rhi::RenderPass*               m_renderPass = nullptr;
   std::vector<rhi::Framebuffer*> m_framebuffers;
 
-  //rhi::Buffer*              m_gridParametersBuffer = nullptr;
-  //rhi::DescriptorSetLayout* m_gridLayout           = nullptr;
-  //rhi::DescriptorSet*       m_gridDescriptorSet    = nullptr;
+  // rhi::Buffer*              m_gridParametersBuffer = nullptr;
+  // rhi::DescriptorSetLayout* m_gridLayout           = nullptr;
+  // rhi::DescriptorSet*       m_gridDescriptorSet    = nullptr;
 };
 
 }  // namespace renderer

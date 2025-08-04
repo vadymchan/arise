@@ -17,7 +17,7 @@ namespace arise {
 
 class KtxImageLoader final : public IImageLoader {
   public:
-  KtxImageLoader() = default;
+  KtxImageLoader()           = default;
   ~KtxImageLoader() override = default;
 
   std::unique_ptr<Image> loadImage(const std::filesystem::path& filepath) override;
@@ -34,11 +34,11 @@ class KtxImageLoader final : public IImageLoader {
     bool bc7  = true;
     bool astc = false;
     bool etc2 = false;
-  } m_deviceCaps_;  
+  } m_deviceCaps_;
 
   gfx::rhi::TextureFormat determineBestFormat_(uint32_t components, bool hasAlpha) const;
 
-  static ktx_transcode_fmt_e transcodeFormat_(gfx::rhi::TextureFormat format);
+  static ktx_transcode_fmt_e   transcodeFormat_(gfx::rhi::TextureFormat format);
   static gfx::rhi::TextureType determineDimension_(ktxTexture* texture);
 
   std::unique_ptr<Image> loadKtx2_(const std::filesystem::path& filepath);

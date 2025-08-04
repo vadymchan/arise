@@ -8,8 +8,8 @@ namespace ecs {
 
 struct Selected {
   math::Vector4f highlightColor   = math::Vector4f(1.0f, 0.5f, 0.0f, 1.0f);  // Orange
-  float           outlineThickness = 0.02f;
-  bool            xRay             = false;
+  float          outlineThickness = 0.02f;
+  bool           xRay             = false;
 };
 
 }  // namespace ecs

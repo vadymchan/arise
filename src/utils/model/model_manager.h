@@ -19,7 +19,7 @@ class ModelManager {
 
   private:
   std::unordered_map<std::filesystem::path, std::unique_ptr<ecs::Model>> modelCache_;
-  std::mutex                                                        mutex_;
+  std::mutex                                                             mutex_;
 };
 
 }  // namespace arise

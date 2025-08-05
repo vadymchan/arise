@@ -36,7 +36,7 @@ const std::unordered_map<std::string, MouseButton> InputMap::s_mouseNameToButton
   {"MiddleMouse", SDL_BUTTON_MIDDLE}
 };
 
-const std::unordered_map<std::string, SDL_Scancode> InputMap::s_keyNameToScancode = {
+const std::unordered_map<std::string, PhysicalKey> InputMap::s_keyNameToPhysicalKey = {
   {         "A",         SDL_SCANCODE_A},
   {         "B",         SDL_SCANCODE_B},
   {         "C",         SDL_SCANCODE_C},
@@ -209,7 +209,7 @@ void InputMap::loadMapFromFile(const std::filesystem::path&                   pa
 
 KeyBinding InputMap::parseKeyBinding(const std::string& keyString) const {
   KeyBinding binding;
-  binding.key = SDL_SCANCODE_UNKNOWN;
+  binding.key = static_cast<PhysicalKey>(SDL_SCANCODE_UNKNOWN);
 
   std::string processedString = keyString;
 
@@ -234,8 +234,8 @@ KeyBinding InputMap::parseKeyBinding(const std::string& keyString) const {
     processedString     = processedString.substr(altStr.size());
   }
 
-  auto it = s_keyNameToScancode.find(processedString);
-  if (it != s_keyNameToScancode.end()) {
+  auto it = s_keyNameToPhysicalKey.find(processedString);
+  if (it != s_keyNameToPhysicalKey.end()) {
     binding.key = it->second;
   }
 
@@ -275,7 +275,7 @@ void InputMap::processKeyBinding(const std::string&                           ac
                                  std::unordered_map<std::string, KeyBinding>& keyBindings,
                                  const std::string&                           modeStr) const {
   KeyBinding binding = parseKeyBinding(bindingString);
-  if (binding.key != SDL_SCANCODE_UNKNOWN) {
+  if (binding.key != static_cast<PhysicalKey>(SDL_SCANCODE_UNKNOWN)) {
     keyBindings[actionName] = binding;
   } else {
     GlobalLogger::Log(LogLevel::Warning, "Unknown key binding in " + modeStr + " map: " + bindingString);

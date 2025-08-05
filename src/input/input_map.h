@@ -4,6 +4,7 @@
 #include "config/config_manager.h"
 #include "core/application_mode.h"
 #include "input/actions.h"
+#include "input/key.h"
 #include "input/mouse.h"
 #include "utils/logger/global_logger.h"
 #include "utils/path_manager/path_manager.h"
@@ -18,10 +19,10 @@
 namespace arise {
 
 struct KeyBinding {
-  SDL_Scancode key           = SDL_SCANCODE_UNKNOWN;
-  bool         requiresCtrl  = false;
-  bool         requiresShift = false;
-  bool         requiresAlt   = false;
+  PhysicalKey key           = static_cast<PhysicalKey>(SDL_SCANCODE_UNKNOWN);
+  bool        requiresCtrl  = false;
+  bool        requiresShift = false;
+  bool        requiresAlt   = false;
 
   bool matchesEvent(const SDL_KeyboardEvent& event) const {
     if (event.keysym.scancode != key) {
@@ -95,7 +96,7 @@ class InputMap {
 
   static const std::unordered_map<std::string, InputAction>  s_stringToInputAction;
   static const std::unordered_map<std::string, EditorAction> s_stringToEditorAction;
-  static const std::unordered_map<std::string, SDL_Scancode> s_keyNameToScancode;
+  static const std::unordered_map<std::string, PhysicalKey>  s_keyNameToPhysicalKey;
   static const std::unordered_map<std::string, MouseButton>  s_mouseNameToButton;
 };
 

@@ -26,8 +26,14 @@ const std::unordered_map<std::string, EditorAction> InputMap::s_stringToEditorAc
   {           "GizmoScale",            EditorAction::GizmoScale},
   {     "GizmoToggleSpace",      EditorAction::GizmoToggleSpace},
   {"GizmoToggleVisibility", EditorAction::GizmoToggleVisibility},
-  {            "MousePick",             EditorAction::MousePick}, // TODO: not completely implemented yet
+  {            "MousePick",             EditorAction::MousePick},
   {"ToggleApplicationMode", EditorAction::ToggleApplicationMode}
+};
+
+const std::unordered_map<std::string, MouseButton> InputMap::s_mouseNameToButton = {
+  {  "LeftMouse",   SDL_BUTTON_LEFT},
+  { "RightMouse",  SDL_BUTTON_RIGHT},
+  {"MiddleMouse", SDL_BUTTON_MIDDLE}
 };
 
 const std::unordered_map<std::string, SDL_Scancode> InputMap::s_keyNameToScancode = {
@@ -121,11 +127,12 @@ void InputMap::loadAllMaps() {
 }
 
 void InputMap::loadStandaloneMap() {
-  loadMapFromFile(m_standaloneMapPath, m_standaloneBindings, ApplicationMode::Standalone);
+  std::unordered_map<std::string, MouseBinding> emptyMouseBindings;
+  loadMapFromFile(m_standaloneMapPath, m_standaloneBindings, emptyMouseBindings, ApplicationMode::Standalone);
 }
 
 void InputMap::loadEditorMap() {
-  loadMapFromFile(m_editorMapPath, m_editorBindings, ApplicationMode::Editor);
+  loadMapFromFile(m_editorMapPath, m_editorBindings, m_editorMouseBindings, ApplicationMode::Editor);
 }
 
 std::optional<InputAction> InputMap::getStandaloneAction(const SDL_KeyboardEvent& event) const {
@@ -137,7 +144,7 @@ std::optional<InputAction> InputMap::getStandaloneAction(const SDL_KeyboardEvent
   return std::nullopt;
 }
 
-std::optional<EditorAction> InputMap::getEditorAction(const SDL_KeyboardEvent& event) const {
+std::optional<EditorAction> InputMap::getEditorKeyboardAction(const SDL_KeyboardEvent& event) const {
   for (const auto& [actionName, binding] : m_editorBindings) {
     if (binding.matchesEvent(event)) {
       return stringToEditorAction(actionName);
@@ -146,10 +153,21 @@ std::optional<EditorAction> InputMap::getEditorAction(const SDL_KeyboardEvent& e
   return std::nullopt;
 }
 
-void InputMap::loadMapFromFile(const std::filesystem::path&                 path,
-                               std::unordered_map<std::string, KeyBinding>& bindings,
-                               ApplicationMode                              mode) {
-  bindings.clear();
+std::optional<EditorAction> InputMap::getEditorMouseAction(const SDL_MouseButtonEvent& event) const {
+  for (const auto& [actionName, binding] : m_editorMouseBindings) {
+    if (binding.matchesEvent(event)) {
+      return stringToEditorAction(actionName);
+    }
+  }
+  return std::nullopt;
+}
+
+void InputMap::loadMapFromFile(const std::filesystem::path&                   path,
+                               std::unordered_map<std::string, KeyBinding>&   keyBindings,
+                               std::unordered_map<std::string, MouseBinding>& mouseBindings,
+                               ApplicationMode                                mode) {
+  keyBindings.clear();
+  mouseBindings.clear();
 
   auto configManager = ServiceLocator::s_get<ConfigManager>();
   if (!configManager) {
@@ -175,21 +193,18 @@ void InputMap::loadMapFromFile(const std::filesystem::path&                 path
     expectedKeys = getEditorActionKeys();
   }
 
+  std::string modeStr = (mode == ApplicationMode::Editor) ? "editor" : "standalone";
+
   for (const auto& actionName : expectedKeys) {
-    std::string keyString = config->get<std::string>(actionName);
-    if (!keyString.empty()) {
-      KeyBinding binding = parseKeyBinding(keyString);
-      if (binding.key != SDL_SCANCODE_UNKNOWN) {
-        bindings[actionName] = binding;
-      } else {
-        std::string modeStr = (mode == ApplicationMode::Editor) ? "editor" : "standalone";
-        GlobalLogger::Log(LogLevel::Warning, "Unknown key binding in " + modeStr + " map: " + keyString);
-      }
+    std::string bindingString = config->get<std::string>(actionName);
+    if (!bindingString.empty()) {
+      processBinding(actionName, bindingString, keyBindings, mouseBindings, modeStr);
     }
   }
 
-  std::string modeStr = (mode == ApplicationMode::Editor) ? "editor" : "standalone";
-  GlobalLogger::Log(LogLevel::Info, "Loaded " + std::to_string(bindings.size()) + " " + modeStr + " key bindings");
+  GlobalLogger::Log(LogLevel::Info,
+                    "Loaded " + std::to_string(keyBindings.size()) + " key bindings and "
+                        + std::to_string(mouseBindings.size()) + " mouse bindings for " + modeStr + " mode");
 }
 
 KeyBinding InputMap::parseKeyBinding(const std::string& keyString) const {
@@ -225,6 +240,58 @@ KeyBinding InputMap::parseKeyBinding(const std::string& keyString) const {
   }
 
   return binding;
+}
+
+MouseBinding InputMap::parseMouseBinding(const std::string& mouseString) const {
+  MouseBinding binding;
+  binding.button = 0;
+
+  auto it = s_mouseNameToButton.find(mouseString);
+  if (it != s_mouseNameToButton.end()) {
+    binding.button = it->second;
+  }
+
+  return binding;
+}
+
+bool InputMap::isMouseBinding(const std::string& bindingString) const {
+  return s_mouseNameToButton.find(bindingString) != s_mouseNameToButton.end();
+}
+
+void InputMap::processBinding(const std::string&                             actionName,
+                              const std::string&                             bindingString,
+                              std::unordered_map<std::string, KeyBinding>&   keyBindings,
+                              std::unordered_map<std::string, MouseBinding>& mouseBindings,
+                              const std::string&                             modeStr) const {
+  if (isMouseBinding(bindingString)) {
+    processMouseBinding(actionName, bindingString, mouseBindings, modeStr);
+  } else {
+    processKeyBinding(actionName, bindingString, keyBindings, modeStr);
+  }
+}
+
+void InputMap::processKeyBinding(const std::string&                           actionName,
+                                 const std::string&                           bindingString,
+                                 std::unordered_map<std::string, KeyBinding>& keyBindings,
+                                 const std::string&                           modeStr) const {
+  KeyBinding binding = parseKeyBinding(bindingString);
+  if (binding.key != SDL_SCANCODE_UNKNOWN) {
+    keyBindings[actionName] = binding;
+  } else {
+    GlobalLogger::Log(LogLevel::Warning, "Unknown key binding in " + modeStr + " map: " + bindingString);
+  }
+}
+
+void InputMap::processMouseBinding(const std::string&                             actionName,
+                                   const std::string&                             bindingString,
+                                   std::unordered_map<std::string, MouseBinding>& mouseBindings,
+                                   const std::string&                             modeStr) const {
+  MouseBinding binding = parseMouseBinding(bindingString);
+  if (binding.button != 0) {
+    mouseBindings[actionName] = binding;
+  } else {
+    GlobalLogger::Log(LogLevel::Warning, "Unknown mouse binding in " + modeStr + " map: " + bindingString);
+  }
 }
 
 std::vector<std::string> InputMap::getStandaloneActionKeys() const {

@@ -14,13 +14,31 @@ bool EditorInputProcessor::process(const SDL_Event& event) {
   switch (event.type) {
     case SDL_KEYDOWN:
       return handleKeyboard(event);
+    case SDL_MOUSEBUTTONDOWN:
+      return handleMouse(event);
   }
 
   return false;
 }
 
 bool EditorInputProcessor::handleKeyboard(const SDL_Event& event) {
-  auto actionOpt = m_inputMap->getEditorAction(event.key);
+  auto actionOpt = m_inputMap->getEditorKeyboardAction(event.key);
+  if (!actionOpt) {
+    return false;
+  }
+
+  auto it = m_callbacks.find(*actionOpt);
+  if (it != m_callbacks.end()) {
+    for (auto& callback : it->second) {
+      callback(*actionOpt);
+    }
+  }
+
+  return true;
+}
+
+bool EditorInputProcessor::handleMouse(const SDL_Event& event) {
+  auto actionOpt = m_inputMap->getEditorMouseAction(event.button);
   if (!actionOpt) {
     return false;
   }
@@ -38,7 +56,7 @@ bool EditorInputProcessor::handleKeyboard(const SDL_Event& event) {
 bool EditorInputProcessor::shouldProcess(const SDL_Event& event) const {
   // Always allow processing toggle mode action regardless of current mode
   if (event.type == SDL_KEYDOWN) {
-    auto actionOpt = m_inputMap->getEditorAction(event.key);
+    auto actionOpt = m_inputMap->getEditorKeyboardAction(event.key);
     if (actionOpt && *actionOpt == EditorAction::ToggleApplicationMode) {
       return true;
     }

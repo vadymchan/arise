@@ -30,6 +30,7 @@ class EditorInputProcessor : public InputProcessor {
   private:
   bool shouldProcess(const SDL_Event& event) const;
   bool handleKeyboard(const SDL_Event& event);
+  bool handleMouse(const SDL_Event& event);
 
   InputMap*                                                     m_inputMap;
   std::function<ApplicationMode()>                              m_getCurrentMode;

@@ -14,7 +14,6 @@
 #include "gfx/rhi/backends/vulkan/texture_vk.h"
 #include "gfx/rhi/shader_reflection/pipeline_utils.h"
 #include "platform/common/window.h"
-// #include "profiler/backends/gpu_profiler_vk.h"
 #include "profiler/backends/gpu_profiler.h"
 #include "utils/logger/global_logger.h"
 #include "utils/service/service_locator.h"
@@ -106,7 +105,19 @@ bool DeviceVk::createInstance_() {
 
   VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo = {};
   g_populateDebugMessengerCreateInfo(debugCreateInfo);
+
+#if defined(ARISE_USE_VULKAN_BEST_PRACTICES_VALIDATION)
+  VkValidationFeatureEnableEXT validationFeatures[] = {VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT};
+
+  VkValidationFeaturesEXT validationFeaturesExt       = {};
+  validationFeaturesExt.sType                         = VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT;
+  validationFeaturesExt.enabledValidationFeatureCount = 1;
+  validationFeaturesExt.pEnabledValidationFeatures    = validationFeatures;
+  validationFeaturesExt.pNext                         = &debugCreateInfo;
+  createInfo.pNext                                    = &validationFeaturesExt;
+#else
   createInfo.pNext = &debugCreateInfo;
+#endif
 #else
   createInfo.enabledLayerCount = 0;
   createInfo.pNext             = nullptr;

@@ -18,7 +18,6 @@
 #include "gfx/rhi/backends/dx12/texture_dx12.h"
 #include "gfx/rhi/shader_reflection/pipeline_utils.h"
 #include "platform/common/window.h"
-// #include "profiler/backends/gpu_profiler_dx12.h"
 #include "profiler/backends/gpu_profiler.h"
 #include "utils/logger/global_logger.h"
 #include "utils/service/service_locator.h"

@@ -37,7 +37,8 @@ option(BUILD_PROFILING_TOOLS "Download Tracy profiling tools" OFF)
 
 include(CMakeDependentOption)
 
-cmake_dependent_option(BUILD_VULKAN_MEMORY_ALLOCATOR "Build Vulkan Memory Allocator" ON "USE_VULKAN"  OFF)
+cmake_dependent_option(BUILD_VULKAN_MEMORY_ALLOCATOR        "Build Vulkan Memory Allocator" ON "USE_VULKAN"  OFF)
+cmake_dependent_option(USE_VULKAN_BEST_PRACTICES_VALIDATION "Enable Vulkan best practices validation in debug builds" ON "USE_VULKAN" OFF)
 cmake_dependent_option(BUILD_D3D12_MEMORY_ALLOCATOR  "Build D3D12 Memory Allocator"  ON "USE_DIRECTX" OFF)
 cmake_dependent_option(USE_DIRECTX_AGILITY           "Fetch DirectX 12 Agility SDK (and DirectX-Headers as dependent library)"  ON "USE_DIRECTX" OFF)
 cmake_dependent_option(USE_DIRECTX_TOOL_KIT          "Fetch DirectX Tool Kit for DX12" ON "USE_DIRECTX" OFF)
@@ -921,6 +922,10 @@ if(USE_VULKAN)
     target_link_libraries(${PROJECT_NAME} PRIVATE ${Vulkan_LIBRARIES})
 
     target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_VULKAN)
+endif()
+
+if(USE_VULKAN_BEST_PRACTICES_VALIDATION)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_VULKAN_BEST_PRACTICES_VALIDATION)
 endif()
 
 if(USE_OPENGL)

@@ -99,4 +99,20 @@ inline void LogFatal(fmt::format_string<Args...> fmtStr,
 
 }  // namespace arise
 
+#ifndef ARISE_DISABLE_LOGGING
+#define LOG_TRACE(...) arise::LogTrace(__VA_ARGS__)
+#define LOG_DEBUG(...) arise::LogDebug(__VA_ARGS__)
+#define LOG_INFO(...)  arise::LogInfo(__VA_ARGS__)
+#define LOG_WARN(...)  arise::LogWarn(__VA_ARGS__)
+#define LOG_ERROR(...) arise::LogError(__VA_ARGS__)
+#define LOG_FATAL(...) arise::LogFatal(__VA_ARGS__)
+#else
+#define LOG_TRACE(...)
+#define LOG_DEBUG(...)
+#define LOG_INFO(...)
+#define LOG_WARN(...)
+#define LOG_ERROR(...)
+#define LOG_FATAL(...)
+#endif
+
 #endif  // ARISE_LOG_HELPERS_H

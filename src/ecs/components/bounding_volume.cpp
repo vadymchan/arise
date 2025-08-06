@@ -1,7 +1,7 @@
 #include "ecs/components/bounding_volume.h"
 
 #include "ecs/components/vertex.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 #include <algorithm>
 #include <array>
@@ -44,7 +44,7 @@ BoundingBox calculateAABBFromRange(Iterator begin, Iterator end) {
 
 BoundingBox calculateAABB(const std::vector<math::Vector3f>& positions) {
   if (positions.empty()) {
-    GlobalLogger::Log(LogLevel::Warning, "Empty position list for AABB calculation");
+    LOG_WARN("Empty position list for AABB calculation");
     return createInvalid();
   }
 
@@ -53,7 +53,7 @@ BoundingBox calculateAABB(const std::vector<math::Vector3f>& positions) {
 
 BoundingBox calculateAABB(const std::vector<Vertex>& vertices) {
   if (vertices.empty()) {
-    GlobalLogger::Log(LogLevel::Warning, "Empty vertex list for AABB calculation");
+    LOG_WARN("Empty vertex list for AABB calculation");
     return createInvalid();
   }
 
@@ -98,7 +98,7 @@ BoundingBox transformAABB(const BoundingBox& aabb, const math::Matrix4f<>& trans
 
 BoundingBox combineAABBs(const std::vector<BoundingBox>& boxes) {
   if (boxes.empty()) {
-    GlobalLogger::Log(LogLevel::Warning, "Empty bounding box list for combination");
+    LOG_WARN("Empty bounding box list for combination");
     return createInvalid();
   }
 
@@ -113,7 +113,7 @@ BoundingBox combineAABBs(const std::vector<BoundingBox>& boxes) {
   }
 
   if (allPoints.empty()) {
-    GlobalLogger::Log(LogLevel::Warning, "No valid bounding boxes found in list");
+    LOG_WARN("No valid bounding boxes found in list");
     return createInvalid();
   }
 

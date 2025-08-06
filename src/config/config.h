@@ -1,7 +1,7 @@
 #ifndef ARISE_CONFIG_H
 #define ARISE_CONFIG_H
 
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 #include <rapidjson/document.h>
 #include <rapidjson/prettywriter.h>
@@ -55,7 +55,7 @@ class Config {
   T get(const std::string& key) const {
     asyncLoadComplete_();
     if (!m_root_.IsObject()) {
-      GlobalLogger::Log(LogLevel::Error, "Configuration not loaded or root is not an object.");
+      LOG_ERROR("Configuration not loaded or root is not an object.");
       return T();
     }
 
@@ -67,13 +67,13 @@ class Config {
   Container getContainer(const std::string& key) const {
     asyncLoadComplete_();
     if (!m_root_.IsObject()) {
-      GlobalLogger::Log(LogLevel::Error, "Configuration not loaded or root is not an object.");
+      LOG_ERROR("Configuration not loaded or root is not an object.");
       return Container();
     }
 
     const ConfigValue& value = getMember_(key);
     if (!value.IsArray()) {
-      GlobalLogger::Log(LogLevel::Error, "Value for key \"" + key + "\" is not an array.");
+      LOG_ERROR("Value for key \"" + key + "\" is not an array.");
       return Container();
     }
 
@@ -113,7 +113,7 @@ class Config {
     if (value.IsObject()) {
       return convertObject_<T>(value);
     }
-    GlobalLogger::Log(LogLevel::Error, "Value is not an object.");
+    LOG_ERROR("Value is not an object.");
     return T();
   }
 
@@ -126,7 +126,7 @@ class Config {
         return std::any_cast<T>(result);
       }
     } else {
-      GlobalLogger::Log(LogLevel::Error, "No converter registered for the requested type.");
+      LOG_ERROR("No converter registered for the requested type.");
     }
     return T();
   }
@@ -136,7 +136,7 @@ class Config {
     if (value.IsBool()) {
       return value.GetBool();
     }
-    GlobalLogger::Log(LogLevel::Error, "Value is not a bool.");
+    LOG_ERROR("Value is not a bool.");
     return false;
   }
 
@@ -146,7 +146,7 @@ class Config {
     if (value.IsNumber()) {
       return value.GetFloat();
     }
-    GlobalLogger::Log(LogLevel::Error, "Value is not a float.");
+    LOG_ERROR("Value is not a float.");
     return 0.0f;
   }
 
@@ -156,7 +156,7 @@ class Config {
     if (value.IsNumber()) {
       return value.GetDouble();
     }
-    GlobalLogger::Log(LogLevel::Error, "Value is not a double.");
+    LOG_ERROR("Value is not a double.");
     return 0.0;
   }
 
@@ -165,7 +165,7 @@ class Config {
     if (value.IsUint()) {
       return value.GetUint();
     }
-    GlobalLogger::Log(LogLevel::Error, "Value is not a uint32.");
+    LOG_ERROR("Value is not a uint32.");
     return 0;
   }
 
@@ -174,7 +174,7 @@ class Config {
     if (value.IsInt()) {
       return value.GetInt();
     }
-    GlobalLogger::Log(LogLevel::Error, "Value is not an int32.");
+    LOG_ERROR("Value is not an int32.");
     return 0;
   }
 
@@ -183,7 +183,7 @@ class Config {
     if (value.IsUint64()) {
       return value.GetUint64();
     }
-    GlobalLogger::Log(LogLevel::Error, "Value is not a uint64.");
+    LOG_ERROR("Value is not a uint64.");
     return 0;
   }
 
@@ -192,7 +192,7 @@ class Config {
     if (value.IsInt64()) {
       return value.GetInt64();
     }
-    GlobalLogger::Log(LogLevel::Error, "Value is not an int64.");
+    LOG_ERROR("Value is not an int64.");
     return 0;
   }
 
@@ -201,7 +201,7 @@ class Config {
     if (value.IsString()) {
       return value.GetString();
     }
-    GlobalLogger::Log(LogLevel::Error, "Value is not a string.");
+    LOG_ERROR("Value is not a string.");
     return "";
   }
 

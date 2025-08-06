@@ -1,7 +1,7 @@
 #include "utils/third_party/directx_tex_util.h"
 
 #include "gfx/rhi/backends/dx12/rhi_enums_dx12.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 #include <algorithm>
 
@@ -30,9 +30,9 @@ TextureType DirectXTexImageLoader::determineDimension_(const DirectX::TexMetadat
       baseDimension = (metadata.arraySize > 1) ? TextureType::Texture3DArray : TextureType::Texture3D;
       break;
     default:
-      GlobalLogger::Log(LogLevel::Warning,
-                        "Unsupported texture dimension in DirectXTexImageLoader. "
-                        "Defaulting to TextureType::Count.");
+      LOG_WARN(
+          "Unsupported texture dimension in DirectXTexImageLoader. "
+          "Defaulting to TextureType::Count.");
       baseDimension = TextureType::Count;
       break;
   }
@@ -46,8 +46,7 @@ std::unique_ptr<Image> DirectXTexImageLoader::loadImage(const std::filesystem::p
   HRESULT hr = DirectX::LoadFromDDSFile(filepath.wstring().c_str(), DirectX::DDS_FLAGS_NONE, &metadata, scratchImage);
 
   if (FAILED(hr)) {
-    GlobalLogger::Log(LogLevel::Error,
-                      "Failed to load DDS image: " + filepath.string() + " [HRESULT: " + std::to_string(hr) + "]");
+    LOG_ERROR("Failed to load DDS image: " + filepath.string() + " [HRESULT: " + std::to_string(hr) + "]");
     return nullptr;
   }
 
@@ -73,9 +72,8 @@ std::unique_ptr<Image> DirectXTexImageLoader::loadImage(const std::filesystem::p
       for (auto slice = 0; slice < image->depth; ++slice) {
         const auto* img = scratchImage.GetImage(mip, arraySlice, slice);
         if (!img) {
-          GlobalLogger::Log(LogLevel::Warning,
-                            "Failed to retrieve image data for mip level " + std::to_string(mip) + ", array slice "
-                                + std::to_string(arraySlice) + ", depth slice " + std::to_string(slice) + ".");
+          LOG_WARN("Failed to retrieve image data for mip level " + std::to_string(mip) + ", array slice "
+                   + std::to_string(arraySlice) + ", depth slice " + std::to_string(slice) + ".");
           continue;
         }
 

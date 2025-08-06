@@ -85,7 +85,7 @@ void WireframeStrategy::render(const RenderContext& context) {
 
   uint32_t currentIndex = context.currentImageIndex;
   if (currentIndex >= m_framebuffers.size()) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid framebuffer index");
+    LOG_ERROR("Invalid framebuffer index");
     return;
   }
 
@@ -137,7 +137,7 @@ void WireframeStrategy::render(const RenderContext& context) {
 void WireframeStrategy::clearSceneResources() {
   m_instanceBufferCache.clear();
   m_drawData.clear();
-  GlobalLogger::Log(LogLevel::Info, "Wireframe strategy resources cleared for scene switch");
+  LOG_INFO("Wireframe strategy resources cleared for scene switch");
 }
 
 void WireframeStrategy::cleanup() {
@@ -176,7 +176,7 @@ void WireframeStrategy::setupRenderPass_() {
 
 void WireframeStrategy::createFramebuffers_(const math::Dimension2i& dimension) {
   if (!m_renderPass) {
-    GlobalLogger::Log(LogLevel::Error, "Render pass must be created before framebuffer");
+    LOG_ERROR("Render pass must be created before framebuffer");
     return;
   }
 

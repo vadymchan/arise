@@ -3,7 +3,7 @@
 #include "ecs/components/bounding_volume.h"
 #include "ecs/components/model.h"
 #include "ecs/components/transform.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 namespace arise {
 namespace ecs {
@@ -24,8 +24,7 @@ void BoundingVolumeSystem::update(Scene* scene, float deltaTime) {
       worldBounds.isDirty     = true;
       registry.emplace<WorldBounds>(entity, worldBounds);
 
-      GlobalLogger::Log(LogLevel::Debug,
-                        "Added WorldBounds component to entity " + std::to_string(static_cast<uint32_t>(entity)));
+      LOG_DEBUG("Added WorldBounds component to entity " + std::to_string(static_cast<uint32_t>(entity)));
     }
   }
 
@@ -71,9 +70,8 @@ void BoundingVolumeSystem::updateEntityWorldBounds_(entt::entity entity, Scene* 
   worldBounds.boundingBox          = bounds::transformAABB(localBounds, transformMatrix);
   worldBounds.isDirty              = false;
 
-  GlobalLogger::Log(LogLevel::Debug,
-                    "BoundingVolumeSystem: Updated world bounds for entity "
-                        + std::to_string(static_cast<uint32_t>(entity)) + " using model: " + model->filePath.string());
+  LOG_DEBUG("BoundingVolumeSystem: Updated world bounds for entity " + std::to_string(static_cast<uint32_t>(entity))
+            + " using model: " + model->filePath.string());
 }
 
 }  // namespace ecs

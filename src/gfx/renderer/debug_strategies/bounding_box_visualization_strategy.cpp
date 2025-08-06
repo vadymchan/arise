@@ -13,7 +13,7 @@
 #include "gfx/rhi/interface/render_pass.h"
 #include "gfx/rhi/shader_manager.h"
 #include "profiler/profiler.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 namespace arise {
 namespace gfx {
@@ -78,7 +78,7 @@ void BoundingBoxVisualizationStrategy::prepareFrame(const RenderContext& context
         boundingBoxData.worldMinCorner = worldBounds.boundingBox.min;
         boundingBoxData.worldMaxCorner = worldBounds.boundingBox.max;
       } else {
-        GlobalLogger::Log(LogLevel::Error, "World bounds are invalid");
+        LOG_ERROR("World bounds are invalid");
         boundingBoxData.worldMinCorner = model->boundingBox.min;
         boundingBoxData.worldMaxCorner = model->boundingBox.max;
       }
@@ -118,7 +118,7 @@ void BoundingBoxVisualizationStrategy::render(const RenderContext& context) {
 
   uint32_t currentIndex = context.currentImageIndex;
   if (currentIndex >= m_framebuffers.size()) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid framebuffer index");
+    LOG_ERROR("Invalid framebuffer index");
     return;
   }
 
@@ -171,7 +171,7 @@ void BoundingBoxVisualizationStrategy::render(const RenderContext& context) {
 void BoundingBoxVisualizationStrategy::clearSceneResources() {
   m_instanceBufferCache.clear();
   m_drawData.clear();
-  GlobalLogger::Log(LogLevel::Info, "Bounding box visualization strategy resources cleared for scene switch");
+  LOG_INFO("Bounding box visualization strategy resources cleared for scene switch");
 }
 
 void BoundingBoxVisualizationStrategy::cleanup() {
@@ -214,7 +214,7 @@ void BoundingBoxVisualizationStrategy::setupRenderPass_() {
 
 void BoundingBoxVisualizationStrategy::createFramebuffers_(const math::Dimension2i& dimension) {
   if (!m_renderPass) {
-    GlobalLogger::Log(LogLevel::Error, "Render pass must be created before framebuffer");
+    LOG_ERROR("Render pass must be created before framebuffer");
     return;
   }
 
@@ -361,7 +361,7 @@ void BoundingBoxVisualizationStrategy::prepareDrawCalls_(const RenderContext& co
     }
 
     if (!pipeline) {
-      GlobalLogger::Log(LogLevel::Error, "Failed to create bounding box pipeline");
+      LOG_ERROR("Failed to create bounding box pipeline");
       continue;
     }
 
@@ -475,7 +475,7 @@ void BoundingBoxVisualizationStrategy::createBoundingBoxGeometry_() {
   }
 
   if (!m_cubeVertexBuffer || !m_cubeIndexBuffer) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create bounding box geometry buffers");
+    LOG_ERROR("Failed to create bounding box geometry buffers");
   }
 }
 

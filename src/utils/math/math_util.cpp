@@ -1,6 +1,6 @@
 #include "utils/math/math_util.h"
 
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 namespace math {
 

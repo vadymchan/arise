@@ -1,7 +1,7 @@
 #include "gfx/rhi/backends/vulkan/synchronization_vk.h"
 
 #include "gfx/rhi/backends/vulkan/device_vk.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 namespace arise {
 namespace gfx {
@@ -15,7 +15,7 @@ FenceVk::FenceVk(const FenceDesc& desc, DeviceVk* device)
   fenceInfo.flags             = desc.signaled ? VK_FENCE_CREATE_SIGNALED_BIT : 0;
 
   if (vkCreateFence(device->getDevice(), &fenceInfo, nullptr, &m_fence_) != VK_SUCCESS) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create Vulkan fence");
+    LOG_ERROR("Failed to create Vulkan fence");
   }
 }
 
@@ -60,7 +60,7 @@ void FenceVk::signal(VkQueue queue) {
   {
     std::lock_guard<std::mutex> lock(m_device_->getQueueMutex());
     if (vkQueueSubmit(queue, 1, &submitInfo, m_fence_) != VK_SUCCESS) {
-      GlobalLogger::Log(LogLevel::Error, "Failed to signal Vulkan fence");
+      LOG_ERROR("Failed to signal Vulkan fence");
     } else {
       m_signaled_ = true;
     }
@@ -73,7 +73,7 @@ SemaphoreVk::SemaphoreVk(DeviceVk* device)
   semaphoreInfo.sType                 = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
   if (vkCreateSemaphore(device->getDevice(), &semaphoreInfo, nullptr, &m_semaphore_) != VK_SUCCESS) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create Vulkan semaphore");
+    LOG_ERROR("Failed to create Vulkan semaphore");
   }
 }
 
@@ -93,7 +93,7 @@ void SemaphoreVk::signal(VkQueue queue) {
   {
     std::lock_guard<std::mutex> lock(m_device_->getQueueMutex());
     if (vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE) != VK_SUCCESS) {
-      GlobalLogger::Log(LogLevel::Error, "Failed to signal Vulkan semaphore");
+      LOG_ERROR("Failed to signal Vulkan semaphore");
     }
   }
 }

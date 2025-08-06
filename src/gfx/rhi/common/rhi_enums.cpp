@@ -1,6 +1,6 @@
 #include "gfx/rhi/common/rhi_enums.h"
 
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 #ifdef ARISE_USE_VULKAN
 #include "gfx/rhi/backends/vulkan/rhi_enums_vk.h"
@@ -30,9 +30,7 @@ int g_getTextureComponentCount(TextureFormat format, RenderingApi api) {
 
     default:
       // TODO: add logger with assertion (prob macro function)
-      GlobalLogger::Log(
-          LogLevel::Error,
-          "Unsupported rendering API for g_getTextureComponentCount: " + std::to_string(static_cast<int>(api)));
+      LOG_ERROR("Unsupported rendering API for g_getTextureComponentCount: " + std::to_string(static_cast<int>(api)));
       assert(false && "Unsupported rendering API");
       return 0;
   }

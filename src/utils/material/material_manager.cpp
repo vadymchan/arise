@@ -1,5 +1,6 @@
 #include "utils/material/material_manager.h"
 
+#include "utils/logger/log.h"
 #include "utils/material/material_loader_manager.h"
 #include "utils/service/service_locator.h"
 #include "utils/texture/texture_manager.h"
@@ -13,14 +14,12 @@ MaterialManager::~MaterialManager() {
       totalMaterials += materials.size();
     }
 
-    GlobalLogger::Log(LogLevel::Info,
-                      "MaterialManager destroyed, releasing " + std::to_string(totalMaterials) + " materials from "
-                          + std::to_string(materialCache_.size()) + " files");
+    LOG_INFO("MaterialManager destroyed, releasing " + std::to_string(totalMaterials) + " materials from "
+             + std::to_string(materialCache_.size()) + " files");
 
     for (const auto& [path, materials] : materialCache_) {
       for (const auto& material : materials) {
-        GlobalLogger::Log(LogLevel::Info,
-                          "Released material: " + material->materialName + " from " + path.filename().string());
+        LOG_INFO("Released material: " + material->materialName + " from " + path.filename().string());
       }
     }
   }
@@ -40,7 +39,7 @@ std::vector<ecs::Material*> MaterialManager::getMaterials(const std::filesystem:
 
   auto materialLoaderManager = ServiceLocator::s_get<MaterialLoaderManager>();
   if (!materialLoaderManager) {
-    GlobalLogger::Log(LogLevel::Error, "MaterialLoaderManager not available in ServiceLocator.");
+    LOG_ERROR("MaterialLoaderManager not available in ServiceLocator.");
     return {};
   }
 
@@ -59,13 +58,13 @@ std::vector<ecs::Material*> MaterialManager::getMaterials(const std::filesystem:
     return result;
   }
 
-  GlobalLogger::Log(LogLevel::Warning, "Failed to load materials from: " + filepath.string());
+  LOG_WARN("Failed to load materials from: " + filepath.string());
   return {};
 }
 
 bool MaterialManager::removeMaterial(ecs::Material* material) {
   if (!material) {
-    GlobalLogger::Log(LogLevel::Error, "Cannot remove null material");
+    LOG_ERROR("Cannot remove null material");
     return false;
   }
 
@@ -78,22 +77,21 @@ bool MaterialManager::removeMaterial(ecs::Material* material) {
                                    [material](const std::unique_ptr<ecs::Material>& m) { return m.get() == material; });
 
     if (materialIt != materialVec.end()) {
-      GlobalLogger::Log(LogLevel::Info, "Removing material: " + material->materialName);
+      LOG_INFO("Removing material: " + material->materialName);
 
       auto textureManager = ServiceLocator::s_get<TextureManager>();
       if (textureManager) {
         for (const auto& [textureName, texturePtr] : material->textures) {
           if (texturePtr) {
-            GlobalLogger::Log(LogLevel::Debug,
-                              "Releasing texture '" + textureName + "' from material '" + material->materialName + "'");
+            LOG_DEBUG("Releasing texture '" + textureName + "' from material '" + material->materialName + "'");
             textureManager->removeTexture(texturePtr);
           }
         }
       } else {
-        GlobalLogger::Log(LogLevel::Warning, "TextureManager not available, textures may not be properly released");
+        LOG_WARN("TextureManager not available, textures may not be properly released");
       }
 
-      GlobalLogger::Log(LogLevel::Info, "Material '" + material->materialName + "' deleted");
+      LOG_INFO("Material '" + material->materialName + "' deleted");
 
       materialVec.erase(materialIt);
       if (materialVec.empty()) {
@@ -103,7 +101,7 @@ bool MaterialManager::removeMaterial(ecs::Material* material) {
     }
   }
 
-  GlobalLogger::Log(LogLevel::Debug, "Material not found in manager (may have been removed already)");
+  LOG_DEBUG("Material not found in manager (may have been removed already)");
   return false;
 }
 }  // namespace arise

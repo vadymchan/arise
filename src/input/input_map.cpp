@@ -171,7 +171,7 @@ void InputMap::loadMapFromFile(const std::filesystem::path&                   pa
 
   auto configManager = ServiceLocator::s_get<ConfigManager>();
   if (!configManager) {
-    GlobalLogger::Log(LogLevel::Error, "ConfigManager not available");
+    LOG_ERROR("ConfigManager not available");
     return;
   }
 
@@ -182,7 +182,7 @@ void InputMap::loadMapFromFile(const std::filesystem::path&                   pa
   auto config = configManager->getConfig(path);
   if (!config) {
     std::string modeStr = (mode == ApplicationMode::Editor) ? "editor" : "standalone";
-    GlobalLogger::Log(LogLevel::Error, "Failed to load " + modeStr + " input map config: " + path.string());
+    LOG_ERROR("Failed to load " + modeStr + " input map config: " + path.string());
     return;
   }
 
@@ -202,9 +202,8 @@ void InputMap::loadMapFromFile(const std::filesystem::path&                   pa
     }
   }
 
-  GlobalLogger::Log(LogLevel::Info,
-                    "Loaded " + std::to_string(keyBindings.size()) + " key bindings and "
-                        + std::to_string(mouseBindings.size()) + " mouse bindings for " + modeStr + " mode");
+  LOG_INFO("Loaded " + std::to_string(keyBindings.size()) + " key bindings and " + std::to_string(mouseBindings.size())
+           + " mouse bindings for " + modeStr + " mode");
 }
 
 KeyBinding InputMap::parseKeyBinding(const std::string& keyString) const {
@@ -278,7 +277,7 @@ void InputMap::processKeyBinding(const std::string&                           ac
   if (binding.key != static_cast<PhysicalKey>(SDL_SCANCODE_UNKNOWN)) {
     keyBindings[actionName] = binding;
   } else {
-    GlobalLogger::Log(LogLevel::Warning, "Unknown key binding in " + modeStr + " map: " + bindingString);
+    LOG_WARN("Unknown key binding in " + modeStr + " map: " + bindingString);
   }
 }
 
@@ -290,7 +289,7 @@ void InputMap::processMouseBinding(const std::string&                           
   if (binding.button != 0) {
     mouseBindings[actionName] = binding;
   } else {
-    GlobalLogger::Log(LogLevel::Warning, "Unknown mouse binding in " + modeStr + " map: " + bindingString);
+    LOG_WARN("Unknown mouse binding in " + modeStr + " map: " + bindingString);
   }
 }
 

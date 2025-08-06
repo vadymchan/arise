@@ -7,7 +7,7 @@
 #include "gfx/rhi/backends/dx12/render_pass_dx12.h"
 #include "gfx/rhi/backends/dx12/rhi_enums_dx12.h"
 #include "gfx/rhi/backends/dx12/shader_dx12.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 #include <d3dcompiler.h>
 
@@ -19,30 +19,30 @@ GraphicsPipelineDx12::GraphicsPipelineDx12(const GraphicsPipelineDesc& desc, Dev
     : GraphicsPipeline(desc)
     , m_device_(device) {
   if (!initialize_()) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to initialize DirectX 12 graphics pipeline");
+    LOG_ERROR("Failed to initialize DirectX 12 graphics pipeline");
   }
 }
 
 bool GraphicsPipelineDx12::rebuild() {
   m_pipelineState_.Reset();
   if (createPipelineState_()) {
-    GlobalLogger::Log(LogLevel::Info, "Successfully rebuilt DirectX 12 graphics pipeline");
+    LOG_INFO("Successfully rebuilt DirectX 12 graphics pipeline");
     m_updateFrame = -1;
     return true;
   } else {
-    GlobalLogger::Log(LogLevel::Error, "Failed to rebuild DirectX 12 graphics pipeline");
+    LOG_ERROR("Failed to rebuild DirectX 12 graphics pipeline");
     return false;
   }
 }
 
 bool GraphicsPipelineDx12::initialize_() {
   if (!createRootSignature_()) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create root signature for DX12 pipeline");
+    LOG_ERROR("Failed to create root signature for DX12 pipeline");
     return false;
   }
 
   if (!createPipelineState_()) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create pipeline state object for DX12 pipeline");
+    LOG_ERROR("Failed to create pipeline state object for DX12 pipeline");
     return false;
   }
 
@@ -62,13 +62,13 @@ bool GraphicsPipelineDx12::createRootSignature_() {
   for (size_t i = 0; i < m_desc_.setLayouts.size(); ++i) {
     const auto* layoutBase = m_desc_.setLayouts[i];
     if (!layoutBase) {
-      GlobalLogger::Log(LogLevel::Error, "Null descriptor set layout provided");
+      LOG_ERROR("Null descriptor set layout provided");
       continue;
     }
 
     const auto* layout = dynamic_cast<const DescriptorSetLayoutDx12*>(layoutBase);
     if (!layout) {
-      GlobalLogger::Log(LogLevel::Error, "Invalid descriptor set layout type for DX12 pipeline");
+      LOG_ERROR("Invalid descriptor set layout type for DX12 pipeline");
       return false;
     }
 
@@ -119,7 +119,7 @@ bool GraphicsPipelineDx12::createRootSignature_() {
       errorMsg += std::string(static_cast<const char*>(error->GetBufferPointer()), error->GetBufferSize());
       error->Release();
     }
-    GlobalLogger::Log(LogLevel::Error, errorMsg);
+    LOG_ERROR(errorMsg);
 
     if (signature) {
       signature->Release();
@@ -139,7 +139,7 @@ bool GraphicsPipelineDx12::createRootSignature_() {
   }
 
   if (FAILED(hr)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create root signature");
+    LOG_ERROR("Failed to create root signature");
     return false;
   }
 
@@ -154,7 +154,7 @@ bool GraphicsPipelineDx12::createPipelineState_() {
   ComPtr<ID3DBlob> geometryShader;
 
   if (!collectShaders_(vertexShader, pixelShader, domainShader, hullShader, geometryShader)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to collect shaders for pipeline");
+    LOG_ERROR("Failed to collect shaders for pipeline");
     return false;
   }
 
@@ -300,7 +300,7 @@ bool GraphicsPipelineDx12::createPipelineState_() {
 
   RenderPassDx12* renderPassDx12 = dynamic_cast<RenderPassDx12*>(m_desc_.renderPass);
   if (!renderPassDx12) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid render pass for DX12 pipeline");
+    LOG_ERROR("Invalid render pass for DX12 pipeline");
     return false;
   }
 
@@ -325,7 +325,7 @@ bool GraphicsPipelineDx12::createPipelineState_() {
   HRESULT hr = m_device_->getDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState_));
 
   if (FAILED(hr)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create graphics pipeline state object");
+    LOG_ERROR("Failed to create graphics pipeline state object");
     return false;
   }
 
@@ -339,13 +339,13 @@ bool GraphicsPipelineDx12::collectShaders_(ComPtr<ID3DBlob>& vertexShader,
                                            ComPtr<ID3DBlob>& geometryShader) {
   for (Shader* shader : m_desc_.shaders) {
     if (!shader) {
-      GlobalLogger::Log(LogLevel::Error, "Null shader pointer in pipeline description");
+      LOG_ERROR("Null shader pointer in pipeline description");
       return false;
     }
 
     ShaderDx12* shaderDx12 = dynamic_cast<ShaderDx12*>(shader);
     if (!shaderDx12) {
-      GlobalLogger::Log(LogLevel::Error, "Invalid shader type for DX12 pipeline");
+      LOG_ERROR("Invalid shader type for DX12 pipeline");
       return false;
     }
 
@@ -366,7 +366,7 @@ bool GraphicsPipelineDx12::collectShaders_(ComPtr<ID3DBlob>& vertexShader,
         geometryShader = shaderDx12->getShaderBlob();
         break;
       default:
-        GlobalLogger::Log(LogLevel::Warning, "Unsupported shader stage for DX12 pipeline");
+        LOG_WARN("Unsupported shader stage for DX12 pipeline");
         break;
     }
   }

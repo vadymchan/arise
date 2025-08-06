@@ -1,6 +1,6 @@
 #include "utils/third_party/stb_util.h"
 
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 #include <unordered_set>
 #define STB_IMAGE_IMPLEMENTATION
@@ -77,9 +77,8 @@ gfx::rhi::TextureFormat STBImageLoader::determineFormat_(int32_t channels, int32
     }
   }
 
-  GlobalLogger::Log(LogLevel::Error,
-                    "Unknown format. channels = " + std::to_string(channels) + ", bitsPerChannel = "
-                        + std::to_string(bitsPerChannel) + ", isHdr = " + std::to_string(isHdr));
+  LOG_ERROR("Unknown format. channels = " + std::to_string(channels)
+            + ", bitsPerChannel = " + std::to_string(bitsPerChannel) + ", isHdr = " + std::to_string(isHdr));
   return gfx::rhi::TextureFormat::Count;
 }
 
@@ -92,7 +91,7 @@ std::unique_ptr<Image> STBImageLoader::loadImageData_(
 
   void* data = loader(filepath, &width, &height, &channelsInFile, desiredChannels);
   if (!data) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to load image: " + filepath.string());
+    LOG_ERROR("Failed to load image: " + filepath.string());
     return nullptr;
   }
 
@@ -123,9 +122,8 @@ std::unique_ptr<Image> STBImageLoader::loadImageData_(
   baseSub.pixelOffset = 0;
   image->subImages.push_back(baseSub);
 
-  GlobalLogger::Log(LogLevel::Debug,
-                    "Loaded " + filepath.string() + " (" + std::to_string(width) + "x" + std::to_string(height)
-                        + ", RGBA, " + std::to_string(bitsPerChannel) + " bpc)");
+  LOG_DEBUG("Loaded " + filepath.string() + " (" + std::to_string(width) + "x" + std::to_string(height) + ", RGBA, "
+            + std::to_string(bitsPerChannel) + " bpc)");
 
   generateMipmaps_(image, desiredChannels, bitsPerChannel);
   return image;
@@ -195,8 +193,7 @@ void STBImageLoader::generateMipmaps_(std::unique_ptr<Image>& image, int32_t cha
   image->subImages = std::move(newSubImages);
   image->mipLevels = image->subImages.size();
 
-  GlobalLogger::Log(LogLevel::Debug,
-                    "Generated " + std::to_string(image->mipLevels) + " mip levels via stb_image_resize2");
+  LOG_DEBUG("Generated " + std::to_string(image->mipLevels) + " mip levels via stb_image_resize2");
 }
 
 }  // namespace arise

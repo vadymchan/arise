@@ -8,7 +8,7 @@
 #include "ecs/components/transform.h"
 #include "ecs/components/viewport_tag.h"
 #include "scene/scene.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 #include <math_library/graphics.h>
 
@@ -35,7 +35,7 @@ entt::entity MousePickingSystem::handleMousePick(Scene* scene, int mouseX, int m
 entt::entity MousePickingSystem::processMouseClick_(Scene* scene, int mouseX, int mouseY) {
   entt::entity cameraEntity = findActiveCamera_(scene);
   if (cameraEntity == entt::null) {
-    GlobalLogger::Log(LogLevel::Warning, "No active camera found");
+    LOG_WARN("No active camera found");
     return entt::null;
   }
 
@@ -46,7 +46,7 @@ entt::entity MousePickingSystem::processMouseClick_(Scene* scene, int mouseX, in
   int viewportHeight = m_viewportContext->getViewportHeight();
 
   if (viewportWidth <= 0 || viewportHeight <= 0) {
-    GlobalLogger::Log(LogLevel::Warning, "Invalid viewport size");
+    LOG_WARN("Invalid viewport size");
     return entt::null;
   }
 
@@ -56,9 +56,9 @@ entt::entity MousePickingSystem::processMouseClick_(Scene* scene, int mouseX, in
   entt::entity hitEntity = performRaycast_(scene, ray);
 
   if (hitEntity != entt::null) {
-    GlobalLogger::Log(LogLevel::Info, "Picked entity " + std::to_string(static_cast<uint32_t>(hitEntity)));
+    LOG_INFO("Picked entity " + std::to_string(static_cast<uint32_t>(hitEntity)));
   } else {
-    GlobalLogger::Log(LogLevel::Debug, "No entity picked");
+    LOG_DEBUG("No entity picked");
   }
 
   return hitEntity;
@@ -94,7 +94,7 @@ entt::entity MousePickingSystem::performRaycast_(Scene* scene, const math::Rayf<
   std::vector<AABBCandidate> aabbCandidates = performAABBRaycast_(scene, ray);
 
   if (aabbCandidates.empty()) {
-    GlobalLogger::Log(LogLevel::Debug, "No AABB intersections found");
+    LOG_DEBUG("No AABB intersections found");
     return entt::null;
   }
 
@@ -130,7 +130,7 @@ std::vector<AABBCandidate> MousePickingSystem::performAABBRaycast_(Scene* scene,
     }
   }
 
-  GlobalLogger::Log(LogLevel::Debug, "Found " + std::to_string(candidates.size()) + " AABB candidates");
+  LOG_DEBUG("Found " + std::to_string(candidates.size()) + " AABB candidates");
 
   return candidates;
 }
@@ -174,14 +174,13 @@ entt::entity MousePickingSystem::performTriangleRaycast_(Scene*                 
     }
 
     if (anyTriangleHit) {
-      GlobalLogger::Log(LogLevel::Info,
-                        "Triangle hit on entity " + std::to_string(static_cast<uint32_t>(candidate.entity))
-                            + " at distance " + std::to_string(closestDistance));
+      LOG_INFO("Triangle hit on entity " + std::to_string(static_cast<uint32_t>(candidate.entity)) + " at distance "
+               + std::to_string(closestDistance));
       return candidate.entity;
     }
   }
 
-  GlobalLogger::Log(LogLevel::Debug, "No triangle intersections found");
+  LOG_DEBUG("No triangle intersections found");
   return entt::null;
 }
 

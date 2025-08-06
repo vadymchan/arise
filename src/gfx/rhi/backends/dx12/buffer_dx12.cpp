@@ -3,7 +3,7 @@
 #ifdef ARISE_USE_DX12
 
 #include "gfx/rhi/backends/dx12/device_dx12.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 #include "utils/memory/align.h"
 
 namespace arise {
@@ -52,7 +52,7 @@ BufferDx12::BufferDx12(const BufferDesc& desc, DeviceDx12* device)
       &allocationDesc, &resourceDesc, m_currentState_, nullptr, &m_allocation_, IID_PPV_ARGS(&m_resource_));
 
   if (FAILED(hr)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create DirectX 12 buffer using D3D12MA");
+    LOG_ERROR("Failed to create DirectX 12 buffer using D3D12MA");
     return;
   }
 
@@ -62,7 +62,7 @@ BufferDx12::BufferDx12(const BufferDesc& desc, DeviceDx12* device)
     hr                    = m_resource_->Map(0, &readRange, &m_mappedData_);
 
     if (FAILED(hr)) {
-      GlobalLogger::Log(LogLevel::Error, "Failed to map buffer memory");
+      LOG_ERROR("Failed to map buffer memory");
       m_mappedData_ = nullptr;
     } else {
       m_isMapped_ = true;
@@ -94,7 +94,7 @@ bool BufferDx12::update_(const void* data, size_t size, size_t offset) {
   }
 
   if (offset + size > m_desc_.size) {
-    GlobalLogger::Log(LogLevel::Error, "Buffer update exceeds buffer size");
+    LOG_ERROR("Buffer update exceeds buffer size");
     return false;
   }
 
@@ -116,7 +116,7 @@ bool BufferDx12::update_(const void* data, size_t size, size_t offset) {
       m_resource_->Unmap(0, &writtenRange);
       return true;
     } else {
-      GlobalLogger::Log(LogLevel::Error, "Failed to map buffer for update");
+      LOG_ERROR("Failed to map buffer for update");
       return false;
     }
   }
@@ -139,13 +139,13 @@ bool BufferDx12::map_(void** ppData, D3D12_RANGE* pReadRange) {
   }
 
   if (!isUploadHeapBuffer_() && !isReadbackHeapBuffer_()) {
-    GlobalLogger::Log(LogLevel::Error, "Cannot map a non-mappable buffer");
+    LOG_ERROR("Cannot map a non-mappable buffer");
     return false;
   }
 
   HRESULT hr = m_resource_->Map(0, pReadRange, ppData);
   if (FAILED(hr)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to map buffer");
+    LOG_ERROR("Failed to map buffer");
     return false;
   }
 
@@ -196,7 +196,7 @@ D3D12_RESOURCE_STATES BufferDx12::getInitialResourceState_() const {
     return D3D12_RESOURCE_STATE_COPY_DEST;
   }
 
-  GlobalLogger::Log(LogLevel::Warning,
+  LOG_WARN(
                     "BufferDx12" + m_desc_.debugName + "created without specific resource state. Defaulting to "
                     "D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER.");
   return D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
@@ -214,9 +214,9 @@ DirectBufferDx12::DirectBufferDx12(const BufferDesc& desc, DeviceDx12* device)
                      || (desc.createFlags & BufferCreateFlag::InstanceBuffer) != BufferCreateFlag::None;
 
   if (!isDirectBuffer) {
-    GlobalLogger::Log(LogLevel::Warning,
-                      "DirectBufferDx12 created without vertex, index, or instance buffer flags. "
-                      "Consider using DescriptorBufferDx12 for other buffer types.");
+    LOG_WARN(
+        "DirectBufferDx12 created without vertex, index, or instance buffer flags. "
+        "Consider using DescriptorBufferDx12 for other buffer types.");
   }
 }
 
@@ -254,9 +254,9 @@ DescriptorBufferDx12::DescriptorBufferDx12(const BufferDesc& desc, DeviceDx12* d
     if (desc.type == BufferType::Dynamic) {
       createConstantBufferView();
     } else {
-      GlobalLogger::Log(LogLevel::Warning,
-                        "DescriptorBufferDx12 created without CBV, UAV, or SRV flags. "
-                        "Consider using DirectBufferDx12 for vertex or index buffers.");
+      LOG_WARN(
+          "DescriptorBufferDx12 created without CBV, UAV, or SRV flags. "
+          "Consider using DirectBufferDx12 for vertex or index buffers.");
     }
   }
 }
@@ -295,19 +295,19 @@ bool DescriptorBufferDx12::isShaderResourceBuffer() const {
 
 void DescriptorBufferDx12::createConstantBufferView() {
   if (!m_device_ || !m_resource_ || m_cbvDescriptorIndex_ != UINT32_MAX) {
-    GlobalLogger::Log(LogLevel::Error, "CBV descriptor already created or invalid state");
+    LOG_ERROR("CBV descriptor already created or invalid state");
     return;
   }
 
   DescriptorHeapDx12* cpuHeap = m_device_->getCpuCbvSrvUavHeap();
   if (!cpuHeap) {
-    GlobalLogger::Log(LogLevel::Error, "CPU CBV/SRV/UAV descriptor heap not available");
+    LOG_ERROR("CPU CBV/SRV/UAV descriptor heap not available");
     return;
   }
 
   m_cbvDescriptorIndex_ = cpuHeap->allocate();
   if (m_cbvDescriptorIndex_ == UINT32_MAX) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to allocate CBV descriptor");
+    LOG_ERROR("Failed to allocate CBV descriptor");
     return;
   }
 
@@ -324,20 +324,20 @@ void DescriptorBufferDx12::createConstantBufferView() {
 
 void DescriptorBufferDx12::createUnorderedAccessView() {
   if (!m_device_ || !m_resource_ || m_uavDescriptorIndex_ != UINT32_MAX) {
-    GlobalLogger::Log(LogLevel::Error, "UAV descriptor already created or invalid state");
+    LOG_ERROR("UAV descriptor already created or invalid state");
     return;
   }
 
   DescriptorHeapDx12* cpuHeap = m_device_->getCpuCbvSrvUavHeap();
   if (!cpuHeap) {
-    GlobalLogger::Log(LogLevel::Error, "CPU CBV/SRV/UAV descriptor heap not available");
+    LOG_ERROR("CPU CBV/SRV/UAV descriptor heap not available");
     return;
   }
 
   // Allocate a descriptor
   m_uavDescriptorIndex_ = cpuHeap->allocate();
   if (m_uavDescriptorIndex_ == UINT32_MAX) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to allocate UAV descriptor");
+    LOG_ERROR("Failed to allocate UAV descriptor");
     return;
   }
 
@@ -358,19 +358,19 @@ void DescriptorBufferDx12::createUnorderedAccessView() {
 
 void DescriptorBufferDx12::createShaderResourceView() {
   if (!m_device_ || !m_resource_ || m_srvDescriptorIndex_ != UINT32_MAX) {
-    GlobalLogger::Log(LogLevel::Error, "SRV descriptor already created or invalid state");
+    LOG_ERROR("SRV descriptor already created or invalid state");
     return;
   }
 
   DescriptorHeapDx12* cpuHeap = m_device_->getCpuCbvSrvUavHeap();
   if (!cpuHeap) {
-    GlobalLogger::Log(LogLevel::Error, "CPU CBV/SRV/UAV descriptor heap not available");
+    LOG_ERROR("CPU CBV/SRV/UAV descriptor heap not available");
     return;
   }
 
   m_srvDescriptorIndex_ = cpuHeap->allocate();
   if (m_srvDescriptorIndex_ == UINT32_MAX) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to allocate SRV descriptor");
+    LOG_ERROR("Failed to allocate SRV descriptor");
     return;
   }
 

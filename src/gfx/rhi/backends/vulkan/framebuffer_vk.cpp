@@ -4,7 +4,7 @@
 #include "gfx/rhi/backends/vulkan/device_vk.h"
 #include "gfx/rhi/backends/vulkan/render_pass_vk.h"
 #include "gfx/rhi/backends/vulkan/texture_vk.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 namespace arise {
 namespace gfx {
@@ -16,7 +16,7 @@ FramebufferVk::FramebufferVk(const FramebufferDesc& desc, DeviceVk* device)
     , m_height(desc.height)
     , m_hasDepthStencil(desc.hasDepthStencil) {
   if (!initialize(desc)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to initialize framebuffer");
+    LOG_ERROR("Failed to initialize framebuffer");
   }
 }
 
@@ -82,7 +82,7 @@ bool FramebufferVk::initialize(const FramebufferDesc& desc) {
   for (auto* texture : desc.colorAttachments) {
     TextureVk* textureVk = dynamic_cast<TextureVk*>(texture);
     if (!textureVk) {
-      GlobalLogger::Log(LogLevel::Error, "Invalid texture type for color attachment");
+      LOG_ERROR("Invalid texture type for color attachment");
       return false;
     }
     m_colorAttachments.push_back(textureVk);
@@ -91,14 +91,14 @@ bool FramebufferVk::initialize(const FramebufferDesc& desc) {
   if (desc.hasDepthStencil && desc.depthStencilAttachment) {
     m_depthStencilAttachment = dynamic_cast<TextureVk*>(desc.depthStencilAttachment);
     if (!m_depthStencilAttachment) {
-      GlobalLogger::Log(LogLevel::Error, "Invalid texture type for depth/stencil attachment");
+      LOG_ERROR("Invalid texture type for depth/stencil attachment");
       return false;
     }
   }
 
   RenderPassVk* renderPassVk = dynamic_cast<RenderPassVk*>(desc.renderPass);
   if (!renderPassVk) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid render pass type");
+    LOG_ERROR("Invalid render pass type");
     return false;
   }
 
@@ -124,7 +124,7 @@ bool FramebufferVk::initialize(const FramebufferDesc& desc) {
 
   VkResult result = vkCreateFramebuffer(m_device->getDevice(), &framebufferInfo, nullptr, &m_framebuffer);
   if (result != VK_SUCCESS) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create framebuffer");
+    LOG_ERROR("Failed to create framebuffer");
     return false;
   }
 

@@ -4,7 +4,7 @@
 
 #include "profiler/backends/gpu_profiler_dx12.h"
 #include "profiler/backends/gpu_profiler_vk.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 namespace arise {
 namespace gpu {
@@ -29,7 +29,7 @@ std::unique_ptr<GpuProfiler> GpuProfilerFactory::create(gfx::rhi::RenderingApi a
 #endif
 
     default:
-      GlobalLogger::Log(LogLevel::Error, "Unsupported rendering API for GPU profiler");
+      LOG_ERROR("Unsupported rendering API for GPU profiler");
       return nullptr;
   }
   profiler->setApi(api);

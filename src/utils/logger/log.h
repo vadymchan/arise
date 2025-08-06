@@ -1,5 +1,5 @@
-#ifndef ARISE_LOG_HELPERS_H
-#define ARISE_LOG_HELPERS_H
+#ifndef ARISE_LOG_H
+#define ARISE_LOG_H
 
 #include "utils/logger/global_logger.h"
 
@@ -115,4 +115,4 @@ inline void LogFatal(fmt::format_string<Args...> fmtStr,
 #define LOG_FATAL(...)
 #endif
 
-#endif  // ARISE_LOG_HELPERS_H
+#endif  // ARISE_LOG_H

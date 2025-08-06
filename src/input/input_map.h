@@ -6,7 +6,7 @@
 #include "input/actions.h"
 #include "input/key.h"
 #include "input/mouse.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 #include "utils/path_manager/path_manager.h"
 #include "utils/service/service_locator.h"
 

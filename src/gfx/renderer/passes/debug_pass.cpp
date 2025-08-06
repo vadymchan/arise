@@ -9,7 +9,7 @@
 #include "gfx/renderer/debug_strategies/wireframe_strategy.h"
 #include "gfx/renderer/debug_strategies/world_grid_strategy.h"
 #include "profiler/profiler.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 namespace arise {
 namespace gfx {
@@ -70,7 +70,7 @@ void DebugPass::clearSceneResources() {
   if (m_debugStrategy) {
     m_debugStrategy->clearSceneResources();
   }
-  GlobalLogger::Log(LogLevel::Info, "Debug pass resources cleared for scene switch");
+  LOG_INFO("Debug pass resources cleared for scene switch");
 }
 
 void DebugPass::cleanup() {
@@ -111,8 +111,7 @@ void DebugPass::createDebugStrategy_() {
       m_debugStrategy = std::make_unique<BoundingBoxVisualizationStrategy>();
       break;
     default:
-      GlobalLogger::Log(LogLevel::Error,
-                        "DebugPass: Unsupported render mode: " + std::to_string(static_cast<int>(m_currentRenderMode)));
+      LOG_ERROR("DebugPass: Unsupported render mode: " + std::to_string(static_cast<int>(m_currentRenderMode)));
       break;
   }
 }

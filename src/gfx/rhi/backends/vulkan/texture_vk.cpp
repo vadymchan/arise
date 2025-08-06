@@ -4,7 +4,7 @@
 #include "gfx/rhi/backends/vulkan/device_vk.h"
 #include "gfx/rhi/backends/vulkan/rhi_enums_vk.h"
 #include "gfx/rhi/backends/vulkan/synchronization_vk.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 namespace arise {
 namespace gfx {
@@ -18,7 +18,7 @@ TextureVk::TextureVk(const TextureDesc& desc, DeviceVk* device)
   m_currentLayout_ = ResourceLayout::Undefined;  // initially vulkan texture is in undefined layout
 
   if (!createImage_() || !createImageView_()) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create Vulkan texture");
+    LOG_ERROR("Failed to create Vulkan texture");
   }
 
   if (!desc.debugName.empty() && m_image_ != VK_NULL_HANDLE) {
@@ -98,7 +98,7 @@ bool TextureVk::createImage_() {
       imageInfo.imageType = VK_IMAGE_TYPE_3D;
       break;
     default:
-      GlobalLogger::Log(LogLevel::Error, "Unsupported texture type");
+      LOG_ERROR("Unsupported texture type");
       return false;
   }
 
@@ -157,7 +157,7 @@ bool TextureVk::createImage_() {
       m_device_->getAllocator(), &imageInfo, &allocInfo, &m_image_, &m_allocation_, &m_allocationInfo_);
 
   if (result != VK_SUCCESS) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create image with VMA");
+    LOG_ERROR("Failed to create image with VMA");
     return false;
   }
 
@@ -187,14 +187,13 @@ bool TextureVk::createImageView_() {
       break;
     case TextureType::Texture3DArray:
       viewInfo.viewType = VK_IMAGE_VIEW_TYPE_3D;
-      GlobalLogger::Log(LogLevel::Warning,
-                        "3D array textures are not directly supported in Vulkan. Using 3D view instead.");
+      LOG_WARN("3D array textures are not directly supported in Vulkan. Using 3D view instead.");
       break;
     case TextureType::TextureCube:
       viewInfo.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
       break;
     default:
-      GlobalLogger::Log(LogLevel::Error, "Unsupported texture view type");
+      LOG_ERROR("Unsupported texture view type");
       return false;
   }
 
@@ -220,7 +219,7 @@ bool TextureVk::createImageView_() {
   viewInfo.subresourceRange.layerCount     = m_desc_.arraySize;
 
   if (vkCreateImageView(m_device_->getDevice(), &viewInfo, nullptr, &m_imageView_) != VK_SUCCESS) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create Vulkan image view");
+    LOG_ERROR("Failed to create Vulkan image view");
     return false;
   }
 
@@ -233,7 +232,7 @@ void TextureVk::updateCurrentLayout_(ResourceLayout layout) {
 
 void TextureVk::update(const void* data, size_t dataSize, uint32_t mipLevel, uint32_t arrayLayer) {
   if (!data || !dataSize) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid data or size for texture update");
+    LOG_ERROR("Invalid data or size for texture update");
     return;
   }
 
@@ -241,7 +240,7 @@ void TextureVk::update(const void* data, size_t dataSize, uint32_t mipLevel, uin
   VkBuffer      stagingBuffer     = m_device_->createStagingBuffer(data, dataSize, stagingAllocation);
 
   if (stagingBuffer == VK_NULL_HANDLE) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create staging buffer for texture update");
+    LOG_ERROR("Failed to create staging buffer for texture update");
     return;
   }
 
@@ -251,7 +250,7 @@ void TextureVk::update(const void* data, size_t dataSize, uint32_t mipLevel, uin
   auto commandBuffer = m_device_->createCommandBuffer(cmdBufferDesc);
   if (!commandBuffer) {
     vmaDestroyBuffer(m_device_->getAllocator(), stagingBuffer, stagingAllocation);
-    GlobalLogger::Log(LogLevel::Error, "Failed to create command buffer for texture update");
+    LOG_ERROR("Failed to create command buffer for texture update");
     return;
   }
 

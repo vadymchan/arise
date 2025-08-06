@@ -4,7 +4,6 @@
 #include "gfx/rhi/interface/device.h"
 #include "gfx/rhi/interface/texture.h"
 #include "resources/image.h"
-#include "utils/logger/global_logger.h"
 
 #include <filesystem>
 #include <memory>

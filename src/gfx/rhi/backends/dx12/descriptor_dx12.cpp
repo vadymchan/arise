@@ -7,7 +7,7 @@
 #include "gfx/rhi/backends/dx12/rhi_enums_dx12.h"
 #include "gfx/rhi/backends/dx12/sampler_dx12.h"
 #include "gfx/rhi/backends/dx12/texture_dx12.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 #include <algorithm>
 
@@ -23,7 +23,7 @@ DescriptorSetLayoutDx12::DescriptorSetLayoutDx12(const DescriptorSetLayoutDesc& 
     : DescriptorSetLayout(desc)
     , m_device_(device) {
   if (desc.bindings.empty()) {
-    GlobalLogger::Log(LogLevel::Error, "No bindings provided");
+    LOG_ERROR("No bindings provided");
     return;
   }
 
@@ -35,12 +35,11 @@ DescriptorSetLayoutDx12::DescriptorSetLayoutDx12(const DescriptorSetLayoutDesc& 
     bool                        bindingIsSampler = (type == D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER);
 
     if (bindingIsSampler != m_isSamplerLayout) {
-      GlobalLogger::Log(LogLevel::Error,
-                        "Mixed CBV/SRV/UAV and Sampler bindings not allowed in same layout (invariant). "
-                        "Descriptor layout is marked as "
-                            + std::string(m_isSamplerLayout ? "sampler" : "non-sampler") + " but binding "
-                            + std::to_string(binding.binding) + " is "
-                            + std::string(bindingIsSampler ? "sampler" : "non-sampler"));
+      LOG_ERROR(
+          "Mixed CBV/SRV/UAV and Sampler bindings not allowed in same layout (invariant). "
+          "Descriptor layout is marked as "
+          + std::string(m_isSamplerLayout ? "sampler" : "non-sampler") + " but binding "
+          + std::to_string(binding.binding) + " is " + std::string(bindingIsSampler ? "sampler" : "non-sampler"));
       return;
     }
   }
@@ -129,18 +128,18 @@ DescriptorSetDx12::~DescriptorSetDx12() {
 
 void DescriptorSetDx12::setUniformBuffer(uint32_t binding, Buffer* buffer, uint64_t offset, uint64_t range) {
   if (!buffer) {
-    GlobalLogger::Log(LogLevel::Error, "Null buffer");
+    LOG_ERROR("Null buffer");
     return;
   }
 
   DescriptorBufferDx12* bufferDx12 = dynamic_cast<DescriptorBufferDx12*>(buffer);
   if (!bufferDx12) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid buffer type");
+    LOG_ERROR("Invalid buffer type");
     return;
   }
 
   if (!bufferDx12->hasCbvHandle()) {
-    GlobalLogger::Log(LogLevel::Error, "Buffer does not have a CBV");
+    LOG_ERROR("Buffer does not have a CBV");
     return;
   }
 
@@ -155,7 +154,7 @@ void DescriptorSetDx12::setUniformBuffer(uint32_t binding, Buffer* buffer, uint6
   DescriptorHeapDx12* gpuHeap = m_device_->getFrameResourcesManager()->getCurrentCbvSrvUavHeap();
 
   if (!cpuHeap || !gpuHeap) {
-    GlobalLogger::Log(LogLevel::Error, "Descriptor heaps not available");
+    LOG_ERROR("Descriptor heaps not available");
     return;
   }
 
@@ -171,23 +170,23 @@ void DescriptorSetDx12::setTextureSampler(uint32_t binding, Texture* texture, Sa
   // For DX12, we need to handle this by setting texture and sampler separately
   // This is because DX12 handles samplers and SRVs through different tables
   // and we have an invariant that 1 descriptor set is 1 descriptor table (hence, either sampler or cbv/srv/uav)
-  GlobalLogger::Log(LogLevel::Info, "Setting texture and sampler separately for DX12");
+  LOG_INFO("Setting texture and sampler separately for DX12");
 }
 
 void DescriptorSetDx12::setTexture(uint32_t binding, Texture* texture, ResourceLayout layout) {
   if (!texture) {
-    GlobalLogger::Log(LogLevel::Error, "Null texture");
+    LOG_ERROR("Null texture");
     return;
   }
 
   if (m_layout_->isSamplerLayout()) {
-    GlobalLogger::Log(LogLevel::Error, "Cannot set texture on a sampler descriptor set");
+    LOG_ERROR("Cannot set texture on a sampler descriptor set");
     return;
   }
 
   TextureDx12* textureDx12 = dynamic_cast<TextureDx12*>(texture);
   if (!textureDx12) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid texture type");
+    LOG_ERROR("Invalid texture type");
     return;
   }
 
@@ -201,7 +200,7 @@ void DescriptorSetDx12::setTexture(uint32_t binding, Texture* texture, ResourceL
   DescriptorHeapDx12* cpuHeap = m_device_->getCpuCbvSrvUavHeap();
   DescriptorHeapDx12* gpuHeap = frameResMgr->getCurrentCbvSrvUavHeap();
   if (!cpuHeap || !gpuHeap) {
-    GlobalLogger::Log(LogLevel::Error, "Descriptor heaps not available");
+    LOG_ERROR("Descriptor heaps not available");
     return;
   }
 
@@ -215,21 +214,21 @@ void DescriptorSetDx12::setTexture(uint32_t binding, Texture* texture, ResourceL
 
 void DescriptorSetDx12::setSampler(uint32_t binding, Sampler* sampler) {
   if (!sampler) {
-    GlobalLogger::Log(LogLevel::Error, "Null sampler");
+    LOG_ERROR("Null sampler");
     return;
   }
   if (!m_layout_->isSamplerLayout()) {
-    GlobalLogger::Log(LogLevel::Error, "Cannot set sampler on a non-sampler descriptor set");
+    LOG_ERROR("Cannot set sampler on a non-sampler descriptor set");
     return;
   }
 
   SamplerDx12* samplerDx12 = dynamic_cast<SamplerDx12*>(sampler);
   if (!samplerDx12) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid sampler type");
+    LOG_ERROR("Invalid sampler type");
     return;
   }
   if (!samplerDx12->isValid()) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid sampler descriptor");
+    LOG_ERROR("Invalid sampler descriptor");
     return;
   }
 
@@ -243,7 +242,7 @@ void DescriptorSetDx12::setSampler(uint32_t binding, Sampler* sampler) {
   DescriptorHeapDx12* cpuHeap = m_device_->getCpuSamplerHeap();
   DescriptorHeapDx12* gpuHeap = frameResMgr->getCurrentSamplerHeap();
   if (!cpuHeap || !gpuHeap) {
-    GlobalLogger::Log(LogLevel::Error, "Descriptor heaps not available");
+    LOG_ERROR("Descriptor heaps not available");
     return;
   }
 
@@ -257,13 +256,13 @@ void DescriptorSetDx12::setSampler(uint32_t binding, Sampler* sampler) {
 
 void DescriptorSetDx12::setStorageBuffer(uint32_t binding, Buffer* buffer, uint64_t offset, uint64_t range) {
   if (!buffer) {
-    GlobalLogger::Log(LogLevel::Error, "Null buffer");
+    LOG_ERROR("Null buffer");
     return;
   }
 
   DescriptorBufferDx12* bufferDx12 = dynamic_cast<DescriptorBufferDx12*>(buffer);
   if (!bufferDx12) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid buffer type");
+    LOG_ERROR("Invalid buffer type");
     return;
   }
 
@@ -277,7 +276,7 @@ void DescriptorSetDx12::setStorageBuffer(uint32_t binding, Buffer* buffer, uint6
   DescriptorHeapDx12* cpuHeap = m_device_->getCpuCbvSrvUavHeap();
   DescriptorHeapDx12* gpuHeap = frameResMgr->getCurrentCbvSrvUavHeap();
   if (!cpuHeap || !gpuHeap) {
-    GlobalLogger::Log(LogLevel::Error, "Descriptor heaps not available");
+    LOG_ERROR("Descriptor heaps not available");
     return;
   }
 
@@ -293,7 +292,7 @@ void DescriptorSetDx12::setStorageBuffer(uint32_t binding, Buffer* buffer, uint6
         = uint32_t((bufferDx12->getSrvCpuHandle().ptr - cpuHeap->getCpuHandle(0).ptr) / cpuHeap->getDescriptorSize());
     rangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
   } else {
-    GlobalLogger::Log(LogLevel::Error, "Buffer must have either UAV or SRV capability for storage buffer usage");
+    LOG_ERROR("Buffer must have either UAV or SRV capability for storage buffer usage");
     return;
   }
 
@@ -311,7 +310,7 @@ void DescriptorSetDx12::setStorageBuffer(uint32_t binding, Buffer* buffer, uint6
   }
 
   if (m_srvUavCbvIndices_[frame] == UINT32_MAX) {
-    GlobalLogger::Log(LogLevel::Error, "No valid descriptor set allocated for this frame");
+    LOG_ERROR("No valid descriptor set allocated for this frame");
     return D3D12_GPU_DESCRIPTOR_HANDLE{0};
   }
 
@@ -327,7 +326,7 @@ void DescriptorSetDx12::setStorageBuffer(uint32_t binding, Buffer* buffer, uint6
   }
 
   if (m_samplerIndices_[frame] == UINT32_MAX) {
-    GlobalLogger::Log(LogLevel::Error, "No valid sampler descriptor allocated for this frame");
+    LOG_ERROR("No valid sampler descriptor allocated for this frame");
     return D3D12_GPU_DESCRIPTOR_HANDLE{0};
   }
 
@@ -364,7 +363,7 @@ uint32_t DescriptorSetDx12::findBindingOffset_(D3D12_DESCRIPTOR_RANGE_TYPE range
           ++offset;
         }
       }
-      GlobalLogger::Log(LogLevel::Error, "Binding not found: " + std::to_string(binding));
+      LOG_ERROR("Binding not found: " + std::to_string(binding));
       return UINT32_MAX;
     } else {
       for (const auto& desc : list) {
@@ -373,7 +372,7 @@ uint32_t DescriptorSetDx12::findBindingOffset_(D3D12_DESCRIPTOR_RANGE_TYPE range
     }
   }
 
-  GlobalLogger::Log(LogLevel::Error, "Range type not in layout: " + std::to_string(rangeType));
+  LOG_ERROR("Range type not in layout: " + std::to_string(rangeType));
   return UINT32_MAX;
 }
 
@@ -390,7 +389,7 @@ bool DescriptorHeapDx12::initialize(ID3D12Device*              device,
                                     uint32_t                   count,
                                     bool                       shaderVisible) {
   if (!device || count == 0) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid parameters for descriptor heap initialization");
+    LOG_ERROR("Invalid parameters for descriptor heap initialization");
     return false;
   }
 
@@ -412,7 +411,7 @@ bool DescriptorHeapDx12::initialize(ID3D12Device*              device,
 
   HRESULT hr = device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&m_heap));
   if (FAILED(hr)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create descriptor heap");
+    LOG_ERROR("Failed to create descriptor heap");
     return false;
   }
 
@@ -432,7 +431,7 @@ void DescriptorHeapDx12::release() {
 
 D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeapDx12::getCpuHandle(uint32_t index) const {
   if (!m_heap || index >= m_capacity) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid index for descriptor heap CPU handle");
+    LOG_ERROR("Invalid index for descriptor heap CPU handle");
     return D3D12_CPU_DESCRIPTOR_HANDLE{0};
   }
 
@@ -443,7 +442,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeapDx12::getCpuHandle(uint32_t index) con
 
 D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeapDx12::getGpuHandle(uint32_t index) const {
   if (!m_heap || !m_shaderVisible || index >= m_capacity) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid index for descriptor heap GPU handle");
+    LOG_ERROR("Invalid index for descriptor heap GPU handle");
     return D3D12_GPU_DESCRIPTOR_HANDLE{0};
   }
 
@@ -455,7 +454,7 @@ D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeapDx12::getGpuHandle(uint32_t index) con
 uint32_t DescriptorHeapDx12::allocate(uint32_t count) {
   std::lock_guard<std::mutex> lock(m_heapMutex);
   if (!m_heap || count == 0 || count > m_capacity) {
-    GlobalLogger::Log(LogLevel::Warning, "Invalid allocation request for descriptor heap");
+    LOG_WARN("Invalid allocation request for descriptor heap");
     return UINT32_MAX;
   }
 
@@ -480,7 +479,7 @@ uint32_t DescriptorHeapDx12::allocate(uint32_t count) {
     }
   }
 
-  GlobalLogger::Log(LogLevel::Warning, "Failed to find space in descriptor heap for allocation");
+  LOG_WARN("Failed to find space in descriptor heap for allocation");
   return UINT32_MAX;
 }
 
@@ -509,7 +508,7 @@ void DescriptorHeapDx12::copyDescriptors(const DescriptorHeapDx12* srcHeap,
   std::lock_guard<std::mutex> lock(m_heapMutex);
   if (!m_heap || !srcHeap || !srcHeap->getHeap() || srcIndex + count > srcHeap->getCapacity()
       || dstIndex + count > m_capacity) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid parameters for descriptor heap copy");
+    LOG_ERROR("Invalid parameters for descriptor heap copy");
     return;
   }
 
@@ -533,7 +532,7 @@ FrameResourcesManager::~FrameResourcesManager() {
 
 bool FrameResourcesManager::initialize(DeviceDx12* device, uint32_t frameCount) {
   if (!device || frameCount == 0) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid parameters for frame resources manager initialization");
+    LOG_ERROR("Invalid parameters for frame resources manager initialization");
     return false;
   }
 
@@ -548,7 +547,7 @@ bool FrameResourcesManager::initialize(DeviceDx12* device, uint32_t frameCount) 
     m_cbvSrvUavHeaps[i] = std::make_unique<DescriptorHeapDx12>();
     if (!m_cbvSrvUavHeaps[i]->initialize(
             device->getDevice(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, FRAME_CBV_SRV_UAV_HEAP_SIZE, true)) {
-      GlobalLogger::Log(LogLevel::Error, "Failed to create frame CBV/SRV/UAV heap");
+      LOG_ERROR("Failed to create frame CBV/SRV/UAV heap");
       return false;
     }
   }
@@ -558,13 +557,12 @@ bool FrameResourcesManager::initialize(DeviceDx12* device, uint32_t frameCount) 
     m_samplerHeaps[i] = std::make_unique<DescriptorHeapDx12>();
     if (!m_samplerHeaps[i]->initialize(
             device->getDevice(), D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, FRAME_SAMPLER_HEAP_SIZE, true)) {
-      GlobalLogger::Log(LogLevel::Error, "Failed to create frame Sampler heap");
+      LOG_ERROR("Failed to create frame Sampler heap");
       return false;
     }
   }
 
-  GlobalLogger::Log(LogLevel::Info,
-                    "Frame resources manager initialized with " + std::to_string(frameCount) + " frames");
+  LOG_INFO("Frame resources manager initialized with " + std::to_string(frameCount) + " frames");
   return true;
 }
 
@@ -581,7 +579,7 @@ DescriptorHeapDx12* FrameResourcesManager::getCurrentCbvSrvUavHeap() {
   if (m_currentFrame < m_cbvSrvUavHeaps.size()) {
     return m_cbvSrvUavHeaps[m_currentFrame].get();
   }
-  GlobalLogger::Log(LogLevel::Error, "Current frame index exceeds frame count");
+  LOG_ERROR("Current frame index exceeds frame count");
   return nullptr;
 }
 
@@ -590,16 +588,14 @@ DescriptorHeapDx12* FrameResourcesManager::getCurrentSamplerHeap() {
   if (m_currentFrame < m_samplerHeaps.size()) {
     return m_samplerHeaps[m_currentFrame].get();
   }
-  GlobalLogger::Log(LogLevel::Error, "Current frame index exceeds frame count");
+  LOG_ERROR("Current frame index exceeds frame count");
   return nullptr;
 }
 
 inline DescriptorHeapDx12* FrameResourcesManager::getCbvSrvUavHeap(uint32_t frameIndex) {
   std::lock_guard<std::mutex> lock(m_frameResourcesMutex);
   if (frameIndex >= m_frameCount) {
-    GlobalLogger::Log(
-        LogLevel::Error,
-        "Frame index " + std::to_string(frameIndex) + " exceeds frame count " + std::to_string(m_frameCount));
+    LOG_ERROR("Frame index " + std::to_string(frameIndex) + " exceeds frame count " + std::to_string(m_frameCount));
     return nullptr;
   }
   return m_cbvSrvUavHeaps[frameIndex].get();
@@ -608,9 +604,7 @@ inline DescriptorHeapDx12* FrameResourcesManager::getCbvSrvUavHeap(uint32_t fram
 inline DescriptorHeapDx12* FrameResourcesManager::getSamplerHeap(uint32_t frameIndex) {
   std::lock_guard<std::mutex> lock(m_frameResourcesMutex);
   if (frameIndex >= m_frameCount) {
-    GlobalLogger::Log(
-        LogLevel::Error,
-        "Frame index " + std::to_string(frameIndex) + " exceeds frame count " + std::to_string(m_frameCount));
+    LOG_ERROR("Frame index " + std::to_string(frameIndex) + " exceeds frame count " + std::to_string(m_frameCount));
     return nullptr;
   }
   return m_samplerHeaps[frameIndex].get();

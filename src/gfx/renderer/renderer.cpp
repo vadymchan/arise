@@ -31,7 +31,7 @@ bool Renderer::initialize(Window* window, rhi::RenderingApi api) {
   m_device          = g_createDevice(api, deviceDesc);
 
   if (!m_device) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create device");
+    LOG_ERROR("Failed to create device");
     return false;
   }
 
@@ -52,7 +52,7 @@ bool Renderer::initialize(Window* window, rhi::RenderingApi api) {
 
   m_swapChain = m_device->createSwapChain(swapchainDesc);
   if (!m_swapChain) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create swap chain");
+    LOG_ERROR("Failed to create swap chain");
     return false;
   }
 
@@ -95,14 +95,14 @@ bool Renderer::initialize(Window* window, rhi::RenderingApi api) {
 
   m_initialized = true;
 
-  GlobalLogger::Log(LogLevel::Info, "Renderer initialized successfully");
+  LOG_INFO("Renderer initialized successfully");
   return true;
 }
 
 RenderContext Renderer::beginFrame(Scene* scene, const RenderSettings& renderSettings) {
   CPU_ZONE_NC("Renderer::beginFrame", color::PURPLE);
   if (!m_initialized) {
-    GlobalLogger::Log(LogLevel::Error, "Renderer not initialized");
+    LOG_ERROR("Renderer not initialized");
     return RenderContext();
   }
 
@@ -139,7 +139,7 @@ RenderContext Renderer::beginFrame(Scene* scene, const RenderSettings& renderSet
     CPU_ZONE_NC("Swapchain Acquisition", color::PURPLE);
     auto currentFrameIndex = frameManager->getCurrentFrameIndex();
     if (!m_swapChain->acquireNextImage(m_imageAvailableSemaphores[currentFrameIndex].get())) {
-      GlobalLogger::Log(LogLevel::Error, "Failed to acquire next swapchain image");
+      LOG_ERROR("Failed to acquire next swapchain image");
       return RenderContext();
     }
   }
@@ -169,7 +169,7 @@ RenderContext Renderer::beginFrame(Scene* scene, const RenderSettings& renderSet
         onViewportResize(viewportDimension);
         break;
       default:
-        GlobalLogger::Log(LogLevel::Error, "Invalid application mode");
+        LOG_ERROR("Invalid application mode");
         return RenderContext();
     }
 
@@ -194,7 +194,7 @@ void Renderer::renderFrame(RenderContext& context) {
   CPU_ZONE_NC("Renderer::renderFrame", color::CYAN);
 
   if (!context.commandBuffer || !m_frameResources.get()) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid render context");
+    LOG_ERROR("Invalid render context");
     return;
   }
 
@@ -306,7 +306,7 @@ bool Renderer::onWindowResize(uint32_t width, uint32_t height) {
   waitForAllFrames_();
 
   if (!m_swapChain->resize(width, height)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to resize swap chain");
+    LOG_ERROR("Failed to resize swap chain");
     return false;
   }
 
@@ -340,7 +340,7 @@ bool Renderer::onViewportResize(const math::Dimension2i& newDimension) {
   auto width  = newDimension.width() > 0 ? newDimension.width() : 1;
   auto height = newDimension.height() > 0 ? newDimension.height() : 1;
 
-  GlobalLogger::Log(LogLevel::Info, "Resizing viewport to " + std::to_string(width) + "x" + std::to_string(height));
+  LOG_INFO("Resizing viewport to " + std::to_string(width) + "x" + std::to_string(height));
 
   // this is not ideal solution, but it works for now
   auto scene = ServiceLocator::s_get<SceneManager>()->getCurrentScene();
@@ -385,7 +385,7 @@ void Renderer::onSceneSwitch() {
     m_debugPass->clearSceneResources();
   }
 
-  GlobalLogger::Log(LogLevel::Info, "Renderer resources cleared for scene switch");
+  LOG_INFO("Renderer resources cleared for scene switch");
 }
 
 gfx::rhi::RenderingApi Renderer::getCurrentApi() const {
@@ -394,32 +394,32 @@ gfx::rhi::RenderingApi Renderer::getCurrentApi() const {
 
 void Renderer::updateWindow(Window* window) {
   if (!window) {
-    GlobalLogger::Log(LogLevel::Error, "Cannot update with null window");
+    LOG_ERROR("Cannot update with null window");
     return;
   }
   m_window = window;
-  GlobalLogger::Log(LogLevel::Info, "Window pointer updated successfully");
+  LOG_INFO("Window pointer updated successfully");
 }
 
 bool Renderer::switchRenderingApi(gfx::rhi::RenderingApi newApi) {
   if (!m_initialized) {
-    GlobalLogger::Log(LogLevel::Error, "Cannot switch API - renderer not initialized");
+    LOG_ERROR("Cannot switch API - renderer not initialized");
     return false;
   }
 
   if (getCurrentApi() == newApi) {
-    GlobalLogger::Log(LogLevel::Info, "Already using requested API, no switch needed");
+    LOG_INFO("Already using requested API, no switch needed");
     return true;
   }
 
-  GlobalLogger::Log(LogLevel::Info, "Starting API switch to " + std::to_string(static_cast<int>(newApi)));
+  LOG_INFO("Starting API switch to " + std::to_string(static_cast<int>(newApi)));
 
   waitForAllFrames_();
 
   cleanupResources_();
 
   if (!recreateResources_(newApi)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to recreate resources with new API");
+    LOG_ERROR("Failed to recreate resources with new API");
     return false;
   }
 
@@ -427,16 +427,16 @@ bool Renderer::switchRenderingApi(gfx::rhi::RenderingApi newApi) {
 
   reloadSceneModels_();
 
-  GlobalLogger::Log(LogLevel::Info, "Successfully switched to new rendering API");
+  LOG_INFO("Successfully switched to new rendering API");
   return true;
 }
 
 void Renderer::initializeGpuProfiler_() {
   if (auto* profiler = ServiceLocator::s_get<gpu::GpuProfiler>()) {
     if (profiler->initialize(m_device.get())) {
-      GlobalLogger::Log(LogLevel::Info, "GPU profiler initialized successfully");
+      LOG_INFO("GPU profiler initialized successfully");
     } else {
-      GlobalLogger::Log(LogLevel::Warning, "Failed to initialize GPU profiler");
+      LOG_WARN("Failed to initialize GPU profiler");
     }
   }
 }
@@ -489,7 +489,7 @@ void Renderer::setupRenderPasses_() {
 }
 
 void Renderer::cleanupResources_() {
-  GlobalLogger::Log(LogLevel::Info, "Cleaning up all rendering resources");
+  LOG_INFO("Cleaning up all rendering resources");
 
   if (m_resourceManager) {
     m_resourceManager->clear();
@@ -554,19 +554,19 @@ void Renderer::cleanupResources_() {
 
   m_initialized = false;
 
-  GlobalLogger::Log(LogLevel::Info, "Resource cleanup completed");
+  LOG_INFO("Resource cleanup completed");
 }
 
 // TODO: consider making one method (init and this method) that will have the same logic
 bool Renderer::recreateResources_(gfx::rhi::RenderingApi newApi) {
-  GlobalLogger::Log(LogLevel::Info, "Recreating resources with new API");
+  LOG_INFO("Recreating resources with new API");
 
   rhi::DeviceDesc deviceDesc;
   deviceDesc.window = m_window;
   m_device          = g_createDevice(newApi, deviceDesc);
 
   if (!m_device) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create device with new API");
+    LOG_ERROR("Failed to create device with new API");
     return false;
   }
 
@@ -586,7 +586,7 @@ bool Renderer::recreateResources_(gfx::rhi::RenderingApi newApi) {
   m_swapChain               = m_device->createSwapChain(swapchainDesc);
 
   if (!m_swapChain) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create swap chain with new API");
+    LOG_ERROR("Failed to create swap chain with new API");
     return false;
   }
 
@@ -627,12 +627,12 @@ bool Renderer::recreateResources_(gfx::rhi::RenderingApi newApi) {
 
   m_initialized = true;
 
-  GlobalLogger::Log(LogLevel::Info, "Resource recreation completed");
+  LOG_INFO("Resource recreation completed");
   return true;
 }
 
 void Renderer::recreateResourceManagers_() {
-  GlobalLogger::Log(LogLevel::Info, "Recreating resource managers with new device");
+  LOG_INFO("Recreating resource managers with new device");
 
   ServiceLocator::s_provide<BufferManager>(m_device.get());
   ServiceLocator::s_provide<TextureManager>(m_device.get());
@@ -649,7 +649,7 @@ void Renderer::recreateResourceManagers_() {
     }
   }
 
-  GlobalLogger::Log(LogLevel::Info, "Resource managers recreated with new device");
+  LOG_INFO("Resource managers recreated with new device");
 }
 
 void Renderer::reloadSceneModels_() {
@@ -674,9 +674,8 @@ void Renderer::reloadSceneModels_() {
     auto* cpuModel = registry.get<ecs::Model*>(entity);
     if (cpuModel && !cpuModel->filePath.empty()) {
       entitiesToUpdate.emplace_back(entity, cpuModel->filePath);
-      GlobalLogger::Log(LogLevel::Info,
-                        "Entity " + std::to_string(static_cast<uint32_t>(entity))
-                            + " scheduled for GPU model reload: " + cpuModel->filePath.string());
+      LOG_INFO("Entity " + std::to_string(static_cast<uint32_t>(entity))
+               + " scheduled for GPU model reload: " + cpuModel->filePath.string());
     }
   }
 
@@ -685,14 +684,13 @@ void Renderer::reloadSceneModels_() {
 
   auto renderModelManager = ServiceLocator::s_get<RenderModelManager>();
   if (!renderModelManager) {
-    GlobalLogger::Log(LogLevel::Error, "RenderModelManager not available for model reload");
+    LOG_ERROR("RenderModelManager not available for model reload");
     return;
   }
 
   for (const auto& [entity, modelPath] : entitiesToUpdate) {
     if (!registry.valid(entity)) {
-      GlobalLogger::Log(LogLevel::Warning,
-                        "Entity " + std::to_string(static_cast<uint32_t>(entity)) + " no longer valid during reload");
+      LOG_WARN("Entity " + std::to_string(static_cast<uint32_t>(entity)) + " no longer valid during reload");
       continue;
     }
 
@@ -702,17 +700,15 @@ void Renderer::reloadSceneModels_() {
     if (newRenderModel) {
       registry.emplace<ecs::RenderModel*>(entity, newRenderModel);
 
-      GlobalLogger::Log(LogLevel::Info,
-                        "Entity " + std::to_string(static_cast<uint32_t>(entity))
-                            + " GPU model successfully reloaded: " + modelPath.string());
+      LOG_INFO("Entity " + std::to_string(static_cast<uint32_t>(entity))
+               + " GPU model successfully reloaded: " + modelPath.string());
     } else {
-      GlobalLogger::Log(LogLevel::Error,
-                        "Failed to reload GPU model for entity " + std::to_string(static_cast<uint32_t>(entity)) + ": "
-                            + modelPath.string());
+      LOG_ERROR("Failed to reload GPU model for entity " + std::to_string(static_cast<uint32_t>(entity)) + ": "
+                + modelPath.string());
     }
   }
 
-  GlobalLogger::Log(LogLevel::Info, "Reloaded GPU models for " + std::to_string(entitiesToUpdate.size()) + " entities");
+  LOG_INFO("Reloaded GPU models for " + std::to_string(entitiesToUpdate.size()) + " entities");
 }
 
 }  // namespace renderer

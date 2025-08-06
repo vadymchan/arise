@@ -1,7 +1,7 @@
 #include "utils/path_manager/path_manager.h"
 
 #include "config/config_manager.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 #include "utils/service/service_locator.h"
 
 namespace arise {
@@ -38,9 +38,9 @@ bool PathManager::s_isConfigAvailable() {
   if (!s_config_) {
     auto configManager = ServiceLocator::s_get<ConfigManager>();
     if (!configManager) {
-      GlobalLogger::Log(LogLevel::Warning,
-                        "ConfigManager is not provided in ServiceLocator when "
-                        "using PathManager. Adding it...");
+      LOG_WARN(
+          "ConfigManager is not provided in ServiceLocator when "
+          "using PathManager. Adding it...");
       ServiceLocator::s_provide<ConfigManager>();
       configManager = ServiceLocator::s_get<ConfigManager>();
     }
@@ -49,7 +49,7 @@ bool PathManager::s_isConfigAvailable() {
     s_config_ = configManager->getConfig(std::string(s_configFile));
 
     if (!s_config_) {
-      GlobalLogger::Log(LogLevel::Error, "Failed to load config!");
+      LOG_ERROR("Failed to load config!");
       return false;
     }
   }
@@ -59,7 +59,7 @@ bool PathManager::s_isConfigAvailable() {
 
 std::filesystem::path PathManager::s_getPath(std::string_view pathKey) {
   if (!s_isConfigAvailable()) {
-    GlobalLogger::Log(LogLevel::Error, "Config is not available.");
+    LOG_ERROR("Config is not available.");
     return {};
   }
 

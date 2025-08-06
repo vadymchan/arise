@@ -2,7 +2,7 @@
 
 #include "gfx/rhi/backends/vulkan/device_vk.h"
 #include "gfx/rhi/backends/vulkan/rhi_enums_vk.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 namespace arise {
 namespace gfx {
@@ -45,13 +45,13 @@ SamplerVk::SamplerVk(const SamplerDesc& desc, DeviceVk* device)
     samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
   } else {
     samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
-    GlobalLogger::Log(LogLevel::Warning, "Custom border colors not fully supported in Vulkan sampler");
+    LOG_WARN("Custom border colors not fully supported in Vulkan sampler");
   }
 
   samplerInfo.unnormalizedCoordinates = VK_FALSE;
 
   if (vkCreateSampler(device->getDevice(), &samplerInfo, nullptr, &m_sampler_) != VK_SUCCESS) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create Vulkan sampler");
+    LOG_ERROR("Failed to create Vulkan sampler");
   }
 }
 

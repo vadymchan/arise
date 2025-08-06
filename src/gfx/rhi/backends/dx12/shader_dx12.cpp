@@ -1,7 +1,7 @@
 #include "gfx/rhi/backends/dx12/shader_dx12.h"
 
 #include "gfx/rhi/backends/dx12/device_dx12.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 #ifdef ARISE_USE_DX12
 
@@ -25,7 +25,7 @@ void ShaderDx12::initialize(const std::vector<uint8_t>& code) {
   // Create a blob to hold the shader bytecode
   HRESULT hr = D3DCreateBlob(code.size(), &m_shaderBlob_);
   if (FAILED(hr)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create shader blob for DirectX 12 shader");
+    LOG_ERROR("Failed to create shader blob for DirectX 12 shader");
     return;
   }
 

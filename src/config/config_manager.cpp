@@ -1,7 +1,7 @@
 #include "config/config_manager.h"
 
 #include "file_loader/file_system_manager.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 #include <ranges>
 
@@ -9,7 +9,7 @@ namespace arise {
 
 void ConfigManager::loadAllConfigsFromDirectory(const std::filesystem::path& dirPath) {
   if (!std::filesystem::exists(dirPath) || !std::filesystem::is_directory(dirPath)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to load configs: Directory does not exist: " + dirPath.string());
+    LOG_ERROR("Failed to load configs: Directory does not exist: " + dirPath.string());
     return;
   }
 
@@ -22,16 +22,16 @@ void ConfigManager::loadAllConfigsFromDirectory(const std::filesystem::path& dir
 
 void ConfigManager::addConfig(const std::filesystem::path& filePath) {
   if (configs_.contains(filePath)) {
-    GlobalLogger::Log(LogLevel::Warning, "Config already loaded: " + filePath.string());
+    LOG_WARN("Config already loaded: " + filePath.string());
     return;
   }
 
   auto config = std::make_unique<Config>();
   if (config->loadFromFile(filePath)) {
     configs_[filePath] = std::move(config);
-    GlobalLogger::Log(LogLevel::Info, "Config loaded: " + filePath.string());
+    LOG_INFO("Config loaded: " + filePath.string());
   } else {
-    GlobalLogger::Log(LogLevel::Error, "Failed to load config: " + filePath.string());
+    LOG_ERROR("Failed to load config: " + filePath.string());
   }
 }
 
@@ -51,17 +51,17 @@ void ConfigManager::saveAllConfigs() {
 
 bool ConfigManager::unloadConfig(const std::filesystem::path& filePath) {
   if (configs_.erase(filePath)) {
-    GlobalLogger::Log(LogLevel::Info, "Config " + filePath.string() + " unloaded from memory.");
+    LOG_INFO("Config " + filePath.string() + " unloaded from memory.");
     return true;
   } else {
-    GlobalLogger::Log(LogLevel::Error, "Config " + filePath.string() + " not found.");
+    LOG_ERROR("Config " + filePath.string() + " not found.");
     return false;
   }
 }
 
 void ConfigManager::unloadAllConfigs() {
   configs_.clear();
-  GlobalLogger::Log(LogLevel::Info, "All configs have been unloaded from memory.");
+  LOG_INFO("All configs have been unloaded from memory.");
 }
 
 }  // namespace arise

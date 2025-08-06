@@ -3,6 +3,7 @@
 #include "gfx/rhi/interface/command_buffer.h"
 #include "gfx/rhi/interface/synchronization.h"
 #include "utils/image/image_manager.h"
+#include "utils/logger/log.h"
 #include "utils/resource/resource_deletion_manager.h"
 #include "utils/service/service_locator.h"
 
@@ -12,17 +13,16 @@ TextureManager::TextureManager(gfx::rhi::Device* device)
     : m_device(device)
     , m_textureCounter(0) {
   if (!m_device) {
-    GlobalLogger::Log(LogLevel::Error, "Device is null");
+    LOG_ERROR("Device is null");
   }
 }
 
 TextureManager::~TextureManager() {
   if (!m_textures.empty()) {
-    GlobalLogger::Log(LogLevel::Info,
-                      "TextureManager destroyed, releasing " + std::to_string(m_textures.size()) + " textures");
+    LOG_INFO("TextureManager destroyed, releasing " + std::to_string(m_textures.size()) + " textures");
 
     for (const auto& [name, texture] : m_textures) {
-      GlobalLogger::Log(LogLevel::Info, "Released texture: " + name);
+      LOG_INFO("Released texture: " + name);
     }
   }
   release();
@@ -30,12 +30,12 @@ TextureManager::~TextureManager() {
 
 gfx::rhi::Texture* TextureManager::createTexture(Image* image, const std::string& name) {
   if (!m_device) {
-    GlobalLogger::Log(LogLevel::Error, "Cannot create texture, device is null");
+    LOG_ERROR("Cannot create texture, device is null");
     return nullptr;
   }
 
   if (!image) {
-    GlobalLogger::Log(LogLevel::Error, "Cannot create texture, image is null");
+    LOG_ERROR("Cannot create texture, image is null");
     return nullptr;
   }
 
@@ -55,13 +55,13 @@ gfx::rhi::Texture* TextureManager::createTexture(Image* image, const std::string
   std::lock_guard<std::mutex> lock(m_mutex);
 
   if (m_textures.contains(textureName)) {
-    GlobalLogger::Log(LogLevel::Warning, "Texture with name '" + textureName + "' already exists, will be replaced");
+    LOG_WARN("Texture with name '" + textureName + "' already exists, will be replaced");
     m_textures.erase(textureName);
   }
 
   auto texture = m_device->createTexture(desc);
   if (!texture) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create texture '" + textureName + "'");
+    LOG_ERROR("Failed to create texture '" + textureName + "'");
     return nullptr;
   }
 
@@ -107,9 +107,8 @@ gfx::rhi::Texture* TextureManager::createTexture(Image* image, const std::string
   gfx::rhi::Texture* texturePtr = texture.get();
   m_textures[textureName]       = std::move(texture);
 
-  GlobalLogger::Log(LogLevel::Info,
-                    "Created texture '" + textureName + "' with dimensions " + std::to_string(desc.width) + "x"
-                        + std::to_string(desc.height));
+  LOG_INFO("Created texture '" + textureName + "' with dimensions " + std::to_string(desc.width) + "x"
+           + std::to_string(desc.height));
 
   return texturePtr;
 }
@@ -118,13 +117,13 @@ gfx::rhi::Texture* TextureManager::createTextureFromFile(const std::filesystem::
                                                          const std::string&           name) {
   auto imageManager = ServiceLocator::s_get<ImageManager>();
   if (!imageManager) {
-    GlobalLogger::Log(LogLevel::Error, "Cannot create texture from file, ImageManager not available");
+    LOG_ERROR("Cannot create texture from file, ImageManager not available");
     return nullptr;
   }
 
   Image* image = imageManager->getImage(filepath);
   if (!image) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to load image from file: " + filepath.string());
+    LOG_ERROR("Failed to load image from file: " + filepath.string());
     return nullptr;
   }
 
@@ -138,12 +137,12 @@ gfx::rhi::Texture* TextureManager::createRenderTarget(uint32_t                wi
                                                       gfx::rhi::TextureFormat format,
                                                       const std::string&      name) {
   if (!m_device) {
-    GlobalLogger::Log(LogLevel::Error, "Cannot create render target, device is null");
+    LOG_ERROR("Cannot create render target, device is null");
     return nullptr;
   }
 
   if (width == 0 || height == 0) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid render target dimensions");
+    LOG_ERROR("Invalid render target dimensions");
     return nullptr;
   }
 
@@ -163,22 +162,21 @@ gfx::rhi::Texture* TextureManager::createRenderTarget(uint32_t                wi
   std::lock_guard<std::mutex> lock(m_mutex);
 
   if (m_textures.contains(textureName)) {
-    GlobalLogger::Log(LogLevel::Warning, "Texture with name '" + textureName + "' already exists, will be replaced");
+    LOG_WARN("Texture with name '" + textureName + "' already exists, will be replaced");
     m_textures.erase(textureName);
   }
 
   auto texture = m_device->createTexture(desc);
   if (!texture) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create render target '" + textureName + "'");
+    LOG_ERROR("Failed to create render target '" + textureName + "'");
     return nullptr;
   }
 
   gfx::rhi::Texture* texturePtr = texture.get();
   m_textures[textureName]       = std::move(texture);
 
-  GlobalLogger::Log(LogLevel::Info,
-                    "Created render target '" + textureName + "' with dimensions " + std::to_string(width) + "x"
-                        + std::to_string(height));
+  LOG_INFO("Created render target '" + textureName + "' with dimensions " + std::to_string(width) + "x"
+           + std::to_string(height));
 
   return texturePtr;
 }
@@ -188,17 +186,17 @@ gfx::rhi::Texture* TextureManager::createDepthStencil(uint32_t                wi
                                                       gfx::rhi::TextureFormat format,
                                                       const std::string&      name) {
   if (!m_device) {
-    GlobalLogger::Log(LogLevel::Error, "Cannot create depth stencil, device is null");
+    LOG_ERROR("Cannot create depth stencil, device is null");
     return nullptr;
   }
 
   if (width == 0 || height == 0) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid depth stencil dimensions");
+    LOG_ERROR("Invalid depth stencil dimensions");
     return nullptr;
   }
 
   if (!gfx::rhi::g_isDepthFormat(format)) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid format for depth stencil, must be a depth format");
+    LOG_ERROR("Invalid format for depth stencil, must be a depth format");
     return nullptr;
   }
 
@@ -218,29 +216,28 @@ gfx::rhi::Texture* TextureManager::createDepthStencil(uint32_t                wi
   std::lock_guard<std::mutex> lock(m_mutex);
 
   if (m_textures.contains(textureName)) {
-    GlobalLogger::Log(LogLevel::Warning, "Texture with name '" + textureName + "' already exists, will be replaced");
+    LOG_WARN("Texture with name '" + textureName + "' already exists, will be replaced");
     m_textures.erase(textureName);
   }
 
   auto texture = m_device->createTexture(desc);
   if (!texture) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create depth stencil '" + textureName + "'");
+    LOG_ERROR("Failed to create depth stencil '" + textureName + "'");
     return nullptr;
   }
 
   gfx::rhi::Texture* texturePtr = texture.get();
   m_textures[textureName]       = std::move(texture);
 
-  GlobalLogger::Log(LogLevel::Info,
-                    "Created depth stencil '" + textureName + "' with dimensions " + std::to_string(width) + "x"
-                        + std::to_string(height));
+  LOG_INFO("Created depth stencil '" + textureName + "' with dimensions " + std::to_string(width) + "x"
+           + std::to_string(height));
 
   return texturePtr;
 }
 
 gfx::rhi::Texture* TextureManager::addTexture(std::unique_ptr<gfx::rhi::Texture> texture, const std::string& name) {
   if (!texture) {
-    GlobalLogger::Log(LogLevel::Error, "Cannot add null texture");
+    LOG_ERROR("Cannot add null texture");
     return nullptr;
   }
 
@@ -249,14 +246,14 @@ gfx::rhi::Texture* TextureManager::addTexture(std::unique_ptr<gfx::rhi::Texture>
   std::lock_guard<std::mutex> lock(m_mutex);
 
   if (m_textures.contains(textureName)) {
-    GlobalLogger::Log(LogLevel::Warning, "Texture with name '" + textureName + "' already exists, will be replaced");
+    LOG_WARN("Texture with name '" + textureName + "' already exists, will be replaced");
     m_textures.erase(textureName);
   }
 
   gfx::rhi::Texture* texturePtr = texture.get();
   m_textures[textureName]       = std::move(texture);
 
-  GlobalLogger::Log(LogLevel::Info, "Added external texture '" + textureName + "'");
+  LOG_INFO("Added external texture '" + textureName + "'");
 
   return texturePtr;
 }
@@ -285,7 +282,7 @@ bool TextureManager::removeTexture(const std::string& name) {
           texturePtr,
           [this, name](gfx::rhi::Texture*) {
             std::lock_guard<std::mutex> lock(m_mutex);
-            GlobalLogger::Log(LogLevel::Info, "Texture '" + name + "' deleted");
+            LOG_INFO("Texture '" + name + "' deleted");
             m_textures.erase(name);
           },
           name,
@@ -293,19 +290,19 @@ bool TextureManager::removeTexture(const std::string& name) {
 
       return true;
     } else {
-      GlobalLogger::Log(LogLevel::Info, "Removing texture '" + name + "'");
+      LOG_INFO("Removing texture '" + name + "'");
       m_textures.erase(it);
       return true;
     }
   }
 
-  GlobalLogger::Log(LogLevel::Warning, "Attempted to remove non-existent texture '" + name + "'");
+  LOG_WARN("Attempted to remove non-existent texture '" + name + "'");
   return false;
 }
 
 bool TextureManager::removeTexture(gfx::rhi::Texture* texture) {
   if (!texture) {
-    GlobalLogger::Log(LogLevel::Error, "Cannot remove null texture");
+    LOG_ERROR("Cannot remove null texture");
     return false;
   }
 
@@ -320,20 +317,20 @@ bool TextureManager::removeTexture(gfx::rhi::Texture* texture) {
           texture,
           [this, textureName](gfx::rhi::Texture*) {
             std::lock_guard<std::mutex> lock(m_mutex);
-            GlobalLogger::Log(LogLevel::Info, "Texture '" + textureName + "' deleted");
+            LOG_INFO("Texture '" + textureName + "' deleted");
             m_textures.erase(textureName);
           },
           textureName,
           "Texture");
       return true;
     } else {
-      GlobalLogger::Log(LogLevel::Info, "Removing texture '" + textureName + "'");
+      LOG_INFO("Removing texture '" + textureName + "'");
       m_textures.erase(it);
       return true;
     }
   }
 
-  GlobalLogger::Log(LogLevel::Warning, "Texture not found in manager");
+  LOG_WARN("Texture not found in manager");
   return false;
 }
 
@@ -350,7 +347,7 @@ size_t TextureManager::getTextureCount() const {
 void TextureManager::release() {
   std::lock_guard<std::mutex> lock(m_mutex);
 
-  GlobalLogger::Log(LogLevel::Info, "Releasing " + std::to_string(m_textures.size()) + " textures");
+  LOG_INFO("Releasing " + std::to_string(m_textures.size()) + " textures");
 
   m_textures.clear();
 }

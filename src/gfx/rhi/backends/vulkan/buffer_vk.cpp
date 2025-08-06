@@ -2,7 +2,7 @@
 
 #include "gfx/rhi/backends/vulkan/device_vk.h"
 #include "gfx/rhi/backends/vulkan/rhi_enums_vk.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 namespace arise {
 namespace gfx {
@@ -15,7 +15,7 @@ BufferVk::BufferVk(const BufferDesc& desc, DeviceVk* device)
   VkMemoryPropertyFlags memProps = getMemoryPropertyFlags_();
 
   if (!createBuffer_(usage, memProps)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create Vulkan buffer");
+    LOG_ERROR("Failed to create Vulkan buffer");
     return;
   }
 
@@ -61,7 +61,7 @@ bool BufferVk::update_(const void* data, size_t size, size_t offset) {
   }
 
   if (offset + size > m_desc_.size) {
-    GlobalLogger::Log(LogLevel::Error, "Buffer update exceeds buffer size");
+    LOG_ERROR("Buffer update exceeds buffer size");
     return false;
   }
 
@@ -98,13 +98,13 @@ bool BufferVk::map_(void** ppData) {
 
   VkMemoryPropertyFlags memProps = getMemoryPropertyFlags_();
   if (!(memProps & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)) {
-    GlobalLogger::Log(LogLevel::Error, "Cannot map a non-host-visible buffer");
+    LOG_ERROR("Cannot map a non-host-visible buffer");
     return false;
   }
 
   VkResult result = vmaMapMemory(m_device_->getAllocator(), m_allocation_, ppData);
   if (result != VK_SUCCESS) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to map buffer memory");
+    LOG_ERROR("Failed to map buffer memory");
     return false;
   }
 
@@ -244,7 +244,7 @@ uint32_t BufferVk::findMemoryType_(uint32_t typeFilter, VkMemoryPropertyFlags pr
     }
   }
 
-  GlobalLogger::Log(LogLevel::Error, "Failed to find suitable memory type for buffer");
+  LOG_ERROR("Failed to find suitable memory type for buffer");
   return 0;
 }
 

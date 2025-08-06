@@ -5,7 +5,7 @@
 #include "gfx/rhi/backends/vulkan/render_pass_vk.h"
 #include "gfx/rhi/backends/vulkan/rhi_enums_vk.h"
 #include "gfx/rhi/backends/vulkan/shader_vk.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 namespace arise {
 namespace gfx {
@@ -17,7 +17,7 @@ GraphicsPipelineVk::GraphicsPipelineVk(const GraphicsPipelineDesc& desc, DeviceV
     , m_pipeline_(VK_NULL_HANDLE)
     , m_pipelineLayout_(VK_NULL_HANDLE) {
   if (!initialize_()) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to initialize Vulkan graphics pipeline");
+    LOG_ERROR("Failed to initialize Vulkan graphics pipeline");
   }
 }
 
@@ -35,18 +35,18 @@ GraphicsPipelineVk::~GraphicsPipelineVk() {
 
 bool GraphicsPipelineVk::rebuild() {
   if (createPipeline_()) {
-    GlobalLogger::Log(LogLevel::Info, "Successfully rebuilt Vulkan graphics pipeline");
+    LOG_INFO("Successfully rebuilt Vulkan graphics pipeline");
     m_updateFrame = -1;
     return true;
   }
 
-  GlobalLogger::Log(LogLevel::Error, "Failed to rebuild Vulkan graphics pipeline");
+  LOG_ERROR("Failed to rebuild Vulkan graphics pipeline");
   return false;
 }
 
 bool GraphicsPipelineVk::initialize_() {
   if (!createPipelineLayout_()) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create pipeline layout");
+    LOG_ERROR("Failed to create pipeline layout");
     return false;
   }
 
@@ -56,19 +56,19 @@ bool GraphicsPipelineVk::initialize_() {
 bool GraphicsPipelineVk::createPipeline_() {
   std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
   if (!createShaderStages_(shaderStages)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create shader stages");
+    LOG_ERROR("Failed to create shader stages");
     return false;
   }
 
   VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
   if (!createVertexInputState_(vertexInputInfo)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create vertex input state");
+    LOG_ERROR("Failed to create vertex input state");
     return false;
   }
 
   VkPipelineInputAssemblyStateCreateInfo inputAssembly = {};
   if (!createInputAssemblyState_(inputAssembly)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create input assembly state");
+    LOG_ERROR("Failed to create input assembly state");
     return false;
   }
 
@@ -79,25 +79,25 @@ bool GraphicsPipelineVk::createPipeline_() {
 
   VkPipelineRasterizationStateCreateInfo rasterizer = {};
   if (!createRasterizationState_(rasterizer)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create rasterization state");
+    LOG_ERROR("Failed to create rasterization state");
     return false;
   }
 
   VkPipelineMultisampleStateCreateInfo multisampling = {};
   if (!createMultisampleState_(multisampling)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create multisample state");
+    LOG_ERROR("Failed to create multisample state");
     return false;
   }
 
   VkPipelineDepthStencilStateCreateInfo depthStencil = {};
   if (!createDepthStencilState_(depthStencil)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create depth-stencil state");
+    LOG_ERROR("Failed to create depth-stencil state");
     return false;
   }
 
   VkPipelineColorBlendStateCreateInfo colorBlending = {};
   if (!createColorBlendState_(colorBlending)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create color blend state");
+    LOG_ERROR("Failed to create color blend state");
     return false;
   }
 
@@ -110,7 +110,7 @@ bool GraphicsPipelineVk::createPipeline_() {
 
   RenderPassVk* renderPassVk = dynamic_cast<RenderPassVk*>(m_desc_.renderPass);
   if (!renderPassVk) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid render pass for Vulkan graphics pipeline");
+    LOG_ERROR("Invalid render pass for Vulkan graphics pipeline");
     return false;
   }
 
@@ -142,7 +142,7 @@ bool GraphicsPipelineVk::createPipeline_() {
 
   if (vkCreateGraphicsPipelines(m_device_->getDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_pipeline_)
       != VK_SUCCESS) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create graphics pipeline");
+    LOG_ERROR("Failed to create graphics pipeline");
     return false;
   }
 
@@ -154,13 +154,13 @@ bool GraphicsPipelineVk::createShaderStages_(std::vector<VkPipelineShaderStageCr
 
   for (Shader* shader : m_desc_.shaders) {
     if (!shader) {
-      GlobalLogger::Log(LogLevel::Error, "Null shader pointer in pipeline description");
+      LOG_ERROR("Null shader pointer in pipeline description");
       return false;
     }
 
     ShaderVk* shaderVk = dynamic_cast<ShaderVk*>(shader);
     if (!shaderVk) {
-      GlobalLogger::Log(LogLevel::Error, "Invalid shader type for Vulkan pipeline");
+      LOG_ERROR("Invalid shader type for Vulkan pipeline");
       return false;
     }
 
@@ -309,7 +309,7 @@ bool GraphicsPipelineVk::createColorBlendState_(VkPipelineColorBlendStateCreateI
   }
 
   if (colorBlendAttachments.empty()) {
-    GlobalLogger::Log(LogLevel::Warning, "No color blend attachments provided, using default attachment");
+    LOG_WARN("No color blend attachments provided, using default attachment");
     VkPipelineColorBlendAttachmentState defaultAttachment = {};
     defaultAttachment.blendEnable                         = VK_FALSE;
     defaultAttachment.colorWriteMask
@@ -337,7 +337,7 @@ bool GraphicsPipelineVk::createPipelineLayout_() {
   for (const auto& setLayout : m_desc_.setLayouts) {
     const DescriptorSetLayoutVk* setLayoutVk = dynamic_cast<const DescriptorSetLayoutVk*>(setLayout);
     if (!setLayoutVk) {
-      GlobalLogger::Log(LogLevel::Error, "Invalid descriptor set layout type for Vulkan pipeline");
+      LOG_ERROR("Invalid descriptor set layout type for Vulkan pipeline");
       return false;
     }
 
@@ -354,7 +354,7 @@ bool GraphicsPipelineVk::createPipelineLayout_() {
   pipelineLayoutInfo.pPushConstantRanges        = nullptr;
 
   if (vkCreatePipelineLayout(m_device_->getDevice(), &pipelineLayoutInfo, nullptr, &m_pipelineLayout_) != VK_SUCCESS) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create pipeline layout");
+    LOG_ERROR("Failed to create pipeline layout");
     return false;
   }
 

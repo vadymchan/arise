@@ -97,7 +97,7 @@ void LightVisualizationStrategy::render(const RenderContext& context) {
 
   uint32_t currentIndex = context.currentImageIndex;
   if (currentIndex >= m_framebuffers.size()) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid framebuffer index");
+    LOG_ERROR("Invalid framebuffer index");
     return;
   }
 
@@ -159,7 +159,7 @@ void LightVisualizationStrategy::clearSceneResources() {
   m_instanceBufferCache.clear();
   m_materialCache.clear();
   m_drawData.clear();
-  GlobalLogger::Log(LogLevel::Info, "Light visualization strategy resources cleared for scene switch");
+  LOG_INFO("Light visualization strategy resources cleared for scene switch");
 }
 
 void LightVisualizationStrategy::cleanup() {
@@ -174,7 +174,7 @@ void LightVisualizationStrategy::cleanup() {
 
 rhi::DescriptorSet* LightVisualizationStrategy::getOrCreateMaterialDescriptorSet_(ecs::Material* material) {
   if (!material) {
-    GlobalLogger::Log(LogLevel::Error, "Material is null");
+    LOG_ERROR("Material is null");
     return nullptr;
   }
 
@@ -196,7 +196,7 @@ rhi::DescriptorSet* LightVisualizationStrategy::getOrCreateMaterialDescriptorSet
       normalMapTexture = normalMapIt->second;
     } else {
       normalMapTexture = m_frameResources->getDefaultNormalTexture();
-      GlobalLogger::Log(LogLevel::Debug, "Using fallback normal map texture for material: " + material->materialName);
+      LOG_DEBUG("Using fallback normal map texture for material: " + material->materialName);
     }
 
     descriptorSet->setTexture(0, normalMapTexture);
@@ -236,7 +236,7 @@ void LightVisualizationStrategy::setupRenderPass_() {
 
 void LightVisualizationStrategy::createFramebuffers_(const math::Dimension2i& dimension) {
   if (!m_renderPass) {
-    GlobalLogger::Log(LogLevel::Error, "Render pass must be created before framebuffer");
+    LOG_ERROR("Render pass must be created before framebuffer");
     return;
   }
 
@@ -471,9 +471,8 @@ void LightVisualizationStrategy::cleanupUnusedBuffers_(
   }
 
   for (auto material : materialsToRemove) {
-    GlobalLogger::Log(LogLevel::Debug,
-                      "Removing cached light visualization material descriptor set for deleted material at address: "
-                          + std::to_string(reinterpret_cast<uintptr_t>(material)));
+    LOG_DEBUG("Removing cached light visualization material descriptor set for deleted material at address: "
+              + std::to_string(reinterpret_cast<uintptr_t>(material)));
     m_materialCache.erase(material);
   }
 }

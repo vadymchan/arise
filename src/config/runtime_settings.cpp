@@ -1,6 +1,6 @@
 #include "config/runtime_settings.h"
 
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 #include "utils/math/math_util.h"
 
 namespace arise {
@@ -31,7 +31,7 @@ void RuntimeSettings::updateFromConfig() {
   if (config) {
     m_worldUp_ = config->get<math::Vector3f>("worldUp");
   } else {
-    GlobalLogger::Log(LogLevel::Error, std::string("Failed to initialize RuntimeSettings at - config is nullptr."));
+    LOG_ERROR(std::string("Failed to initialize RuntimeSettings at - config is nullptr."));
   }
 }
 

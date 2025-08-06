@@ -97,7 +97,7 @@ void NormalMapVisualizationStrategy::render(const RenderContext& context) {
 
   uint32_t currentIndex = context.currentImageIndex;
   if (currentIndex >= m_framebuffers.size()) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid framebuffer index");
+    LOG_ERROR("Invalid framebuffer index");
     return;
   }
 
@@ -155,7 +155,7 @@ void NormalMapVisualizationStrategy::clearSceneResources() {
   m_instanceBufferCache.clear();
   m_materialCache.clear();
   m_drawData.clear();
-  GlobalLogger::Log(LogLevel::Info, "Normal map visualization strategy resources cleared for scene switch");
+  LOG_INFO("Normal map visualization strategy resources cleared for scene switch");
 }
 
 void NormalMapVisualizationStrategy::cleanup() {
@@ -195,7 +195,7 @@ void NormalMapVisualizationStrategy::setupRenderPass_() {
 
 void NormalMapVisualizationStrategy::createFramebuffers_(const math::Dimension2i& dimension) {
   if (!m_renderPass) {
-    GlobalLogger::Log(LogLevel::Error, "Render pass must be created before framebuffer");
+    LOG_ERROR("Render pass must be created before framebuffer");
     return;
   }
 
@@ -272,7 +272,7 @@ void NormalMapVisualizationStrategy::prepareDrawCalls_(const RenderContext& cont
     for (const auto& renderMesh : model->renderMeshes) {
       rhi::DescriptorSet* materialDescriptorSet = getOrCreateMaterialDescriptorSet_(renderMesh->material);
       if (!materialDescriptorSet) {
-        GlobalLogger::Log(LogLevel::Warning, "Could not create material descriptor set for normal map visualization");
+        LOG_WARN("Could not create material descriptor set for normal map visualization");
         continue;
       }
 
@@ -430,17 +430,15 @@ void NormalMapVisualizationStrategy::cleanupUnusedBuffers_(
   }
 
   for (auto material : materialsToRemove) {
-    GlobalLogger::Log(
-        LogLevel::Debug,
-        "Normal map visualization: Removing cached material descriptor set for deleted material at address: "
-            + std::to_string(reinterpret_cast<uintptr_t>(material)));
+    LOG_DEBUG("Normal map visualization: Removing cached material descriptor set for deleted material at address: "
+              + std::to_string(reinterpret_cast<uintptr_t>(material)));
     m_materialCache.erase(material);
   }
 }
 
 rhi::DescriptorSet* NormalMapVisualizationStrategy::getOrCreateMaterialDescriptorSet_(ecs::Material* material) {
   if (!material) {
-    GlobalLogger::Log(LogLevel::Error, "Material is null");
+    LOG_ERROR("Material is null");
     return nullptr;
   }
 
@@ -463,7 +461,7 @@ rhi::DescriptorSet* NormalMapVisualizationStrategy::getOrCreateMaterialDescripto
     } else {
       normalMapTexture = m_frameResources->getDefaultNormalTexture();
 
-      GlobalLogger::Log(LogLevel::Debug, "Using fallback normal map texture for material: " + material->materialName);
+      LOG_DEBUG("Using fallback normal map texture for material: " + material->materialName);
     }
 
     descriptorSet->setTexture(0, normalMapTexture);

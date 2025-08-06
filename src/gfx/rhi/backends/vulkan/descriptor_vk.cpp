@@ -5,7 +5,7 @@
 #include "gfx/rhi/backends/vulkan/rhi_enums_vk.h"
 #include "gfx/rhi/backends/vulkan/sampler_vk.h"
 #include "gfx/rhi/backends/vulkan/texture_vk.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 namespace arise {
 namespace gfx {
@@ -49,7 +49,7 @@ DescriptorSetLayoutVk::DescriptorSetLayoutVk(const DescriptorSetLayoutDesc& desc
   layoutInfo.flags                           = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT;
 
   if (vkCreateDescriptorSetLayout(device->getDevice(), &layoutInfo, nullptr, &m_layout_) != VK_SUCCESS) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create Vulkan descriptor set layout");
+    LOG_ERROR("Failed to create Vulkan descriptor set layout");
   }
 }
 
@@ -70,7 +70,7 @@ DescriptorSetVk::DescriptorSetVk(DeviceVk* device, const DescriptorSetLayoutVk* 
   m_descriptorSet_ = device->getDescriptorPoolManager().allocateDescriptorSet(layout->getLayout());
 
   if (m_descriptorSet_ == VK_NULL_HANDLE) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to allocate Vulkan descriptor set");
+    LOG_ERROR("Failed to allocate Vulkan descriptor set");
   }
 }
 
@@ -80,13 +80,13 @@ DescriptorSetVk::~DescriptorSetVk() {
 
 void DescriptorSetVk::setUniformBuffer(uint32_t binding, Buffer* buffer, uint64_t offset, uint64_t range) {
   if (!buffer) {
-    GlobalLogger::Log(LogLevel::Error, "Null buffer in setUniformBuffer");
+    LOG_ERROR("Null buffer in setUniformBuffer");
     return;
   }
 
   BufferVk* bufferVk = dynamic_cast<BufferVk*>(buffer);
   if (!bufferVk) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid buffer type in setUniformBuffer");
+    LOG_ERROR("Invalid buffer type in setUniformBuffer");
     return;
   }
 
@@ -109,7 +109,7 @@ void DescriptorSetVk::setUniformBuffer(uint32_t binding, Buffer* buffer, uint64_
 
 void DescriptorSetVk::setTextureSampler(uint32_t binding, Texture* texture, Sampler* sampler) {
   if (!texture || !sampler) {
-    GlobalLogger::Log(LogLevel::Error, "Null texture or sampler in setTextureSampler");
+    LOG_ERROR("Null texture or sampler in setTextureSampler");
     return;
   }
 
@@ -117,7 +117,7 @@ void DescriptorSetVk::setTextureSampler(uint32_t binding, Texture* texture, Samp
   SamplerVk* samplerVk = dynamic_cast<SamplerVk*>(sampler);
 
   if (!textureVk || !samplerVk) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid texture or sampler type in setTextureSampler");
+    LOG_ERROR("Invalid texture or sampler type in setTextureSampler");
     return;
   }
 
@@ -140,13 +140,13 @@ void DescriptorSetVk::setTextureSampler(uint32_t binding, Texture* texture, Samp
 
 void DescriptorSetVk::setTexture(uint32_t binding, Texture* texture, ResourceLayout layout) {
   if (!texture) {
-    GlobalLogger::Log(LogLevel::Error, "Null texture in setTexture");
+    LOG_ERROR("Null texture in setTexture");
     return;
   }
 
   TextureVk* textureVk = dynamic_cast<TextureVk*>(texture);
   if (!textureVk) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid texture type in setTexture");
+    LOG_ERROR("Invalid texture type in setTexture");
     return;
   }
 
@@ -169,13 +169,13 @@ void DescriptorSetVk::setTexture(uint32_t binding, Texture* texture, ResourceLay
 
 void DescriptorSetVk::setSampler(uint32_t binding, Sampler* sampler) {
   if (!sampler) {
-    GlobalLogger::Log(LogLevel::Error, "Null sampler in setSampler");
+    LOG_ERROR("Null sampler in setSampler");
     return;
   }
 
   SamplerVk* samplerVk = dynamic_cast<SamplerVk*>(sampler);
   if (!samplerVk) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid sampler type in setSampler");
+    LOG_ERROR("Invalid sampler type in setSampler");
     return;
   }
 
@@ -198,13 +198,13 @@ void DescriptorSetVk::setSampler(uint32_t binding, Sampler* sampler) {
 
 void DescriptorSetVk::setStorageBuffer(uint32_t binding, Buffer* buffer, uint64_t offset, uint64_t range) {
   if (!buffer) {
-    GlobalLogger::Log(LogLevel::Error, "Null buffer in setStorageBuffer");
+    LOG_ERROR("Null buffer in setStorageBuffer");
     return;
   }
 
   BufferVk* bufferVk = dynamic_cast<BufferVk*>(buffer);
   if (!bufferVk) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid buffer type in setStorageBuffer");
+    LOG_ERROR("Invalid buffer type in setStorageBuffer");
     return;
   }
 
@@ -312,7 +312,7 @@ VkDescriptorSet DescriptorPoolManager::allocateDescriptorSet(VkDescriptorSetLayo
     m_allocatedSets_++;
     return descriptorSet;
   } else if (result == VK_ERROR_OUT_OF_POOL_MEMORY || result == VK_ERROR_FRAGMENTED_POOL) {
-    GlobalLogger::Log(LogLevel::Warning, "Descriptor pool out of memory, creating a new pool");
+    LOG_WARN("Descriptor pool out of memory, creating a new pool");
     reset();
 
     if (vkAllocateDescriptorSets(m_device_, &allocInfo, &descriptorSet) == VK_SUCCESS) {
@@ -321,7 +321,7 @@ VkDescriptorSet DescriptorPoolManager::allocateDescriptorSet(VkDescriptorSetLayo
     }
   }
 
-  GlobalLogger::Log(LogLevel::Error, "Failed to allocate descriptor set");
+  LOG_ERROR("Failed to allocate descriptor set");
   return VK_NULL_HANDLE;
 }
 

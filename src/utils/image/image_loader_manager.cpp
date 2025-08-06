@@ -1,6 +1,6 @@
 #include "utils/image/image_loader_manager.h"
 
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 namespace arise {
 
@@ -15,7 +15,7 @@ std::unique_ptr<Image> ImageLoaderManager::loadImage(const std::filesystem::path
   ImageType imageType = getImageTypeFromExtension(extension);
 
   if (imageType == ImageType::UNKNOWN) {
-    GlobalLogger::Log(LogLevel::Error, "Unknown image type for extension: " + extension);
+    LOG_ERROR("Unknown image type for extension: " + extension);
     return nullptr;
   }
 
@@ -32,7 +32,7 @@ std::unique_ptr<Image> ImageLoaderManager::loadImage(const std::filesystem::path
     return loader->loadImage(filepath);
   }
 
-  GlobalLogger::Log(LogLevel::Error, "No suitable loader found for image type: " + extension);
+  LOG_ERROR("No suitable loader found for image type: " + extension);
   return nullptr;
 }
 

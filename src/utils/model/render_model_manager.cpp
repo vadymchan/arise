@@ -1,5 +1,6 @@
 #include "utils/model/render_model_manager.h"
 
+#include "utils/logger/log.h"
 #include "utils/model/model_manager.h"
 #include "utils/model/render_mesh_manager.h"
 
@@ -8,12 +9,10 @@
 namespace arise {
 RenderModelManager::~RenderModelManager() {
   if (!renderModelCache_.empty()) {
-    GlobalLogger::Log(
-        LogLevel::Info,
-        "RenderModelManager destroyed, releasing " + std::to_string(renderModelCache_.size()) + " render models");
+    LOG_INFO("RenderModelManager destroyed, releasing " + std::to_string(renderModelCache_.size()) + " render models");
 
     for (const auto& [path, renderModel] : renderModelCache_) {
-      GlobalLogger::Log(LogLevel::Info, "Released render model: " + path.string());
+      LOG_INFO("Released render model: " + path.string());
     }
   }
 }
@@ -27,9 +26,9 @@ ecs::RenderModel* RenderModelManager::getRenderModel(const std::filesystem::path
         auto modelManager = ServiceLocator::s_get<ModelManager>();
         if (modelManager) {
           *outModel = modelManager->getModel(filepath);
-          GlobalLogger::Log(LogLevel::Debug, "CPU model retrieved from cache for: " + filepath.string());
+          LOG_DEBUG("CPU model retrieved from cache for: " + filepath.string());
         } else {
-          GlobalLogger::Log(LogLevel::Warning, "ModelManager not available for cached model: " + filepath.string());
+          LOG_WARN("ModelManager not available for cached model: " + filepath.string());
           *outModel = nullptr;
         }
       }
@@ -39,7 +38,7 @@ ecs::RenderModel* RenderModelManager::getRenderModel(const std::filesystem::path
 
   auto renderModelLoaderManager = ServiceLocator::s_get<RenderModelLoaderManager>();
   if (!renderModelLoaderManager) {
-    GlobalLogger::Log(LogLevel::Error, "RenderModelLoaderManager not available in ServiceLocator.");
+    LOG_ERROR("RenderModelLoaderManager not available in ServiceLocator.");
     return nullptr;
   }
 
@@ -59,7 +58,7 @@ ecs::RenderModel* RenderModelManager::getRenderModel(const std::filesystem::path
     return modelPtr;
   }
 
-  GlobalLogger::Log(LogLevel::Warning, "Failed to load render model: " + filepath.string());
+  LOG_WARN("Failed to load render model: " + filepath.string());
   return nullptr;
 }
 
@@ -70,11 +69,11 @@ bool RenderModelManager::hasRenderModel(const std::filesystem::path& filepath) c
 
 bool RenderModelManager::removeRenderModel(ecs::RenderModel* renderModel) {
   if (!renderModel) {
-    GlobalLogger::Log(LogLevel::Error, "Cannot remove null render model");
+    LOG_ERROR("Cannot remove null render model");
     return false;
   }
 
-  GlobalLogger::Log(LogLevel::Info, "Removing render model: " + renderModel->filePath.string());
+  LOG_INFO("Removing render model: " + renderModel->filePath.string());
 
   auto renderMeshManager = ServiceLocator::s_get<RenderMeshManager>();
 
@@ -97,7 +96,7 @@ bool RenderModelManager::removeRenderModel(ecs::RenderModel* renderModel) {
     return true;
   }
 
-  GlobalLogger::Log(LogLevel::Warning, "Render model not found in manager");
+  LOG_WARN("Render model not found in manager");
   return false;
 }
 

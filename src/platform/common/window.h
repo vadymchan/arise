@@ -3,7 +3,7 @@
 
 #include "event/event.h"
 #include "utils/enum/enum_util.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 #include <SDL.h>
 #include <math_library/dimension.h>
@@ -42,7 +42,7 @@ class Window {
                                    static_cast<std::uint32_t>(m_flags_))} {
     if (!m_window_) {
       std::string errorMessage = SDL_GetError();
-      GlobalLogger::Log(LogLevel::Error, "Failed to create SDL window:" + errorMessage);
+      LOG_ERROR("Failed to create SDL window:" + errorMessage);
     }
 
     int actualWidth, actualHeight;

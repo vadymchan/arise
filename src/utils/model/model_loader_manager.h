@@ -2,7 +2,6 @@
 #define ARISE_MODEL_LOADER_MANAGER_H
 
 #include "resources/i_model_loader.h"
-#include "utils/logger/global_logger.h"
 #include "utils/model/model_type.h"
 
 #include <filesystem>

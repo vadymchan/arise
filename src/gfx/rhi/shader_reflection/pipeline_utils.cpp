@@ -5,7 +5,7 @@
 #include "gfx/rhi/interface/shader.h"
 #include "gfx/rhi/shader_reflection/pipeline_layout_builder.h"
 #include "gfx/rhi/shader_reflection/shader_reflection_utils.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 namespace arise {
 namespace gfx {
@@ -23,7 +23,7 @@ PipelineLayoutDesc generatePipelineLayoutFromShaders(const std::vector<Shader*>&
 
   PipelineLayoutDesc result = builder.build();
 
-  GlobalLogger::Log(LogLevel::Info, "Generated pipeline layout from shader reflection:");
+  LOG_INFO("Generated pipeline layout from shader reflection:");
   reflection_utils::logPipelineLayoutContents(result);
 
   return result;

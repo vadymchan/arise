@@ -1,12 +1,12 @@
 #include "scene/scene_manager.h"
 
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 namespace arise {
 
 void SceneManager::addScene(const std::string& name, Registry registry) {
   if (scenes_.contains(name)) {
-    GlobalLogger::Log(LogLevel::Warning, "Scene with name '" + name + "' already exists. Overwriting.");
+    LOG_WARN("Scene with name '" + name + "' already exists. Overwriting.");
   }
 
   scenes_[name] = std::make_unique<Scene>(std::move(registry));
@@ -37,7 +37,7 @@ bool SceneManager::switchToScene(const std::string& name) {
     return true;
   }
 
-  GlobalLogger::Log(LogLevel::Error, "Failed to switch to scene '" + name + "'. Scene not found.");
+  LOG_ERROR("Failed to switch to scene '" + name + "'. Scene not found.");
   return false;
 }
 

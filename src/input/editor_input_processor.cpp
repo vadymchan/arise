@@ -1,6 +1,6 @@
 #include "input/editor_input_processor.h"
 
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 #include <imgui.h>
 

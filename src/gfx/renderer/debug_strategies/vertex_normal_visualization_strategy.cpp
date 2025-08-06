@@ -84,7 +84,7 @@ void VertexNormalVisualizationStrategy::render(const RenderContext& context) {
 
   uint32_t currentIndex = context.currentImageIndex;
   if (currentIndex >= m_framebuffers.size()) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid framebuffer index");
+    LOG_ERROR("Invalid framebuffer index");
     return;
   }
 
@@ -129,7 +129,7 @@ void VertexNormalVisualizationStrategy::render(const RenderContext& context) {
 void VertexNormalVisualizationStrategy::clearSceneResources() {
   m_instanceBufferCache.clear();
   m_drawData.clear();
-  GlobalLogger::Log(LogLevel::Info, "Vertex normal visualization strategy resources cleared for scene switch");
+  LOG_INFO("Vertex normal visualization strategy resources cleared for scene switch");
 }
 
 void VertexNormalVisualizationStrategy::cleanup() {
@@ -168,7 +168,7 @@ void VertexNormalVisualizationStrategy::setupRenderPass_() {
 
 void VertexNormalVisualizationStrategy::createFramebuffers_(const math::Dimension2i& dimension) {
   if (!m_renderPass) {
-    GlobalLogger::Log(LogLevel::Error, "Render pass must be created before framebuffer");
+    LOG_ERROR("Render pass must be created before framebuffer");
     return;
   }
 

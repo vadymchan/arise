@@ -5,7 +5,7 @@
 #include "ecs/components/bounding_volume.h"
 #include "ecs/components/model.h"
 #include "resources/cgltf/cgltf_common.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 #include "utils/model/mesh_manager.h"
 #include "utils/service/service_locator.h"
 
@@ -22,7 +22,7 @@ namespace arise {
 std::unique_ptr<ecs::Model> CgltfModelLoader::loadModel(const std::filesystem::path& filePath) {
   auto scene = CgltfSceneCache::getOrLoad(filePath);
   if (!scene) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to load GLTF scene: " + filePath.string());
+    LOG_ERROR("Failed to load GLTF scene: " + filePath.string());
     return nullptr;
   }
   const cgltf_data* data = scene.get();
@@ -36,7 +36,7 @@ std::unique_ptr<ecs::Model> CgltfModelLoader::loadModel(const std::filesystem::p
 
   auto meshManager = ServiceLocator::s_get<MeshManager>();
   if (!meshManager) {
-    GlobalLogger::Log(LogLevel::Error, "MeshManager not available in ServiceLocator.");
+    LOG_ERROR("MeshManager not available in ServiceLocator.");
     return nullptr;
   }
 
@@ -75,13 +75,11 @@ std::unique_ptr<ecs::Model> CgltfModelLoader::loadModel(const std::filesystem::p
             ecs::BoundingBox transformedBounds = ecs::bounds::transformAABB(mesh->boundingBox, mesh->transformMatrix);
             meshBoundingBoxes.push_back(transformedBounds);
 
-            GlobalLogger::Log(
-                LogLevel::Debug,
-                "Mesh '" + mesh->meshName + "' bounding box: min(" + std::to_string(mesh->boundingBox.min.x()) + ", "
-                    + std::to_string(mesh->boundingBox.min.y()) + ", " + std::to_string(mesh->boundingBox.min.z())
-                    + ") max(" + std::to_string(mesh->boundingBox.max.x()) + ", "
-                    + std::to_string(mesh->boundingBox.max.y()) + ", " + std::to_string(mesh->boundingBox.max.z())
-                    + ")");
+            LOG_DEBUG("Mesh '" + mesh->meshName + "' bounding box: min(" + std::to_string(mesh->boundingBox.min.x())
+                      + ", " + std::to_string(mesh->boundingBox.min.y()) + ", "
+                      + std::to_string(mesh->boundingBox.min.z()) + ") max(" + std::to_string(mesh->boundingBox.max.x())
+                      + ", " + std::to_string(mesh->boundingBox.max.y()) + ", "
+                      + std::to_string(mesh->boundingBox.max.z()) + ")");
           }
         }
 
@@ -93,11 +91,10 @@ std::unique_ptr<ecs::Model> CgltfModelLoader::loadModel(const std::filesystem::p
 
   if (!meshBoundingBoxes.empty()) {
     model->boundingBox = ecs::bounds::combineAABBs(meshBoundingBoxes);
-    GlobalLogger::Log(LogLevel::Info,
-                      "Model '" + filePath.filename().string() + "' combined bounding box calculated from "
-                          + std::to_string(meshBoundingBoxes.size()) + " meshes");
+    LOG_INFO("Model '" + filePath.filename().string() + "' combined bounding box calculated from "
+             + std::to_string(meshBoundingBoxes.size()) + " meshes");
   } else {
-    GlobalLogger::Log(LogLevel::Warning, "Model '" + filePath.filename().string() + "' has no valid bounding boxes");
+    LOG_WARN("Model '" + filePath.filename().string() + "' has no valid bounding boxes");
   }
 
   return model;
@@ -184,7 +181,7 @@ std::unique_ptr<ecs::Mesh> CgltfModelLoader::processPrimitive(const cgltf_primit
   auto mesh = std::make_unique<ecs::Mesh>();
 
   if (primitive->type != cgltf_primitive_type_triangles) {
-    GlobalLogger::Log(LogLevel::Warning, "Skipping non-triangle primitive");
+    LOG_WARN("Skipping non-triangle primitive");
     return nullptr;
   }
 
@@ -235,7 +232,7 @@ void CgltfModelLoader::processVertices(const cgltf_primitive* primitive, ecs::Me
   }
 
   if (!position_accessor) {
-    GlobalLogger::Log(LogLevel::Error, "No position data found in primitive");
+    LOG_ERROR("No position data found in primitive");
     return;
   }
 
@@ -310,7 +307,7 @@ void CgltfModelLoader::processIndices(const cgltf_primitive* primitive, ecs::Mes
 // TODO: the same implementation is in asssimp. Consider moving it to a common place and use in both loaders.
 void CgltfModelLoader::calculateTangents(ecs::Mesh* mesh) {
   if (mesh->indices.size() % 3 != 0) {
-    GlobalLogger::Log(LogLevel::Warning, "Index count is not a multiple of 3, cannot calculate tangents");
+    LOG_WARN("Index count is not a multiple of 3, cannot calculate tangents");
     return;
   }
 
@@ -355,7 +352,7 @@ void CgltfModelLoader::calculateTangents(ecs::Mesh* mesh) {
     v2.bitangent = bitangent;
   }
 
-  GlobalLogger::Log(LogLevel::Debug, "Basic tangent calculation completed");
+  LOG_DEBUG("Basic tangent calculation completed");
 }
 
 #ifdef ARISE_USE_MIKKTS
@@ -429,10 +426,10 @@ void CgltfModelLoader::generateMikkTSpaceTangents(ecs::Mesh* mesh) {
   context.m_pUserData        = &userContext;
 
   if (!genTangSpaceDefault(&context)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to generate tangents using MikkTSpace");
+    LOG_ERROR("Failed to generate tangents using MikkTSpace");
     calculateTangents(mesh);
   } else {
-    GlobalLogger::Log(LogLevel::Debug, "MikkTSpace tangent generation completed");
+    LOG_DEBUG("MikkTSpace tangent generation completed");
   }
 }
 #endif  // ARISE_USE_MIKKTS
@@ -456,7 +453,7 @@ ecs::BoundingBox CgltfModelLoader::extractBoundingBoxFromAccessor(const cgltf_ac
 
 ecs::BoundingBox CgltfModelLoader::calculateBoundingBoxFromVertices(const ecs::Mesh* mesh) {
   if (!mesh || mesh->vertices.empty()) {
-    GlobalLogger::Log(LogLevel::Warning, "Cannot calculate bounding box from empty mesh");
+    LOG_WARN("Cannot calculate bounding box from empty mesh");
     return ecs::bounds::createInvalid();
   }
 
@@ -481,7 +478,7 @@ void CgltfModelLoader::processBoundingBox(ecs::Mesh* mesh, const cgltf_primitive
     mesh->boundingBox = extractBoundingBoxFromAccessor(positionAccessor);
 
     if (ecs::bounds::isValid(mesh->boundingBox)) {
-      GlobalLogger::Log(LogLevel::Debug, "Bounding box extracted from GLTF accessor data");
+      LOG_DEBUG("Bounding box extracted from GLTF accessor data");
       return;
     }
   }
@@ -489,9 +486,9 @@ void CgltfModelLoader::processBoundingBox(ecs::Mesh* mesh, const cgltf_primitive
   mesh->boundingBox = calculateBoundingBoxFromVertices(mesh);
 
   if (ecs::bounds::isValid(mesh->boundingBox)) {
-    GlobalLogger::Log(LogLevel::Debug, "Bounding box calculated from vertex data");
+    LOG_DEBUG("Bounding box calculated from vertex data");
   } else {
-    GlobalLogger::Log(LogLevel::Warning, "Failed to calculate valid bounding box for mesh");
+    LOG_WARN("Failed to calculate valid bounding box for mesh");
   }
 }
 

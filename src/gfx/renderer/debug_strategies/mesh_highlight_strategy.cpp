@@ -112,7 +112,7 @@ void MeshHighlightStrategy::render(const RenderContext& context) {
 
   uint32_t currentIndex = context.currentImageIndex;
   if (currentIndex >= m_framebuffers.size()) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid framebuffer index");
+    LOG_ERROR("Invalid framebuffer index");
     return;
   }
 
@@ -183,7 +183,7 @@ void MeshHighlightStrategy::clearSceneResources() {
   m_drawData.clear();
   m_pipelineCache.clear();
   m_highlightParamsCache.clear();
-  GlobalLogger::Log(LogLevel::Info, "Mesh highlight strategy resources cleared for scene switch");
+  LOG_INFO("Mesh highlight strategy resources cleared for scene switch");
 }
 
 void MeshHighlightStrategy::cleanup() {
@@ -267,7 +267,7 @@ void MeshHighlightStrategy::setupVertexInput_(rhi::GraphicsPipelineDesc& pipelin
 
 void MeshHighlightStrategy::createFramebuffers_(const math::Dimension2i& dimension) {
   if (!m_renderPass) {
-    GlobalLogger::Log(LogLevel::Error, "Render pass must be created before framebuffer");
+    LOG_ERROR("Render pass must be created before framebuffer");
     return;
   }
 
@@ -540,7 +540,7 @@ void MeshHighlightStrategy::prepareDrawCalls_(const RenderContext& context) {
       rhi::GraphicsPipeline* outlinePipeline     = getOrCreateOutlinePipeline_(pipelineKey, selectedComp.xRay);
 
       if (!stencilMarkPipeline || !outlinePipeline) {
-        GlobalLogger::Log(LogLevel::Error, "Failed to create highlight pipelines");
+        LOG_ERROR("Failed to create highlight pipelines");
         continue;
       }
 

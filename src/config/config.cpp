@@ -1,11 +1,11 @@
 #include "config/config.h"
 
 #include "file_loader/file_system_manager.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 namespace arise {
 void Config::reloadAsync() {
-  GlobalLogger::Log(LogLevel::Info, "Reloading config due to file modification...");
+  LOG_INFO("Reloading config due to file modification...");
   loadFromFileAsync(m_filePath_);
   return;
 }
@@ -22,14 +22,14 @@ bool Config::loadFromFile(const std::filesystem::path& filePath) {
 
   auto fileContent = FileSystemManager::readFile(filePath);
   if (!fileContent) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to read file: " + filePath.string());
+    LOG_ERROR("Failed to read file: " + filePath.string());
     return false;
   }
 
   m_root_.Parse(fileContent->c_str());
 
   if (m_root_.HasParseError()) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to parse JSON in file: " + filePath.string());
+    LOG_ERROR("Failed to parse JSON in file: " + filePath.string());
     return false;
   }
 
@@ -39,7 +39,7 @@ bool Config::loadFromFile(const std::filesystem::path& filePath) {
 [[nodiscard]] std::string Config::toString() const {
   asyncLoadComplete_();
   if (!m_root_.IsObject()) {
-    GlobalLogger::Log(LogLevel::Error, "Configuration not loaded or root is not an object.");
+    LOG_ERROR("Configuration not loaded or root is not an object.");
     return "";
   }
 
@@ -71,7 +71,7 @@ const ConfigValue& Config::getMember_(const std::string& key) const {
 
       if (!currentValue->IsObject() || !currentValue->HasMember(keyPart.c_str())) {
         static ConfigValue nullValue(rapidjson::kNullType);
-        GlobalLogger::Log(LogLevel::Error, "Key \"" + key + "\" not found in config (failed at \"" + keyPart + "\").");
+        LOG_ERROR("Key \"" + key + "\" not found in config (failed at \"" + keyPart + "\").");
         return nullValue;
       }
 
@@ -90,7 +90,7 @@ const ConfigValue& Config::getMember_(const std::string& key) const {
   // Handle direct key access (original behavior)
   if (!m_root_.HasMember(key.c_str())) {
     static ConfigValue nullValue(rapidjson::kNullType);
-    GlobalLogger::Log(LogLevel::Error, "Key \"" + key + "\" not found in config.");
+    LOG_ERROR("Key \"" + key + "\" not found in config.");
     return nullValue;
   }
   return m_root_[key.c_str()];

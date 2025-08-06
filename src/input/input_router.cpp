@@ -1,6 +1,6 @@
 #include "input/input_router.h"
 
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 #include <algorithm>
 

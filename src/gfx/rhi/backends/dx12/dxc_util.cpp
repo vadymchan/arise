@@ -18,23 +18,23 @@ std::shared_ptr<IDxcBlob> DxcUtil::compileHlslCode(const std::string&          h
                                                    ShaderBackend               backend,
                                                    const OptionalShaderParams& optionalParams) {
   if (!m_dxcCreateFn) {
-    GlobalLogger::Log(LogLevel::Error, "DXC library not loaded properly.");
+    LOG_ERROR("DXC library not loaded properly.");
     return nullptr;
   }
 
   std::wstring targetProfile = getTargetProfile_(stage);
   if (targetProfile.empty()) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid shader stage provided.");
+    LOG_ERROR("Invalid shader stage provided.");
     return nullptr;
   }
 
-  GlobalLogger::Log(LogLevel::Info, "Compiling shader for target: " + wstring_to_utf8_(targetProfile));
+  LOG_INFO("Compiling shader for target: " + wstring_to_utf8_(targetProfile));
 
   IDxcCompiler3* compilerRaw = nullptr;
   IDxcUtils*     utilsRaw    = nullptr;
   if (FAILED(m_dxcCreateFn(CLSID_DxcCompiler, IID_PPV_ARGS(&compilerRaw)))
       || FAILED(m_dxcCreateFn(CLSID_DxcUtils, IID_PPV_ARGS(&utilsRaw)))) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create DXC instances.");
+    LOG_ERROR("Failed to create DXC instances.");
     return nullptr;
   }
 
@@ -97,7 +97,7 @@ std::shared_ptr<IDxcBlob> DxcUtil::compileHlslCode(const std::string&          h
   HRESULT     hr
       = compiler->Compile(&sourceBuf, args.data(), (UINT)args.size(), includeHandler.get(), IID_PPV_ARGS(&resultRaw));
   if (FAILED(hr) || !resultRaw) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to compile shader.");
+    LOG_ERROR("Failed to compile shader.");
     return nullptr;
   }
   auto result = MakeDxcSharedPtr(resultRaw);
@@ -106,22 +106,20 @@ std::shared_ptr<IDxcBlob> DxcUtil::compileHlslCode(const std::string&          h
   hr                      = result->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&errorsRaw), nullptr);
   auto errorsPtr          = MakeDxcSharedPtr(errorsRaw);
   if (errorsPtr && errorsPtr->GetStringLength() > 0) {
-    GlobalLogger::Log(
-        LogLevel::Warning,
-        std::string(errorsPtr->GetStringPointer(), errorsPtr->GetStringPointer() + errorsPtr->GetStringLength()));
+    LOG_WARN(std::string(errorsPtr->GetStringPointer(), errorsPtr->GetStringPointer() + errorsPtr->GetStringLength()));
   }
 
   HRESULT status;
   result->GetStatus(&status);
   if (FAILED(status)) {
-    GlobalLogger::Log(LogLevel::Error, "Shader compilation failed.");
+    LOG_ERROR("Shader compilation failed.");
     return nullptr;
   }
 
   IDxcBlob* blobRaw = nullptr;
   hr                = result->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&blobRaw), nullptr);
   if (FAILED(hr) || !blobRaw) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to retrieve shader blob.");
+    LOG_ERROR("Failed to retrieve shader blob.");
     return nullptr;
   }
 
@@ -132,7 +130,7 @@ gfx::rhi::ShaderMeta DxcUtil::reflectShader(const std::shared_ptr<IDxcBlob>& sha
                                             gfx::rhi::ShaderStageFlag        stage,
                                             ShaderBackend                    backend) {
   if (!shaderBlob) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid shader blob provided for reflection.");
+    LOG_ERROR("Invalid shader blob provided for reflection.");
     return {};
   }
 
@@ -142,7 +140,7 @@ gfx::rhi::ShaderMeta DxcUtil::reflectShader(const std::shared_ptr<IDxcBlob>& sha
     case ShaderBackend::SPIRV:
       return reflectSpirv_(shaderBlob, stage);
     default:
-      GlobalLogger::Log(LogLevel::Error, "Unsupported shader backend for reflection.");
+      LOG_ERROR("Unsupported shader backend for reflection.");
       return {};
   }
 }
@@ -207,7 +205,7 @@ std::wstring DxcUtil::getTargetProfile_(gfx::rhi::ShaderStageFlag stage) {
 std::string DxcUtil::readFile_(const std::filesystem::path& path) {
   std::ifstream ifs(path, std::ios::binary);
   if (!ifs) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to open shader file: " + path.string());
+    LOG_ERROR("Failed to open shader file: " + path.string());
     return {};
   }
   std::stringstream ss;
@@ -225,13 +223,13 @@ gfx::rhi::ShaderMeta DxcUtil::reflectDxil_(const std::shared_ptr<IDxcBlob>& shad
   gfx::rhi::ShaderMeta meta;
 
   if (!m_dxcCreateFn) {
-    GlobalLogger::Log(LogLevel::Error, "DXC library not loaded for reflection.");
+    LOG_ERROR("DXC library not loaded for reflection.");
     return meta;
   }
 
   IDxcUtils* utilsRaw = nullptr;
   if (FAILED(m_dxcCreateFn(CLSID_DxcUtils, IID_PPV_ARGS(&utilsRaw)))) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create DXC Utils for reflection.");
+    LOG_ERROR("Failed to create DXC Utils for reflection.");
     return meta;
   }
   auto utils = MakeDxcSharedPtr(utilsRaw);
@@ -244,14 +242,14 @@ gfx::rhi::ShaderMeta DxcUtil::reflectDxil_(const std::shared_ptr<IDxcBlob>& shad
   ID3D12ShaderReflection* reflectionRaw = nullptr;
   HRESULT                 hr            = utils->CreateReflection(&reflectionBuffer, IID_PPV_ARGS(&reflectionRaw));
   if (FAILED(hr) || !reflectionRaw) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create shader reflection for DXIL.");
+    LOG_ERROR("Failed to create shader reflection for DXIL.");
     return meta;
   }
   auto reflection = MakeDxcSharedPtr(reflectionRaw);
 
   D3D12_SHADER_DESC shaderDesc;
   if (FAILED(reflection->GetDesc(&shaderDesc))) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to get shader description.");
+    LOG_ERROR("Failed to get shader description.");
     return meta;
   }
 
@@ -351,8 +349,7 @@ gfx::rhi::ShaderMeta DxcUtil::reflectDxil_(const std::shared_ptr<IDxcBlob>& shad
     }
   }
 
-  GlobalLogger::Log(LogLevel::Info,
-                    "Extracted " + std::to_string(meta.bindings.size()) + " resource bindings from DXIL shader.");
+  LOG_INFO("Extracted " + std::to_string(meta.bindings.size()) + " resource bindings from DXIL shader.");
 
   return meta;
 }
@@ -367,7 +364,7 @@ gfx::rhi::ShaderMeta DxcUtil::reflectSpirv_(const std::shared_ptr<IDxcBlob>& sha
       = spvReflectCreateShaderModule(shaderBlob->GetBufferSize(), shaderBlob->GetBufferPointer(), &module);
 
   if (result != SPV_REFLECT_RESULT_SUCCESS) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create SPIRV reflection module.");
+    LOG_ERROR("Failed to create SPIRV reflection module.");
     return meta;
   }
 
@@ -517,11 +514,10 @@ gfx::rhi::ShaderMeta DxcUtil::reflectSpirv_(const std::shared_ptr<IDxcBlob>& sha
 
   spvReflectDestroyShaderModule(&module);
 
-  GlobalLogger::Log(LogLevel::Info,
-                    "Extracted " + std::to_string(meta.bindings.size()) + " resource bindings from SPIRV shader.");
+  LOG_INFO("Extracted " + std::to_string(meta.bindings.size()) + " resource bindings from SPIRV shader.");
 
 #else
-  GlobalLogger::Log(LogLevel::Warning, "SPIRV reflection not available - SPIRV-Reflect not enabled.");
+  LOG_WARN("SPIRV reflection not available - SPIRV-Reflect not enabled.");
 #endif
 
   return meta;

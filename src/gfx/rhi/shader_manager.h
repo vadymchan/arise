@@ -9,7 +9,7 @@
 #include "gfx/rhi/interface/shader.h"
 #include "gfx/rhi/shader_reflection/shader_reflection_types.h"
 #include "utils/hot_reload/hot_reload_manager.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 #include "utils/service/service_locator.h"
 
 #include <algorithm>
@@ -76,7 +76,7 @@ class ShaderManager {
 
     auto it = m_loadedShaders_.find(rel);
     if (it == m_loadedShaders_.end()) {
-      GlobalLogger::Log(LogLevel::Warning, "Cannot reload shader, not loaded: " + path.string());
+      LOG_WARN("Cannot reload shader, not loaded: " + path.string());
       return;
     }
 
@@ -87,7 +87,7 @@ class ShaderManager {
     auto         compiledShader = DxcUtil::s_get().compileHlslFile(path, shader->getStage(), wEntryPoint, backend);
 
     if (!compiledShader) {
-      GlobalLogger::Log(LogLevel::Error, "Shader compilation failed: " + path.string());
+      LOG_ERROR("Shader compilation failed: " + path.string());
       return;
     }
 
@@ -104,7 +104,7 @@ class ShaderManager {
       }
     }
 
-    GlobalLogger::Log(LogLevel::Info, "Reloaded shader: " + path.string());
+    LOG_INFO("Reloaded shader: " + path.string());
   }
 
   void release() {
@@ -132,7 +132,7 @@ class ShaderManager {
   Shader* createShader(const std::filesystem::path& path, const std::string& entryPoint) {
     auto shader = createShaderObject(path, entryPoint);
     if (!shader) {
-      GlobalLogger::Log(LogLevel::Error, "Failed to create shader: " + path.string());
+      LOG_ERROR("Failed to create shader: " + path.string());
       return nullptr;
     }
 
@@ -158,7 +158,7 @@ class ShaderManager {
     auto compiledShader = DxcUtil::s_get().compileHlslFile(path, stage, wEntryPoint, backend);
 
     if (!compiledShader) {
-      GlobalLogger::Log(LogLevel::Error, "Shader compilation failed: " + path.string());
+      LOG_ERROR("Shader compilation failed: " + path.string());
       return nullptr;
     }
 
@@ -213,8 +213,7 @@ class ShaderManager {
     }
 
     // Default to All if unable to determine
-    GlobalLogger::Log(LogLevel::Warning,
-                      "Could not determine shader stage from extension: " + stageExt + ". Using All as default.");
+    LOG_WARN("Could not determine shader stage from extension: " + stageExt + ". Using All as default.");
     return ShaderStageFlag::All;
   }
 

@@ -6,19 +6,19 @@
 
 #include "gfx/rhi/backends/dx12/command_buffer_dx12.h"
 #include "gfx/rhi/backends/dx12/device_dx12.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 namespace arise {
 namespace gpu {
 
 bool GpuProfilerDx12::initialize(gfx::rhi::Device* device) {
   if (m_initialized) {
-    GlobalLogger::Log(LogLevel::Warning, "GpuProfilerDx12 already initialized");
+    LOG_WARN("GpuProfilerDx12 already initialized");
     return true;
   }
 
   if (!device) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid DirectX 12 parameters for profiler");
+    LOG_ERROR("Invalid DirectX 12 parameters for profiler");
     return false;
   }
 
@@ -27,11 +27,11 @@ bool GpuProfilerDx12::initialize(gfx::rhi::Device* device) {
   m_tracyContext   = TracyD3D12Context(deviceDx12->getDevice(), deviceDx12->getCommandQueue());
 
   if (!m_tracyContext) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create Tracy DirectX 12 context");
+    LOG_ERROR("Failed to create Tracy DirectX 12 context");
     return false;
   }
 
-  GlobalLogger::Log(LogLevel::Info, "Tracy DirectX 12 profiler initialized");
+  LOG_INFO("Tracy DirectX 12 profiler initialized");
 #endif
 
   setApi(gfx::rhi::RenderingApi::Dx12);
@@ -41,7 +41,7 @@ bool GpuProfilerDx12::initialize(gfx::rhi::Device* device) {
 
 void GpuProfilerDx12::destroy() {
   if (!m_initialized) {
-    GlobalLogger::Log(LogLevel::Warning, "GpuProfierDx12 already destroyed or not initialized");
+    LOG_WARN("GpuProfierDx12 already destroyed or not initialized");
     return;
   }
 
@@ -49,7 +49,7 @@ void GpuProfilerDx12::destroy() {
   if (m_tracyContext) {
     TracyD3D12Destroy(m_tracyContext);
     m_tracyContext = nullptr;
-    GlobalLogger::Log(LogLevel::Info, "Tracy DirectX 12 profiler destroyed");
+    LOG_INFO("Tracy DirectX 12 profiler destroyed");
   }
 #endif
 
@@ -58,7 +58,7 @@ void GpuProfilerDx12::destroy() {
 
 void GpuProfilerDx12::setContextName(const std::string& name) {
   if (!m_initialized) {
-    GlobalLogger::Log(LogLevel::Warning, "GpuProfierDx12 already destroyed or not initialized");
+    LOG_WARN("GpuProfierDx12 already destroyed or not initialized");
     return;
   }
 
@@ -71,7 +71,7 @@ void GpuProfilerDx12::setContextName(const std::string& name) {
 
 void GpuProfilerDx12::newFrame() {
   if (!m_initialized) {
-    GlobalLogger::Log(LogLevel::Warning, "GpuProfierDx12 already destroyed or not initialized");
+    LOG_WARN("GpuProfierDx12 already destroyed or not initialized");
     return;
   }
 
@@ -84,7 +84,7 @@ void GpuProfilerDx12::newFrame() {
 
 void GpuProfilerDx12::collect(gfx::rhi::CommandBuffer* commandBuffer) {
   if (!m_initialized) {
-    GlobalLogger::Log(LogLevel::Warning, "GpuProfierDx12 already destroyed or not initialized");
+    LOG_WARN("GpuProfierDx12 already destroyed or not initialized");
     return;
   }
 

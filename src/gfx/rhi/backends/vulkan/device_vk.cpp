@@ -15,7 +15,7 @@
 #include "gfx/rhi/shader_reflection/pipeline_utils.h"
 #include "platform/common/window.h"
 #include "profiler/backends/gpu_profiler.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 #include "utils/service/service_locator.h"
 
 #include <SDL_vulkan.h>
@@ -178,7 +178,7 @@ bool DeviceVk::setupDebugMessenger_() {
 bool DeviceVk::createSurface_() {
   if (!SDL_Vulkan_CreateSurface(
           static_cast<SDL_Window*>(getWindow()->getNativeWindowHandle()), m_instance_, &m_surface_)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create Vulkan surface: " + std::string(SDL_GetError()));
+    LOG_ERROR("Failed to create Vulkan surface: " + std::string(SDL_GetError()));
     return false;
   }
 
@@ -190,7 +190,7 @@ bool DeviceVk::pickPhysicalDevice_() {
   vkEnumeratePhysicalDevices(m_instance_, &deviceCount, nullptr);
 
   if (deviceCount == 0) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to find GPUs with Vulkan support");
+    LOG_ERROR("Failed to find GPUs with Vulkan support");
     return false;
   }
 
@@ -309,7 +309,7 @@ bool DeviceVk::createAllocator_() {
 
   VkResult result = vmaCreateAllocator(&allocatorInfo, &m_allocator_);
   if (result != VK_SUCCESS) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create Vulkan Memory Allocator");
+    LOG_ERROR("Failed to create Vulkan Memory Allocator");
     return false;
   }
 
@@ -334,7 +334,7 @@ VkBuffer DeviceVk::createStagingBuffer(const void* data, size_t size, VmaAllocat
       = vmaCreateBuffer(m_allocator_, &bufferInfo, &allocInfo, &stagingBuffer, &allocation, &allocationInfo);
 
   if (result != VK_SUCCESS) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create staging buffer with VMA");
+    LOG_ERROR("Failed to create staging buffer with VMA");
     return VK_NULL_HANDLE;
   }
 
@@ -444,17 +444,17 @@ std::unique_ptr<SwapChain> DeviceVk::createSwapChain(const SwapchainDesc& desc) 
 void DeviceVk::updateBuffer(Buffer* buffer, const void* data, size_t size, size_t offset) {
   BufferVk* bufferVk = dynamic_cast<BufferVk*>(buffer);
   if (!bufferVk) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid buffer type");
+    LOG_ERROR("Invalid buffer type");
     return;
   }
 
   if (!data || size == 0) {
-    GlobalLogger::Log(LogLevel::Warning, "No data to update");
+    LOG_WARN("No data to update");
     return;
   }
 
   if (offset + size > bufferVk->getSize()) {
-    GlobalLogger::Log(LogLevel::Error, "Update exceeds buffer size");
+    LOG_ERROR("Update exceeds buffer size");
     return;
   }
 
@@ -468,7 +468,7 @@ void DeviceVk::updateBuffer(Buffer* buffer, const void* data, size_t size, size_
   VkBuffer      stagingBuffer     = createStagingBuffer(data, size, stagingAllocation);
 
   if (stagingBuffer == VK_NULL_HANDLE) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create staging buffer");
+    LOG_ERROR("Failed to create staging buffer");
     return;
   }
 
@@ -566,7 +566,7 @@ void DeviceVk::submitCommandBuffer(CommandBuffer*                 cmdBuffer,
     // though there's already mutex here
     std::lock_guard<std::mutex> lock(m_queueSubmitMutex);
     if (vkQueueSubmit(m_graphicsQueue_, 1, &submitInfo, fenceVk) != VK_SUCCESS) {
-      GlobalLogger::Log(LogLevel::Error, "Failed to submit command buffer");
+      LOG_ERROR("Failed to submit command buffer");
     }
   }
 }

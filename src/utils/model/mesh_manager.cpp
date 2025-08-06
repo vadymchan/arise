@@ -1,6 +1,6 @@
 #include "utils/model/mesh_manager.h"
 
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 namespace arise {
 
@@ -8,7 +8,7 @@ ecs::Mesh* MeshManager::addMesh(std::unique_ptr<ecs::Mesh> mesh, const std::file
   std::lock_guard<std::mutex> lock(m_mutex);
 
   if (!mesh) {
-    GlobalLogger::Log(LogLevel::Error, "Attempting to add null mesh");
+    LOG_ERROR("Attempting to add null mesh");
     return nullptr;
   }
 
@@ -16,8 +16,7 @@ ecs::Mesh* MeshManager::addMesh(std::unique_ptr<ecs::Mesh> mesh, const std::file
 
   auto it = m_meshes.find(key);
   if (it != m_meshes.end()) {
-    GlobalLogger::Log(LogLevel::Warning,
-                      "Mesh '" + mesh->meshName + "' from " + sourcePath.string() + " already exists. Overwriting.");
+    LOG_WARN("Mesh '" + mesh->meshName + "' from " + sourcePath.string() + " already exists. Overwriting.");
   }
 
   ecs::Mesh* meshPtr = mesh.get();
@@ -37,7 +36,7 @@ ecs::Mesh* MeshManager::getMesh(const std::filesystem::path& sourcePath, const s
     return it->second.get();
   }
 
-  GlobalLogger::Log(LogLevel::Warning, "Mesh '" + meshName + "' from " + sourcePath.string() + " not found");
+  LOG_WARN("Mesh '" + meshName + "' from " + sourcePath.string() + " not found");
   return nullptr;
 }
 

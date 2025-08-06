@@ -1,7 +1,7 @@
 #include "utils/image/image_manager.h"
 
 #include "utils/image/image_loader_manager.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 #include "utils/service/service_locator.h"
 
 namespace arise {
@@ -14,7 +14,7 @@ Image* ImageManager::getImage(const std::filesystem::path& filepath) {
 
   auto imageLoaderManager = ServiceLocator::s_get<ImageLoaderManager>();
   if (!imageLoaderManager) {
-    GlobalLogger::Log(LogLevel::Error, "ImageLoaderManager not available in ServiceLocator.");
+    LOG_ERROR("ImageLoaderManager not available in ServiceLocator.");
     return nullptr;
   }
 
@@ -25,7 +25,7 @@ Image* ImageManager::getImage(const std::filesystem::path& filepath) {
     return imagePtr;
   }
 
-  GlobalLogger::Log(LogLevel::Warning, "Failed to load image: " + filepath.string());
+  LOG_WARN("Failed to load image: " + filepath.string());
   return nullptr;
 }
 

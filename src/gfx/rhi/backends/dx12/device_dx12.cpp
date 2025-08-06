@@ -19,7 +19,7 @@
 #include "gfx/rhi/shader_reflection/pipeline_utils.h"
 #include "platform/common/window.h"
 #include "profiler/backends/gpu_profiler.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 #include "utils/service/service_locator.h"
 
 namespace arise {
@@ -51,7 +51,7 @@ DeviceDx12::DeviceDx12(const DeviceDesc& desc)
 
   if (!createFactory_() || !createDevice_() || !createAllocator_() || !createCommandQueue_() || !createCommandPools_()
       || !createDescriptorHeaps_()) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to initialize DirectX 12 device");
+    LOG_ERROR("Failed to initialize DirectX 12 device");
   }
 }
 
@@ -147,7 +147,7 @@ bool DeviceDx12::findAdapter_(IDXGIAdapter1** adapter) {
 bool DeviceDx12::createDevice_() {
   ComPtr<IDXGIAdapter1> adapter;
   if (!findAdapter_(adapter.GetAddressOf())) {
-    GlobalLogger::Log(LogLevel::Error, "No suitable DirectX 12 adapter found!");
+    LOG_ERROR("No suitable DirectX 12 adapter found!");
     return false;
   }
 
@@ -156,7 +156,7 @@ bool DeviceDx12::createDevice_() {
   HRESULT hr = D3D12CreateDevice(m_adapter_.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&m_device_));
 
   if (FAILED(hr)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create DirectX 12 device!");
+    LOG_ERROR("Failed to create DirectX 12 device!");
     return false;
   }
 
@@ -187,7 +187,7 @@ bool DeviceDx12::createCommandQueue_() {
 
   HRESULT hr = m_device_->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_commandQueue_));
   if (FAILED(hr)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create DirectX 12 command queue");
+    LOG_ERROR("Failed to create DirectX 12 command queue");
     return false;
   }
 
@@ -201,25 +201,25 @@ bool DeviceDx12::createCommandPools_() {
 bool DeviceDx12::createDescriptorHeaps_() {
   if (!m_cpuRtvHeap.initialize(
           m_device_.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, DESCRIPTOR_HEAP_CAPACITY_CPU_RTV, false)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create RTV descriptor heap");
+    LOG_ERROR("Failed to create RTV descriptor heap");
     return false;
   }
 
   if (!m_cpuDsvHeap.initialize(
           m_device_.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_DSV, DESCRIPTOR_HEAP_CAPACITY_CPU_DSV, false)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create DSV descriptor heap");
+    LOG_ERROR("Failed to create DSV descriptor heap");
     return false;
   }
 
   if (!m_cpuCbvSrvUavHeap.initialize(
           m_device_.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, DESCRIPTOR_HEAP_CAPACITY_CPU_CBV_SRV_UAV, false)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create CPU CBV/SRV/UAV descriptor heap");
+    LOG_ERROR("Failed to create CPU CBV/SRV/UAV descriptor heap");
     return false;
   }
 
   if (!m_cpuSamplerHeap.initialize(
           m_device_.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, DESCRIPTOR_HEAP_CAPACITY_CPU_SAMPLER, false)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create CPU Sampler descriptor heap");
+    LOG_ERROR("Failed to create CPU Sampler descriptor heap");
     return false;
   }
 
@@ -233,7 +233,7 @@ bool DeviceDx12::createAllocator_() {
 
   HRESULT hr = D3D12MA::CreateAllocator(&allocatorDesc, &m_allocator_);
   if (FAILED(hr)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create D3D12 Memory Allocator");
+    LOG_ERROR("Failed to create D3D12 Memory Allocator");
     return false;
   }
 
@@ -330,7 +330,7 @@ std::unique_ptr<CommandBuffer> DeviceDx12::createCommandBuffer(const CommandBuff
                                      IID_PPV_ARGS(&commandList));
 
   if (FAILED(hr)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create command list");
+    LOG_ERROR("Failed to create command list");
     m_commandAllocatorManager_.returnCommandAllocator(commandAllocator);
     return nullptr;
   }
@@ -352,7 +352,7 @@ std::unique_ptr<Semaphore> DeviceDx12::createSemaphore() {
 std::unique_ptr<SwapChain> DeviceDx12::createSwapChain(const SwapchainDesc& desc) {
   m_frameResourcesManager.release();
   if (!m_frameResourcesManager.initialize(this, desc.bufferCount)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to initialize frame resources manager for DX12");
+    LOG_ERROR("Failed to initialize frame resources manager for DX12");
     return nullptr;
   }
   return std::make_unique<SwapChainDx12>(desc, this);
@@ -361,17 +361,17 @@ std::unique_ptr<SwapChain> DeviceDx12::createSwapChain(const SwapchainDesc& desc
 void DeviceDx12::updateBuffer(Buffer* buffer, const void* data, size_t size, size_t offset) {
   BufferDx12* bufferDx12 = dynamic_cast<BufferDx12*>(buffer);
   if (!bufferDx12) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid buffer type");
+    LOG_ERROR("Invalid buffer type");
     return;
   }
 
   if (!data || size == 0) {
-    GlobalLogger::Log(LogLevel::Warning, "No data to update");
+    LOG_WARN("No data to update");
     return;
   }
 
   if (offset + size > bufferDx12->getSize()) {
-    GlobalLogger::Log(LogLevel::Error, "Update exceeds buffer size");
+    LOG_ERROR("Update exceeds buffer size");
     return;
   }
 
@@ -393,7 +393,7 @@ void DeviceDx12::updateBuffer(Buffer* buffer, const void* data, size_t size, siz
   BufferDx12*             stagingBufferDx12 = static_cast<BufferDx12*>(stagingBuffer.get());
 
   if (!stagingBufferDx12->update_(data, size, 0)) {
-    GlobalLogger::Log(LogLevel::Error, "updateBuffer: Failed to update staging buffer");
+    LOG_ERROR("updateBuffer: Failed to update staging buffer");
     return;
   }
 

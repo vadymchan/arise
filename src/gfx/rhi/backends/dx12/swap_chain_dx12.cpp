@@ -6,7 +6,7 @@
 #include "gfx/rhi/backends/dx12/synchronization_dx12.h"
 #include "gfx/rhi/backends/dx12/texture_dx12.h"
 #include "platform/common/window.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 #include <SDL_syswm.h>
 
@@ -18,17 +18,17 @@ SwapChainDx12::SwapChainDx12(const SwapchainDesc& desc, DeviceDx12* device)
     : SwapChain(desc)
     , m_device_(device) {
   if (!createSwapChain_()) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create swap chain (IDXGISwapChain)");
+    LOG_ERROR("Failed to create swap chain (IDXGISwapChain)");
     return;
   }
 
   if (!createRenderTargetViews_()) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create render target views for swap chain");
+    LOG_ERROR("Failed to create render target views for swap chain");
     return;
   }
 
   if (!createBackBufferTextures_()) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create texture objects for swap chain back buffers");
+    LOG_ERROR("Failed to create texture objects for swap chain back buffers");
     return;
   }
 }
@@ -68,7 +68,7 @@ bool SwapChainDx12::createSwapChain_() {
   SDL_SysWMinfo wmInfo;
   SDL_VERSION(&wmInfo.version);
   if (!SDL_GetWindowWMInfo(static_cast<SDL_Window*>(window->getNativeWindowHandle()), &wmInfo)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to get window handle" + std::string(SDL_GetError()));
+    LOG_ERROR("Failed to get window handle" + std::string(SDL_GetError()));
     return false;
   }
 
@@ -90,13 +90,13 @@ bool SwapChainDx12::createSwapChain_() {
       m_device_->getCommandQueue(), hwnd, &swapChainDesc, nullptr, nullptr, &swapChain1);
 
   if (FAILED(hr)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create swap chain");
+    LOG_ERROR("Failed to create swap chain");
     return false;
   }
 
   hr = swapChain1.As(&m_swapChain_);
   if (FAILED(hr)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to convert swap chain to IDXGISwapChain3");
+    LOG_ERROR("Failed to convert swap chain to IDXGISwapChain3");
     return false;
   }
 
@@ -114,20 +114,20 @@ bool SwapChainDx12::createRenderTargetViews_() {
 
   auto* rtvHeap = m_device_->getCpuRtvHeap();
   if (!rtvHeap) {
-    GlobalLogger::Log(LogLevel::Error, "RTV heap not available");
+    LOG_ERROR("RTV heap not available");
     return false;
   }
 
   for (uint32_t i = 0; i < bufferCount; i++) {
     HRESULT hr = m_swapChain_->GetBuffer(i, IID_PPV_ARGS(&m_backBuffers_[i]));
     if (FAILED(hr)) {
-      GlobalLogger::Log(LogLevel::Error, "Failed to get swap chain buffer");
+      LOG_ERROR("Failed to get swap chain buffer");
       return false;
     }
 
     m_backBuferRtvDescriptorIndices[i] = rtvHeap->allocate();
     if (m_backBuferRtvDescriptorIndices[i] == UINT32_MAX) {
-      GlobalLogger::Log(LogLevel::Error, "Failed to allocate RTV descriptor");
+      LOG_ERROR("Failed to allocate RTV descriptor");
       return false;
     }
 
@@ -180,7 +180,7 @@ bool SwapChainDx12::acquireNextImage(Semaphore* signalSemaphore) {
     constexpr DWORD waitTimeOneSecond = 1000;
     DWORD           waitResult        = WaitForSingleObjectEx(m_frameLatencyWaitableObject_, waitTimeOneSecond, TRUE);
     if (waitResult != WAIT_OBJECT_0) {
-      GlobalLogger::Log(LogLevel::Warning, "Failed to wait for frame latency waitable object");
+      LOG_WARN("Failed to wait for frame latency waitable object");
     }
   }
 
@@ -202,9 +202,9 @@ bool SwapChainDx12::present(Semaphore* waitSemaphore) {
 
   if (FAILED(hr)) {
     if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET) {
-      GlobalLogger::Log(LogLevel::Error, "GPU device removed or reset");
+      LOG_ERROR("GPU device removed or reset");
     } else {
-      GlobalLogger::Log(LogLevel::Error, "Failed to present swap chain");
+      LOG_ERROR("Failed to present swap chain");
     }
     return false;
   }
@@ -231,14 +231,14 @@ bool SwapChainDx12::resize(uint32_t width, uint32_t height) {
       swapChainDesc.BufferCount, width, height, swapChainDesc.Format, swapChainDesc.Flags);
 
   if (FAILED(hr)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to resize swap chain buffers");
+    LOG_ERROR("Failed to resize swap chain buffers");
     return false;
   }
 
   m_currentFrameIndex = m_swapChain_->GetCurrentBackBufferIndex();
 
   if (!createRenderTargetViews_() || !createBackBufferTextures_()) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to recreate render targets after resize");
+    LOG_ERROR("Failed to recreate render targets after resize");
     return false;
   }
 

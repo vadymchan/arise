@@ -3,7 +3,7 @@
 #ifdef ARISE_USE_DX12
 
 #include "gfx/rhi/backends/dx12/device_dx12.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 namespace arise {
 namespace gfx {
@@ -20,13 +20,13 @@ FenceDx12::FenceDx12(const FenceDesc& desc, DeviceDx12* device)
   HRESULT hr = device->getDevice()->CreateFence(m_fenceValue_, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence_));
 
   if (FAILED(hr)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create DirectX12 fence");
+    LOG_ERROR("Failed to create DirectX12 fence");
     return;
   }
 
   m_event_ = CreateEvent(nullptr, FALSE, FALSE, nullptr);
   if (m_event_ == nullptr) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create fence event handle");
+    LOG_ERROR("Failed to create fence event handle");
   }
 }
 
@@ -49,7 +49,7 @@ bool FenceDx12::wait(uint64_t timeout) {
 
   HRESULT hr = m_fence_->SetEventOnCompletion(m_fenceValue_, m_event_);
   if (FAILED(hr)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to set fence completion event");
+    LOG_ERROR("Failed to set fence completion event");
     return false;
   }
 
@@ -79,7 +79,7 @@ void FenceDx12::signal(ID3D12CommandQueue* queue) {
 
   HRESULT hr = queue->Signal(m_fence_.Get(), m_fenceValue_);
   if (FAILED(hr)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to signal DirectX12 fence");
+    LOG_ERROR("Failed to signal DirectX12 fence");
   }
 }
 
@@ -91,12 +91,12 @@ SemaphoreDx12::SemaphoreDx12(DeviceDx12* device)
     : m_device_(device) {
   HRESULT hr = device->getDevice()->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence_));
   if (FAILED(hr)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create DirectX12 fence for semaphore");
+    LOG_ERROR("Failed to create DirectX12 fence for semaphore");
   }
 
   m_event_ = CreateEvent(nullptr, FALSE, FALSE, nullptr);
   if (m_event_ == nullptr) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create event for DirectX12 semaphore");
+    LOG_ERROR("Failed to create event for DirectX12 semaphore");
   }
 }
 
@@ -112,7 +112,7 @@ void SemaphoreDx12::signal(ID3D12CommandQueue* queue) {
 
   HRESULT hr = queue->Signal(m_fence_.Get(), m_value_);
   if (FAILED(hr)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to signal DirectX12 semaphore");
+    LOG_ERROR("Failed to signal DirectX12 semaphore");
   }
 }
 
@@ -120,7 +120,7 @@ void SemaphoreDx12::wait() {
   if (m_fence_->GetCompletedValue() < m_value_) {
     HRESULT hr = m_fence_->SetEventOnCompletion(m_value_, m_event_);
     if (FAILED(hr)) {
-      GlobalLogger::Log(LogLevel::Error, "Failed to set completion event for DirectX12 semaphore");
+      LOG_ERROR("Failed to set completion event for DirectX12 semaphore");
       return;
     }
 

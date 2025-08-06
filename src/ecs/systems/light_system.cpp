@@ -2,7 +2,7 @@
 
 #include "gfx/renderer/render_resource_manager.h"
 #include "gfx/rhi/interface/device.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 #include "utils/memory/align.h"
 
 namespace arise {
@@ -26,7 +26,7 @@ void LightSystem::initialize() {
   createEmptyBuffers_();
   m_initialized = true;
 
-  GlobalLogger::Log(LogLevel::Info, "LightSystem initialized");
+  LOG_INFO("LightSystem initialized");
 }
 
 void LightSystem::update(Scene* scene, float deltaTime) {
@@ -260,7 +260,7 @@ void LightSystem::createOrUpdateDescriptorSet_() {
   if (!m_lightDescriptorSet) {
     auto descriptorSet   = m_device->createDescriptorSet(m_lightLayout);
     m_lightDescriptorSet = m_resourceManager->addDescriptorSet(std::move(descriptorSet), "light_descriptor");
-    GlobalLogger::Log(LogLevel::Info, "Created new light descriptor set");
+    LOG_INFO("Created new light descriptor set");
   }
 
   if (m_lightCountBuffer) {
@@ -357,7 +357,7 @@ void LightSystem::createEmptyBuffers_() {
   m_pointLightCapacity = 1;
   m_spotLightCapacity  = 1;
 
-  GlobalLogger::Log(LogLevel::Info, "Created empty light buffers for Vulkan compatibility");
+  LOG_INFO("Created empty light buffers for Vulkan compatibility");
 }
 
 void LightSystem::createOrResizeBuffer_(size_t             requiredSize,
@@ -381,8 +381,7 @@ void LightSystem::createOrResizeBuffer_(size_t             requiredSize,
     buffer          = m_resourceManager->addBuffer(std::move(newBuffer), debugName);
     currentCapacity = newCapacity;
 
-    GlobalLogger::Log(LogLevel::Info,
-                      "Created/Resized light buffer: " + debugName + " with capacity: " + std::to_string(newCapacity));
+    LOG_INFO("Created/Resized light buffer: " + debugName + " with capacity: " + std::to_string(newCapacity));
   }
 }
 

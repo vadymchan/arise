@@ -10,7 +10,7 @@
 #include "gfx/rhi/backends/vulkan/sampler_vk.h"
 #include "gfx/rhi/backends/vulkan/texture_vk.h"
 #include "profiler/profiler.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 #include <imgui_impl_dx12.h>
 #include <imgui_impl_sdl2.h>
@@ -25,7 +25,7 @@ ImGuiRHIContext::~ImGuiRHIContext() {
 
 bool ImGuiRHIContext::initialize(Window* window, rhi::Device* device, uint32_t swapChainBufferCount) {
   if (!window || !device) {
-    GlobalLogger::Log(LogLevel::Error, "ImGuiRHIContext::initialize: Invalid window or device");
+    LOG_ERROR("ImGuiRHIContext::initialize: Invalid window or device");
     return false;
   }
 
@@ -50,16 +50,16 @@ bool ImGuiRHIContext::initialize(Window* window, rhi::Device* device, uint32_t s
 
   if (m_renderingApi == rhi::RenderingApi::Vulkan) {
     if (!ImGui_ImplSDL2_InitForVulkan(window->getNativeWindowHandle())) {
-      GlobalLogger::Log(LogLevel::Error, "Failed to initialize ImGui SDL2 backend for Vulkan");
+      LOG_ERROR("Failed to initialize ImGui SDL2 backend for Vulkan");
       return false;
     }
   } else if (m_renderingApi == rhi::RenderingApi::Dx12) {
     if (!ImGui_ImplSDL2_InitForD3D(window->getNativeWindowHandle())) {
-      GlobalLogger::Log(LogLevel::Error, "Failed to initialize ImGui SDL2 backend for D3D");
+      LOG_ERROR("Failed to initialize ImGui SDL2 backend for D3D");
       return false;
     }
   } else {
-    GlobalLogger::Log(LogLevel::Error, "Unsupported rendering API for ImGui");
+    LOG_ERROR("Unsupported rendering API for ImGui");
     return false;
   }
 
@@ -86,7 +86,7 @@ bool ImGuiRHIContext::initialize(Window* window, rhi::Device* device, uint32_t s
 
   if (success) {
     m_initialized = true;
-    GlobalLogger::Log(LogLevel::Info, "ImGui RHI context initialized successfully");
+    LOG_INFO("ImGui RHI context initialized successfully");
   }
 
   return success;
@@ -160,13 +160,13 @@ void ImGuiRHIContext::endFrame(rhi::CommandBuffer*      cmdBuffer,
                                uint32_t                 currentFrameIndex) {
   if (!m_initialized || !cmdBuffer || !targetTexture) {
     if (!m_initialized) {
-      GlobalLogger::Log(LogLevel::Warning, "ImGuiRHIContext not initialized in endFrame");
+      LOG_WARN("ImGuiRHIContext not initialized in endFrame");
     }
     if (!cmdBuffer) {
-      GlobalLogger::Log(LogLevel::Warning, "Command buffer is null in endFrame");
+      LOG_WARN("Command buffer is null in endFrame");
     }
     if (!targetTexture) {
-      GlobalLogger::Log(LogLevel::Warning, "Target texture is null in endFrame");
+      LOG_WARN("Target texture is null in endFrame");
     }
     return;
   }
@@ -227,8 +227,7 @@ void ImGuiRHIContext::resize(const math::Dimension2i& newDimensions) {
 
 ImTextureID ImGuiRHIContext::createTextureID(rhi::Texture* texture, uint32_t currentIndex) {
   if (!m_initialized || !texture) {
-    GlobalLogger::Log(LogLevel::Warning,
-                      "Cannot create texture ID - ImGuiRHIContext not initialized or texture is null");
+    LOG_WARN("Cannot create texture ID - ImGuiRHIContext not initialized or texture is null");
     return (ImTextureID)0;
   }
 
@@ -310,7 +309,7 @@ bool ImGuiRHIContext::initializeVulkan(rhi::Device* device, uint32_t swapChainBu
 
   m_imguiPoolManager = std::make_unique<rhi::DescriptorPoolManager>();
   if (!m_imguiPoolManager->initialize(deviceVk->getDevice(), 1000)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to initialize ImGui descriptor pool manager");
+    LOG_ERROR("Failed to initialize ImGui descriptor pool manager");
     return false;
   }
 
@@ -328,14 +327,14 @@ bool ImGuiRHIContext::initializeVulkan(rhi::Device* device, uint32_t swapChainBu
   initInfo.RenderPass                = renderPassVk->getRenderPass();
 
   if (!ImGui_ImplVulkan_Init(&initInfo)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to initialize ImGui Vulkan implementation");
+    LOG_ERROR("Failed to initialize ImGui Vulkan implementation");
     return false;
   }
 
   // Upload fonts
   // ImGui_ImplVulkan_CreateFontsTexture();
 
-  GlobalLogger::Log(LogLevel::Info, "Successfully initialized ImGui Vulkan backend");
+  LOG_INFO("Successfully initialized ImGui Vulkan backend");
   return true;
 }
 
@@ -348,7 +347,7 @@ bool ImGuiRHIContext::initializeDx12(rhi::Device* device, uint32_t swapChainBuff
                                              128,  // Reduced number of descriptors since we're using simple approach
                                              true  // Shader visible
                                              )) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create ImGui descriptor heap");
+    LOG_ERROR("Failed to create ImGui descriptor heap");
     return false;
   }
 
@@ -363,16 +362,16 @@ bool ImGuiRHIContext::initializeDx12(rhi::Device* device, uint32_t swapChainBuff
   initInfo.LegacySingleSrvGpuDescriptor = m_dx12ImGuiDescriptorHeap->getGpuHandle(0);
 
   if (!ImGui_ImplDX12_Init(&initInfo)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to initialize ImGui DX12 implementation");
+    LOG_ERROR("Failed to initialize ImGui DX12 implementation");
     return false;
   }
 
   if (!ImGui_ImplDX12_CreateDeviceObjects()) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create ImGui DX12 device objects");
+    LOG_ERROR("Failed to create ImGui DX12 device objects");
     return false;
   }
 
-  GlobalLogger::Log(LogLevel::Info, "Successfully initialized ImGui DirectX 12 backend");
+  LOG_INFO("Successfully initialized ImGui DirectX 12 backend");
   return true;
 }
 

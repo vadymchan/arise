@@ -3,7 +3,7 @@
 #include "ecs/components/model.h"
 #include "ecs/components/render_model.h"
 #include "ecs/components/transform.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 namespace arise {
 namespace ecs {
@@ -20,9 +20,8 @@ void RenderSystem::update(Scene* scene, float deltaTime) {
   for (auto entity : modelView) {
     auto& renderModel = modelView.get<RenderModel>(entity);
 
-    GlobalLogger::Log(
-        LogLevel::Info,
-        "Entity " + std::to_string(static_cast<int>(entity)) + " has RenderModel: " + renderModel.filePath.string());
+    LOG_INFO("Entity " + std::to_string(static_cast<int>(entity))
+             + " has RenderModel: " + renderModel.filePath.string());
   }
 
   // Handle entities with RenderMesh components
@@ -32,9 +31,8 @@ void RenderSystem::update(Scene* scene, float deltaTime) {
     auto& renderMesh = meshView.get<RenderMesh>(entity);
 
     if (renderMesh.material) {
-      GlobalLogger::Log(
-          LogLevel::Info,
-          "Entity " + std::to_string(static_cast<int>(entity)) + " has Material: " + renderMesh.material->materialName);
+      LOG_INFO("Entity " + std::to_string(static_cast<int>(entity))
+               + " has Material: " + renderMesh.material->materialName);
     }
   }
 }

@@ -6,19 +6,19 @@
 
 #include "gfx/rhi/backends/vulkan/command_buffer_vk.h"
 #include "gfx/rhi/backends/vulkan/device_vk.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 namespace arise {
 namespace gpu {
 
 bool GpuProfilerVk::initialize(gfx::rhi::Device* device) {
   if (m_initialized) {
-    GlobalLogger::Log(LogLevel::Warning, "GpuProfilerVk already initialized");
+    LOG_WARN("GpuProfilerVk already initialized");
     return true;
   }
 
   if (!device) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid Vulkan parameters for profiler");
+    LOG_ERROR("Invalid Vulkan parameters for profiler");
     return false;
   }
 
@@ -34,13 +34,13 @@ bool GpuProfilerVk::initialize(gfx::rhi::Device* device) {
                                   cmdBufferVk->getCommandBuffer());
 
   if (!m_tracyContext) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create Tracy Vulkan context");
+    LOG_ERROR("Failed to create Tracy Vulkan context");
     return false;
   }
 
-  GlobalLogger::Log(LogLevel::Info, "Tracy Vulkan profiler initialized");
+  LOG_INFO("Tracy Vulkan profiler initialized");
 #else
-  GlobalLogger::Log(LogLevel::Info, "Tracy profiling disabled, using native GPU markers only");
+  LOG_INFO("Tracy profiling disabled, using native GPU markers only");
 #endif
 
   setApi(gfx::rhi::RenderingApi::Vulkan);
@@ -57,7 +57,7 @@ void GpuProfilerVk::destroy() {
   if (m_tracyContext) {
     TracyVkDestroy(m_tracyContext);
     m_tracyContext = nullptr;
-    GlobalLogger::Log(LogLevel::Info, "Tracy Vulkan profiler destroyed");
+    LOG_INFO("Tracy Vulkan profiler destroyed");
   }
 #endif
 

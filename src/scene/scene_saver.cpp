@@ -6,7 +6,7 @@
 #include "ecs/components/render_model.h"
 #include "ecs/components/transform.h"
 #include "file_loader/file_system_manager.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 #include "utils/math/math_util.h"
 
 #include <rapidjson/document.h>
@@ -17,7 +17,7 @@ namespace arise {
 
 bool SceneSaver::saveScene(Scene* scene, const std::string& sceneName, const std::filesystem::path& filePath) {
   if (!scene) {
-    GlobalLogger::Log(LogLevel::Error, "Cannot save null scene");
+    LOG_ERROR("Cannot save null scene");
     return false;
   }
 
@@ -39,9 +39,9 @@ bool SceneSaver::saveScene(Scene* scene, const std::string& sceneName, const std
 
   bool success = FileSystemManager::writeFile(filePath, buffer.GetString());
   if (success) {
-    GlobalLogger::Log(LogLevel::Info, "Scene saved to: " + filePath.string());
+    LOG_INFO("Scene saved to: " + filePath.string());
   } else {
-    GlobalLogger::Log(LogLevel::Error, "Failed to save scene to: " + filePath.string());
+    LOG_ERROR("Failed to save scene to: " + filePath.string());
   }
 
   return success;

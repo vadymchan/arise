@@ -2,7 +2,7 @@
 
 #include "gfx/rhi/backends/vulkan/device_vk.h"
 #include "gfx/rhi/backends/vulkan/rhi_enums_vk.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 namespace arise {
 namespace gfx {
@@ -13,7 +13,7 @@ RenderPassVk::RenderPassVk(const RenderPassDesc& desc, DeviceVk* device)
     , m_device_(device)
     , m_hasDepthStencil_(desc.hasDepthStencil) {
   if (!initialize_(desc)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to initialize render pass");
+    LOG_ERROR("Failed to initialize render pass");
   }
 
   m_colorAttachmentInitialLayouts.resize(desc.colorAttachments.size());
@@ -144,7 +144,7 @@ bool RenderPassVk::initialize_(const RenderPassDesc& desc) {
 
   VkResult result = vkCreateRenderPass(m_device_->getDevice(), &renderPassInfo, nullptr, &m_renderPass_);
   if (result != VK_SUCCESS) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create render pass");
+    LOG_ERROR("Failed to create render pass");
     return false;
   }
 
@@ -167,13 +167,13 @@ ResourceLayout RenderPassVk::getColorAttachmentFinalLayout(uint32_t index) const
     return m_colorAttachmentFinalLayouts[index];
   }
 
-  GlobalLogger::Log(LogLevel::Warning, "Invalid color attachment index for final layout");
+  LOG_WARN("Invalid color attachment index for final layout");
   return ResourceLayout::ColorAttachment;
 }
 
 ResourceLayout RenderPassVk::getDepthStencilAttachmentFinalLayout() const {
   if (!m_hasDepthStencil_) {
-    GlobalLogger::Log(LogLevel::Warning, "No depth/stencil attachment");
+    LOG_WARN("No depth/stencil attachment");
     return ResourceLayout::Undefined;
   }
 

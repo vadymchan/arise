@@ -5,7 +5,7 @@
 #include "gfx/rhi/backends/dx12/render_pass_dx12.h"
 #include "gfx/rhi/backends/dx12/rhi_enums_dx12.h"
 #include "gfx/rhi/backends/dx12/texture_dx12.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 namespace arise {
 namespace gfx {
@@ -17,7 +17,7 @@ FramebufferDx12::FramebufferDx12(const FramebufferDesc& desc, DeviceDx12* device
     , m_height_(desc.height)
     , m_hasDepthStencil_(desc.hasDepthStencil) {
   if (!initialize_(desc)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to initialize framebuffer");
+    LOG_ERROR("Failed to initialize framebuffer");
   }
 }
 
@@ -28,7 +28,7 @@ bool FramebufferDx12::initialize_(const FramebufferDesc& desc) {
   for (auto* texture : desc.colorAttachments) {
     TextureDx12* textureDx12 = dynamic_cast<TextureDx12*>(texture);
     if (!textureDx12) {
-      GlobalLogger::Log(LogLevel::Error, "Invalid texture type for color attachment");
+      LOG_ERROR("Invalid texture type for color attachment");
       return false;
     }
 
@@ -36,7 +36,7 @@ bool FramebufferDx12::initialize_(const FramebufferDesc& desc) {
 
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = textureDx12->getRtvHandle();
     if (rtvHandle.ptr == 0) {
-      GlobalLogger::Log(LogLevel::Error, "Texture doesn't have a valid RTV");
+      LOG_ERROR("Texture doesn't have a valid RTV");
       return false;
     }
 
@@ -46,13 +46,13 @@ bool FramebufferDx12::initialize_(const FramebufferDesc& desc) {
   if (desc.hasDepthStencil && desc.depthStencilAttachment) {
     m_depthStencilAttachment_ = dynamic_cast<TextureDx12*>(desc.depthStencilAttachment);
     if (!m_depthStencilAttachment_) {
-      GlobalLogger::Log(LogLevel::Error, "Invalid texture type for depth/stencil attachment");
+      LOG_ERROR("Invalid texture type for depth/stencil attachment");
       return false;
     }
 
     m_dsvHandle_ = m_depthStencilAttachment_->getDsvHandle();
     if (m_dsvHandle_.ptr == 0) {
-      GlobalLogger::Log(LogLevel::Error, "Texture doesn't have a valid DSV");
+      LOG_ERROR("Texture doesn't have a valid DSV");
       return false;
     }
   }

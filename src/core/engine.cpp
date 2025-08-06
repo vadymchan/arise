@@ -36,7 +36,7 @@
 #include "utils/image/image_manager.h"
 #include "utils/logger/console_logger.h"
 #include "utils/logger/file_logger.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 #include "utils/logger/memory_logger.h"
 #include "utils/material/material_loader_manager.h"
 #include "utils/material/material_manager.h"
@@ -107,7 +107,7 @@ auto Engine::initialize() -> bool {
   // auto fileLogger = std::make_unique<FileLogger>("file_logger");
   // GlobalLogger::AddLogger(std::move(fileLogger));
 
-  GlobalLogger::Log(LogLevel::Info, "Engine::initialize() started");
+  LOG_INFO("Engine::initialize() started");
 
   // window event
   // ------------------------------------------------------------------------
@@ -144,7 +144,7 @@ auto Engine::initialize() -> bool {
         inputManager->updateViewport(event.data1, event.data2);
       }
 
-      GlobalLogger::Log(LogLevel::Info, "Window resize in editor mode - ignoring renderer resize");
+      LOG_INFO("Window resize in editor mode - ignoring renderer resize");
     }
   });
 
@@ -190,11 +190,11 @@ auto Engine::initialize() -> bool {
 #ifdef ARISE_FORCE_VULKAN
   renderingApi       = gfx::rhi::RenderingApi::Vulkan;
   renderingApiString = "vulkan";
-  GlobalLogger::Log(LogLevel::Info, "RHI API forced to Vulkan at compile time");
+  LOG_INFO("RHI API forced to Vulkan at compile time");
 #elif defined(ARISE_FORCE_DIRECTX)
   renderingApi       = gfx::rhi::RenderingApi::Dx12;
   renderingApiString = "dx12";
-  GlobalLogger::Log(LogLevel::Info, "RHI API forced to DirectX at compile time");
+  LOG_INFO("RHI API forced to DirectX at compile time");
 #else
   renderingApiString = config->get<std::string>("renderingApi");
 
@@ -207,7 +207,7 @@ auto Engine::initialize() -> bool {
     renderingApiString = "vulkan";
   }
 
-  GlobalLogger::Log(LogLevel::Info, "RHI API selected from config: " + renderingApiString);
+  LOG_INFO("RHI API selected from config: " + renderingApiString);
 #endif
 
   // application mode
@@ -220,12 +220,12 @@ auto Engine::initialize() -> bool {
   auto gpuProfiler = gpu::GpuProfilerFactory::create(renderingApi);
   if (gpuProfiler) {
     ServiceLocator::s_provide<gpu::GpuProfiler>(std::move(gpuProfiler));
-    GlobalLogger::Log(LogLevel::Info, "GPU profiler created for " + renderingApiString);
+    LOG_INFO("GPU profiler created for " + renderingApiString);
   } else {
-    GlobalLogger::Log(LogLevel::Warning, "Failed to create GPU profiler for " + renderingApiString);
+    LOG_WARN("Failed to create GPU profiler for " + renderingApiString);
   }
 #else
-  GlobalLogger::Log(LogLevel::Info, "GPU profiling disabled at compile time");
+  LOG_INFO("GPU profiling disabled at compile time");
 #endif
 
 #ifdef TRACY_ENABLE
@@ -291,12 +291,12 @@ auto Engine::initialize() -> bool {
     auto logoPath     = PathManager::s_getLogoPath() / logoFilename;
 
     if (!m_window_->setWindowIcon(logoPath)) {
-      GlobalLogger::Log(LogLevel::Warning, "Failed to set window icon from: " + logoPath.string());
+      LOG_WARN("Failed to set window icon from: " + logoPath.string());
     } else {
-      GlobalLogger::Log(LogLevel::Info, "Window icon set successfully from: " + logoPath.string());
+      LOG_INFO("Window icon set successfully from: " + logoPath.string());
     }
   } else {
-    GlobalLogger::Log(LogLevel::Info, "Window icon disabled in settings");
+    LOG_INFO("Window icon disabled in settings");
   }
 
   // mesh / model / material loader
@@ -365,16 +365,16 @@ auto Engine::initialize() -> bool {
                                  m_renderer_->getDevice(),
                                  m_renderer_->getFrameResources(),
                                  m_renderer_.get())) {
-        GlobalLogger::Log(LogLevel::Error, "Failed to initialize Editor");
+        LOG_ERROR("Failed to initialize Editor");
         successfullyInitialized = false;
       }
-      GlobalLogger::Log(LogLevel::Info, "Editor initialized successfully");
+      LOG_INFO("Editor initialized successfully");
       break;
     case ApplicationMode::Standalone:
-      GlobalLogger::Log(LogLevel::Info, "Running in Application mode, Editor not initialized");
+      LOG_INFO("Running in Application mode, Editor not initialized");
       break;
     default:
-      GlobalLogger::Log(LogLevel::Error, "Unknown application mode");
+      LOG_ERROR("Unknown application mode");
       successfullyInitialized = false;
       break;
   }
@@ -387,7 +387,7 @@ auto Engine::initialize() -> bool {
   }
 
   if (successfullyInitialized) {
-    GlobalLogger::Log(LogLevel::Info, "Engine::initialize() completed");
+    LOG_INFO("Engine::initialize() completed");
   }
 
   return successfullyInitialized;
@@ -413,7 +413,7 @@ void Engine::run() {
 
   auto frameManager = ServiceLocator::s_get<FrameManager>();
   if (!frameManager) {
-    GlobalLogger::Log(LogLevel::Error, "FrameManager not found");
+    LOG_ERROR("FrameManager not found");
     return;
   }
 
@@ -483,7 +483,7 @@ ApplicationMode Engine::getCurrentApplicationMode_() const {
 void Engine::toggleApplicationMode_() {
   if (m_applicationMode == ApplicationMode::Editor) {
     m_applicationMode = ApplicationMode::Standalone;
-    GlobalLogger::Log(LogLevel::Info, "Switched to Standalone mode");
+    LOG_INFO("Switched to Standalone mode");
 
     if (m_editor_) {
       m_editor_->clearViewportTextureIDs();
@@ -491,7 +491,7 @@ void Engine::toggleApplicationMode_() {
 
   } else {
     m_applicationMode = ApplicationMode::Editor;
-    GlobalLogger::Log(LogLevel::Info, "Switched to Editor mode");
+    LOG_INFO("Switched to Editor mode");
   }
 
   updateCameraForMode_(m_applicationMode);
@@ -503,11 +503,11 @@ void Engine::toggleApplicationMode_() {
 
 Window* Engine::recreateWindow_(gfx::rhi::RenderingApi newApi) {
   if (!m_window_) {
-    GlobalLogger::Log(LogLevel::Error, "Cannot recreate null window");
+    LOG_ERROR("Cannot recreate null window");
     return nullptr;
   }
 
-  GlobalLogger::Log(LogLevel::Info, "Recreating window for API switch");
+  LOG_INFO("Recreating window for API switch");
 
   auto currentSize  = m_window_->getSize();
   auto currentPos   = m_window_->getPosition();
@@ -523,7 +523,7 @@ Window* Engine::recreateWindow_(gfx::rhi::RenderingApi newApi) {
   m_window_ = std::make_unique<Window>(currentTitle, currentSize, currentPos, newFlags);
 
   if (!m_window_) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to recreate window");
+    LOG_ERROR("Failed to recreate window");
     return nullptr;
   }
 
@@ -539,7 +539,7 @@ Window* Engine::recreateWindow_(gfx::rhi::RenderingApi newApi) {
         auto logoPath     = PathManager::s_getLogoPath() / logoFilename;
 
         if (!m_window_->setWindowIcon(logoPath)) {
-          GlobalLogger::Log(LogLevel::Warning, "Failed to set window icon after recreation: " + logoPath.string());
+          LOG_WARN("Failed to set window icon after recreation: " + logoPath.string());
         }
       }
     }
@@ -547,10 +547,10 @@ Window* Engine::recreateWindow_(gfx::rhi::RenderingApi newApi) {
 
   if (m_renderer_) {
     m_renderer_->updateWindow(m_window_.get());
-    GlobalLogger::Log(LogLevel::Info, "Updated window reference in renderer");
+    LOG_INFO("Updated window reference in renderer");
   }
 
-  GlobalLogger::Log(LogLevel::Info, "Window recreated successfully");
+  LOG_INFO("Window recreated successfully");
   return m_window_.get();
 }
 

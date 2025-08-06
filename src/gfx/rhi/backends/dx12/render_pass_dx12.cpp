@@ -2,7 +2,7 @@
 
 #include "gfx/rhi/backends/dx12/device_dx12.h"
 #include "gfx/rhi/backends/dx12/rhi_enums_dx12.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 namespace arise {
 namespace gfx {
@@ -13,7 +13,7 @@ RenderPassDx12::RenderPassDx12(const RenderPassDesc& desc, DeviceDx12* device)
     , m_device_(device)
     , m_hasDepthStencil_(desc.hasDepthStencil) {
   if (!initialize_(desc)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to initialize render pass");
+    LOG_ERROR("Failed to initialize render pass");
   }
 }
 
@@ -48,7 +48,7 @@ ResourceLayout RenderPassDx12::getFinalColorAttachmentLayout(uint32_t index) con
     return m_colorFinalLayouts[index];
   }
 
-  GlobalLogger::Log(LogLevel::Error, "Invalid color attachment index: " + std::to_string(index));
+  LOG_ERROR("Invalid color attachment index: " + std::to_string(index));
   return ResourceLayout::ShaderReadOnly;
 }
 

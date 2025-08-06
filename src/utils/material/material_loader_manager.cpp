@@ -1,6 +1,6 @@
 #include "utils/material/material_loader_manager.h"
 
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 namespace arise {
 MaterialType getMaterialTypeFromExtension(const std::string& extension) {
@@ -34,7 +34,7 @@ std::vector<std::unique_ptr<ecs::Material>> MaterialLoaderManager::loadMaterials
   MaterialType materialType = getMaterialTypeFromExtension(extension);
 
   if (materialType == MaterialType::UNKNOWN) {
-    GlobalLogger::Log(LogLevel::Error, "Unknown material type for extension: " + extension);
+    LOG_ERROR("Unknown material type for extension: " + extension);
     return {};
   }
 
@@ -51,7 +51,7 @@ std::vector<std::unique_ptr<ecs::Material>> MaterialLoaderManager::loadMaterials
     return loader->loadMaterials(filePath);
   }
 
-  GlobalLogger::Log(LogLevel::Error, "No suitable loader found for material type: " + extension);
+  LOG_ERROR("No suitable loader found for material type: " + extension);
   return {};
 }
 }  // namespace arise

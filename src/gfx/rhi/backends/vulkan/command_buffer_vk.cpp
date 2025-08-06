@@ -11,7 +11,7 @@
 #include "gfx/rhi/backends/vulkan/texture_vk.h"
 #include "profiler/gpu.h"
 #include "utils/color/color.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 namespace arise {
 namespace gfx {
@@ -29,7 +29,7 @@ CommandBufferVk::CommandBufferVk(DeviceVk* device, VkCommandBuffer commandBuffer
 
 void CommandBufferVk::begin() {
   if (m_isRecording_) {
-    GlobalLogger::Log(LogLevel::Warning, "Command buffer is already recording");
+    LOG_WARN("Command buffer is already recording");
     return;
   }
 
@@ -40,7 +40,7 @@ void CommandBufferVk::begin() {
 
   VkResult result = vkBeginCommandBuffer(m_commandBuffer_, &beginInfo);
   if (result != VK_SUCCESS) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to begin command buffer");
+    LOG_ERROR("Failed to begin command buffer");
     return;
   }
 
@@ -49,7 +49,7 @@ void CommandBufferVk::begin() {
 
 void CommandBufferVk::end() {
   if (!m_isRecording_) {
-    GlobalLogger::Log(LogLevel::Warning, "Command buffer is not recording");
+    LOG_WARN("Command buffer is not recording");
     return;
   }
 
@@ -59,7 +59,7 @@ void CommandBufferVk::end() {
 
   VkResult result = vkEndCommandBuffer(m_commandBuffer_);
   if (result != VK_SUCCESS) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to end command buffer");
+    LOG_ERROR("Failed to end command buffer");
     return;
   }
 
@@ -68,13 +68,13 @@ void CommandBufferVk::end() {
 
 void CommandBufferVk::reset() {
   if (m_isRecording_) {
-    GlobalLogger::Log(LogLevel::Warning, "Cannot reset while recording");
+    LOG_WARN("Cannot reset while recording");
     return;
   }
 
   VkResult result = vkResetCommandBuffer(m_commandBuffer_, 0);
   if (result != VK_SUCCESS) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to reset command buffer");
+    LOG_ERROR("Failed to reset command buffer");
     return;
   }
 
@@ -86,13 +86,13 @@ void CommandBufferVk::reset() {
 
 void CommandBufferVk::setPipeline(Pipeline* pipeline) {
   if (!m_isRecording_) {
-    GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording");
+    LOG_ERROR("Command buffer is not recording");
     return;
   }
 
   auto pipelineVk = dynamic_cast<GraphicsPipelineVk*>(pipeline);
   if (!pipelineVk) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid pipeline type");
+    LOG_ERROR("Invalid pipeline type");
     return;
   }
 
@@ -105,7 +105,7 @@ void CommandBufferVk::setPipeline(Pipeline* pipeline) {
       bindPoint = VK_PIPELINE_BIND_POINT_COMPUTE;
       break;
     default:
-      GlobalLogger::Log(LogLevel::Error, "Invalid pipeline type");
+      LOG_ERROR("Invalid pipeline type");
       return;
   }
 
@@ -117,7 +117,7 @@ void CommandBufferVk::setPipeline(Pipeline* pipeline) {
 
 void CommandBufferVk::setViewport(const Viewport& viewport) {
   if (!m_isRecording_) {
-    GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording");
+    LOG_ERROR("Command buffer is not recording");
     return;
   }
 
@@ -134,7 +134,7 @@ void CommandBufferVk::setViewport(const Viewport& viewport) {
 
 void CommandBufferVk::setScissor(const ScissorRect& scissor) {
   if (!m_isRecording_) {
-    GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording");
+    LOG_ERROR("Command buffer is not recording");
     return;
   }
 
@@ -149,13 +149,13 @@ void CommandBufferVk::setScissor(const ScissorRect& scissor) {
 
 void CommandBufferVk::bindVertexBuffer(uint32_t binding, Buffer* buffer, uint64_t offset) {
   if (!m_isRecording_) {
-    GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording");
+    LOG_ERROR("Command buffer is not recording");
     return;
   }
 
   BufferVk* bufferVk = dynamic_cast<BufferVk*>(buffer);
   if (!bufferVk) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid buffer type");
+    LOG_ERROR("Invalid buffer type");
     return;
   }
 
@@ -165,13 +165,13 @@ void CommandBufferVk::bindVertexBuffer(uint32_t binding, Buffer* buffer, uint64_
 
 void CommandBufferVk::bindIndexBuffer(Buffer* buffer, uint64_t offset, bool use32BitIndices) {
   if (!m_isRecording_) {
-    GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording");
+    LOG_ERROR("Command buffer is not recording");
     return;
   }
 
   BufferVk* bufferVk = dynamic_cast<BufferVk*>(buffer);
   if (!bufferVk) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid buffer type");
+    LOG_ERROR("Invalid buffer type");
     return;
   }
 
@@ -181,12 +181,12 @@ void CommandBufferVk::bindIndexBuffer(Buffer* buffer, uint64_t offset, bool use3
 
 void CommandBufferVk::bindDescriptorSet(uint32_t setIndex, DescriptorSet* set) {
   if (!m_isRecording_) {
-    GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording");
+    LOG_ERROR("Command buffer is not recording");
     return;
   }
 
   if (!m_currentPipeline_) {
-    GlobalLogger::Log(LogLevel::Error, "No active pipeline");
+    LOG_ERROR("No active pipeline");
     return;
   }
 
@@ -196,7 +196,7 @@ void CommandBufferVk::bindDescriptorSet(uint32_t setIndex, DescriptorSet* set) {
 
   DescriptorSetVk* descriptorSetVk = dynamic_cast<DescriptorSetVk*>(set);
   if (!descriptorSetVk) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid descriptor set type");
+    LOG_ERROR("Invalid descriptor set type");
     return;
   }
 
@@ -213,7 +213,7 @@ void CommandBufferVk::bindDescriptorSet(uint32_t setIndex, DescriptorSet* set) {
 
 void CommandBufferVk::draw(uint32_t vertexCount, uint32_t firstVertex) {
   if (!m_isRecording_ || !m_isRenderPassActive_) {
-    GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording or render pass is not active");
+    LOG_ERROR("Command buffer is not recording or render pass is not active");
     return;
   }
 
@@ -222,7 +222,7 @@ void CommandBufferVk::draw(uint32_t vertexCount, uint32_t firstVertex) {
 
 void CommandBufferVk::drawIndexed(uint32_t indexCount, uint32_t firstIndex, int32_t vertexOffset) {
   if (!m_isRecording_ || !m_isRenderPassActive_) {
-    GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording or render pass is not active");
+    LOG_ERROR("Command buffer is not recording or render pass is not active");
     return;
   }
 
@@ -234,7 +234,7 @@ void CommandBufferVk::drawInstanced(uint32_t vertexCount,
                                     uint32_t firstVertex,
                                     uint32_t firstInstance) {
   if (!m_isRecording_ || !m_isRenderPassActive_) {
-    GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording or render pass is not active");
+    LOG_ERROR("Command buffer is not recording or render pass is not active");
     return;
   }
 
@@ -244,7 +244,7 @@ void CommandBufferVk::drawInstanced(uint32_t vertexCount,
 void CommandBufferVk::drawIndexedInstanced(
     uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset, uint32_t firstInstance) {
   if (!m_isRecording_ || !m_isRenderPassActive_) {
-    GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording or render pass is not active");
+    LOG_ERROR("Command buffer is not recording or render pass is not active");
     return;
   }
 
@@ -253,18 +253,18 @@ void CommandBufferVk::drawIndexedInstanced(
 
 void CommandBufferVk::resourceBarrier(const ResourceBarrierDesc& barrier) {
   if (!m_isRecording_) {
-    GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording");
+    LOG_ERROR("Command buffer is not recording");
     return;
   }
 
   if (!barrier.texture) {
-    GlobalLogger::Log(LogLevel::Error, "Null texture");
+    LOG_ERROR("Null texture");
     return;
   }
 
   TextureVk* textureVk = dynamic_cast<TextureVk*>(barrier.texture);
   if (!textureVk) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid texture type");
+    LOG_ERROR("Invalid texture type");
     return;
   }
 
@@ -273,7 +273,7 @@ void CommandBufferVk::resourceBarrier(const ResourceBarrierDesc& barrier) {
 
   if (oldLayout == newLayout) {
     // TODO: uncomment this if needed
-    // GlobalLogger::Log(LogLevel::Warning, "Skipping redundant barrier, states are identical");
+    // LOG_WARN("Skipping redundant barrier, states are identical");
     return;
   }
 
@@ -367,12 +367,12 @@ void CommandBufferVk::beginRenderPass(RenderPass*                    renderPass,
                                       Framebuffer*                   framebuffer,
                                       const std::vector<ClearValue>& clearValues) {
   if (!m_isRecording_) {
-    GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording");
+    LOG_ERROR("Command buffer is not recording");
     return;
   }
 
   if (m_isRenderPassActive_) {
-    GlobalLogger::Log(LogLevel::Error, "Render pass is already active");
+    LOG_ERROR("Render pass is already active");
     return;
   }
 
@@ -380,7 +380,7 @@ void CommandBufferVk::beginRenderPass(RenderPass*                    renderPass,
   FramebufferVk* framebufferVk = dynamic_cast<FramebufferVk*>(framebuffer);
 
   if (!renderPassVk || !framebufferVk) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid render pass or framebuffer type");
+    LOG_ERROR("Invalid render pass or framebuffer type");
     return;
   }
 
@@ -416,7 +416,7 @@ void CommandBufferVk::beginRenderPass(RenderPass*                    renderPass,
 
 void CommandBufferVk::endRenderPass() {
   if (!m_isRecording_ || !m_isRenderPassActive_) {
-    GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording or render pass is not active");
+    LOG_ERROR("Command buffer is not recording or render pass is not active");
     return;
   }
 
@@ -435,7 +435,7 @@ void CommandBufferVk::endRenderPass() {
 void CommandBufferVk::copyBuffer(
     Buffer* srcBuffer, Buffer* dstBuffer, uint64_t srcOffset, uint64_t dstOffset, uint64_t size) {
   if (!m_isRecording_) {
-    GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording");
+    LOG_ERROR("Command buffer is not recording");
     return;
   }
 
@@ -443,7 +443,7 @@ void CommandBufferVk::copyBuffer(
   BufferVk* dstBufferVk = dynamic_cast<BufferVk*>(dstBuffer);
 
   if (!srcBufferVk || !dstBufferVk) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid buffer type");
+    LOG_ERROR("Invalid buffer type");
     return;
   }
 
@@ -455,7 +455,7 @@ void CommandBufferVk::copyBuffer(
 
   // Verify copy size doesn't exceed destination buffer
   if (dstOffset + copySize > dstBufferVk->getSize()) {
-    GlobalLogger::Log(LogLevel::Error, "Copy operation exceeds destination buffer size");
+    LOG_ERROR("Copy operation exceeds destination buffer size");
     return;
   }
 
@@ -472,7 +472,7 @@ void CommandBufferVk::copyBufferToTexture(Buffer*  srcBuffer,
                                           uint32_t mipLevel,
                                           uint32_t arrayLayer) {
   if (!m_isRecording_) {
-    GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording");
+    LOG_ERROR("Command buffer is not recording");
     return;
   }
 
@@ -480,7 +480,7 @@ void CommandBufferVk::copyBufferToTexture(Buffer*  srcBuffer,
   TextureVk* dstTextureVk = dynamic_cast<TextureVk*>(dstTexture);
 
   if (!srcBufferVk || !dstTextureVk) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid buffer or texture type");
+    LOG_ERROR("Invalid buffer or texture type");
     return;
   }
 
@@ -530,7 +530,7 @@ void CommandBufferVk::copyTextureToBuffer(Texture* srcTexture,
                                           uint32_t mipLevel,
                                           uint32_t arrayLayer) {
   if (!m_isRecording_) {
-    GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording");
+    LOG_ERROR("Command buffer is not recording");
     return;
   }
 
@@ -538,7 +538,7 @@ void CommandBufferVk::copyTextureToBuffer(Texture* srcTexture,
   BufferVk*  dstBufferVk  = dynamic_cast<BufferVk*>(dstBuffer);
 
   if (!srcTextureVk || !dstBufferVk) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid texture or buffer type");
+    LOG_ERROR("Invalid texture or buffer type");
     return;
   }
 
@@ -592,14 +592,14 @@ void CommandBufferVk::copyTexture(Texture* srcTexture,
                                   uint32_t dstMipLevel,
                                   uint32_t dstArrayLayer) {
   if (!m_isRecording_) {
-    GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording");
+    LOG_ERROR("Command buffer is not recording");
     return;
   }
 
   auto* srcTexVk = dynamic_cast<TextureVk*>(srcTexture);
   auto* dstTexVk = dynamic_cast<TextureVk*>(dstTexture);
   if (!srcTexVk || !dstTexVk) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid texture type");
+    LOG_ERROR("Invalid texture type");
     return;
   }
 
@@ -658,13 +658,13 @@ void CommandBufferVk::copyTexture(Texture* srcTexture,
 
 void CommandBufferVk::clearColor(Texture* texture, const float color[4], uint32_t mipLevel, uint32_t arrayLayer) {
   if (!m_isRecording_) {
-    GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording");
+    LOG_ERROR("Command buffer is not recording");
     return;
   }
 
   TextureVk* textureVk = dynamic_cast<TextureVk*>(texture);
   if (!textureVk) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid texture type");
+    LOG_ERROR("Invalid texture type");
     return;
   }
 
@@ -695,18 +695,18 @@ void CommandBufferVk::clearColor(Texture* texture, const float color[4], uint32_
 void CommandBufferVk::clearDepthStencil(
     Texture* texture, float depth, uint8_t stencil, uint32_t mipLevel, uint32_t arrayLayer) {
   if (!m_isRecording_) {
-    GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording");
+    LOG_ERROR("Command buffer is not recording");
     return;
   }
 
   TextureVk* textureVk = dynamic_cast<TextureVk*>(texture);
   if (!textureVk) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid texture type");
+    LOG_ERROR("Invalid texture type");
     return;
   }
 
   if (!g_isDepthFormat(textureVk->getFormat())) {
-    GlobalLogger::Log(LogLevel::Error, "Texture is not a depth/stencil texture");
+    LOG_ERROR("Texture is not a depth/stencil texture");
     return;
   }
 
@@ -744,7 +744,7 @@ void CommandBufferVk::beginDebugMarker(const std::string& name, const float colo
       = (PFN_vkCmdBeginDebugUtilsLabelEXT)vkGetDeviceProcAddr(m_device_->getDevice(), "vkCmdBeginDebugUtilsLabelEXT");
 
   if (!func) {
-    GlobalLogger::Log(LogLevel::Error, "Debug marker function not supported");
+    LOG_ERROR("Debug marker function not supported");
     return;
   }
 
@@ -777,7 +777,7 @@ void CommandBufferVk::insertDebugMarker(const std::string& name, const float col
       = (PFN_vkCmdInsertDebugUtilsLabelEXT)vkGetDeviceProcAddr(m_device_->getDevice(), "vkCmdInsertDebugUtilsLabelEXT");
 
   if (!func) {
-    GlobalLogger::Log(LogLevel::Error, "Debug marker function not supported");
+    LOG_ERROR("Debug marker function not supported");
     return;
   }
 
@@ -869,7 +869,7 @@ VkCommandPool CommandPoolManager::getPool() const {
 
 VkCommandPool CommandPoolManager::createThreadPool() const {
   if (!m_isInitialized || m_device_ == VK_NULL_HANDLE) {
-    GlobalLogger::Log(LogLevel::Error, "Cannot create thread pool: CommandPoolManager not initialized");
+    LOG_ERROR("Cannot create thread pool: CommandPoolManager not initialized");
     return VK_NULL_HANDLE;
   }
 
@@ -880,7 +880,7 @@ VkCommandPool CommandPoolManager::createThreadPool() const {
 
   VkCommandPool pool = VK_NULL_HANDLE;
   if (vkCreateCommandPool(m_device_, &poolInfo, nullptr, &pool) != VK_SUCCESS) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create thread-specific command pool");
+    LOG_ERROR("Failed to create thread-specific command pool");
     return m_mainCommandPool;
   }
 

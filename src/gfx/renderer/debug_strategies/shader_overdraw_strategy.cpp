@@ -82,7 +82,7 @@ void ShaderOverdrawStrategy::render(const RenderContext& context) {
 
   uint32_t currentIndex = context.currentImageIndex;
   if (currentIndex >= m_framebuffers.size()) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid framebuffer index");
+    LOG_ERROR("Invalid framebuffer index");
     return;
   }
 
@@ -126,7 +126,7 @@ void ShaderOverdrawStrategy::render(const RenderContext& context) {
 void ShaderOverdrawStrategy::clearSceneResources() {
   m_instanceBufferCache.clear();
   m_drawData.clear();
-  GlobalLogger::Log(LogLevel::Info, "Shader overdraw strategy resources cleared for scene switch");
+  LOG_INFO("Shader overdraw strategy resources cleared for scene switch");
 }
 
 void ShaderOverdrawStrategy::cleanup() {
@@ -155,7 +155,7 @@ void ShaderOverdrawStrategy::setupRenderPass_() {
 
 void ShaderOverdrawStrategy::createFramebuffers_(const math::Dimension2i& dimension) {
   if (!m_renderPass) {
-    GlobalLogger::Log(LogLevel::Error, "Render pass must be created before framebuffer");
+    LOG_ERROR("Render pass must be created before framebuffer");
     return;
   }
 

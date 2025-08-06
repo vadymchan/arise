@@ -2,7 +2,7 @@
 #define ARISE_SYSTEM_MANAGER_H
 
 #include "ecs/systems/i_updatable_system.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 namespace arise {
 namespace ecs {
@@ -48,7 +48,7 @@ class SystemManager {
       }
     }
 
-    GlobalLogger::Log(LogLevel::Warning, "No existing system found to replace: " + std::string(typeid(T).name()));
+    LOG_WARN("No existing system found to replace: " + std::string(typeid(T).name()));
     return false;
   }
 

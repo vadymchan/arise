@@ -1,7 +1,7 @@
 #include "vertex_input_builder.h"
 
 #include "gfx/rhi/common/rhi_enums.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 #include <algorithm>
 
@@ -19,7 +19,7 @@ void VertexInputBuilder::createFromReflection(const std::vector<ShaderVertexInpu
   attributes.clear();
 
   if (vertexInputs.empty()) {
-    GlobalLogger::Log(LogLevel::Warning, "No vertex inputs found in shader reflection");
+    LOG_WARN("No vertex inputs found in shader reflection");
     return;
   }
 
@@ -32,9 +32,8 @@ void VertexInputBuilder::createFromReflection(const std::vector<ShaderVertexInpu
     } else if (isKnownVertexSemantic_(input.semanticName)) {
       hasVertexInputs = true;
     } else {
-      GlobalLogger::Log(
-          LogLevel::Error,
-          "Unknown vertex input semantic: '" + input.semanticName + "' at location " + std::to_string(input.location));
+      LOG_ERROR("Unknown vertex input semantic: '" + input.semanticName + "' at location "
+                + std::to_string(input.location));
     }
   }
 
@@ -99,9 +98,8 @@ void VertexInputBuilder::createFromReflection(const std::vector<ShaderVertexInpu
         return a.location < b.location;
       });
 
-  GlobalLogger::Log(LogLevel::Info,
-                    "Created vertex input layout: " + std::to_string(bindings.size()) + " bindings, "
-                        + std::to_string(attributes.size()) + " attributes");
+  LOG_INFO("Created vertex input layout: " + std::to_string(bindings.size()) + " bindings, "
+           + std::to_string(attributes.size()) + " attributes");
 }
 
 bool VertexInputBuilder::isKnownVertexSemantic_(const std::string& semanticName) {
@@ -124,9 +122,8 @@ uint32_t VertexInputBuilder::getVertexAttributeOffset_(const std::string& semant
     return offsetof(ecs::Vertex, color);
   }
 
-  GlobalLogger::Log(LogLevel::Error,
-                    "Unknown vertex semantic in offset calculation: " + semanticName
-                        + ". This should never happen if isKnownVertexSemantic_ is used correctly.");
+  LOG_ERROR("Unknown vertex semantic in offset calculation: " + semanticName
+            + ". This should never happen if isKnownVertexSemantic_ is used correctly.");
   return 0;
 }
 
@@ -167,8 +164,7 @@ TextureFormat VertexInputBuilder::getFormatForLocation_(const ShaderVertexInput&
         return TextureFormat::Rgba32f;
     }
   } else {
-    GlobalLogger::Log(LogLevel::Warning,
-                      "Non-float vertex input format detected. Defaulting to Rgba32f for multi-location inputs.");
+    LOG_WARN("Non-float vertex input format detected. Defaulting to Rgba32f for multi-location inputs.");
     if (locationIndex == 0 && totalComponents <= 4) {
       return input.format;
     } else {

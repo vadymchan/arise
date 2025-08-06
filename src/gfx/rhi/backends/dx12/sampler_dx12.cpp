@@ -5,7 +5,7 @@
 #include "gfx/rhi/backends/dx12/descriptor_dx12.h"
 #include "gfx/rhi/backends/dx12/device_dx12.h"
 #include "gfx/rhi/backends/dx12/rhi_enums_dx12.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 namespace arise {
 namespace gfx {
@@ -32,13 +32,13 @@ SamplerDx12::SamplerDx12(const SamplerDesc& desc, DeviceDx12* device)
 
   auto* samplerHeap = device->getCpuSamplerHeap();
   if (!samplerHeap) {
-    GlobalLogger::Log(LogLevel::Error, "Sampler heap not available");
+    LOG_ERROR("Sampler heap not available");
     return;
   }
 
   m_descriptorIndex_ = samplerHeap->allocate();
   if (m_descriptorIndex_ == UINT32_MAX) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to allocate sampler descriptor");
+    LOG_ERROR("Failed to allocate sampler descriptor");
     return;
   }
 

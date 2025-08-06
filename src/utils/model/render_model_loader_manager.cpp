@@ -1,5 +1,7 @@
 #include "utils/model/render_model_loader_manager.h"
 
+#include "utils/logger/log.h"
+
 namespace arise {
 void RenderModelLoaderManager::registerLoader(ModelType modelType, std::shared_ptr<IRenderModelLoader> loader) {
   std::lock_guard<std::mutex> lock(mutex_);
@@ -13,7 +15,7 @@ std::unique_ptr<ecs::RenderModel> RenderModelLoaderManager::loadRenderModel(cons
   ModelType modelType = getModelTypeFromExtension(extension);
 
   if (modelType == ModelType::UNKNOWN) {
-    GlobalLogger::Log(LogLevel::Error, "Unknown model type for extension: " + extension);
+    LOG_ERROR("Unknown model type for extension: " + extension);
     return nullptr;
   }
 
@@ -30,7 +32,7 @@ std::unique_ptr<ecs::RenderModel> RenderModelLoaderManager::loadRenderModel(cons
     return loader->loadRenderModel(filePath, outModel);
   }
 
-  GlobalLogger::Log(LogLevel::Error, "No loader found for model type with extension: " + extension);
+  LOG_ERROR("No loader found for model type with extension: " + extension);
   return nullptr;
 }
 }  // namespace arise

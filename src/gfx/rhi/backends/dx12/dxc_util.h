@@ -7,7 +7,7 @@
 #include "gfx/rhi/common/rhi_types.h"
 #include "gfx/rhi/shader_reflection/shader_reflection_types.h"
 #include "platform/windows/windows_platform_setup.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 #include <codecvt>
 #include <cstdint>
@@ -71,7 +71,7 @@ class DxcUtil {
   static DxcUtil& s_get() {
     static DxcUtil instance;
     if (!instance.initialize()) {
-      GlobalLogger::Log(LogLevel::Error, "Failed to initialize DXC library.");
+      LOG_ERROR("Failed to initialize DXC library.");
     }
 
     return instance;
@@ -85,7 +85,7 @@ class DxcUtil {
                                             const OptionalShaderParams&  optionalParams = {}) {
     std::string code = readFile_(shaderPath);
     if (code.empty()) {
-      GlobalLogger::Log(LogLevel::Error, "Failed to read shader file: " + shaderPath.string());
+      LOG_ERROR("Failed to read shader file: " + shaderPath.string());
       return nullptr;
     }
     return compileHlslCode(code, stage, entryPoint, backend, optionalParams);

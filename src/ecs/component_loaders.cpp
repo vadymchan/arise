@@ -10,7 +10,7 @@
 #include "ecs/components/tags.h"
 #include "ecs/components/transform.h"
 #include "utils/asset/asset_loader.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 #include "utils/model/render_model_manager.h"
 #include "utils/path_manager/path_manager.h"
 #include "utils/service/service_locator.h"
@@ -65,13 +65,13 @@ Camera g_loadCamera(const ConfigValue& value) {
     } else if (typeStr == "orthographic") {
       camera.type = CameraType::Orthographic;
     } else {
-      GlobalLogger::Log(LogLevel::Warning, "Unknown camera type: " + typeStr + ", using perspective as default");
+      LOG_WARN("Unknown camera type: " + typeStr + ", using perspective as default");
       camera.type = CameraType::Perspective;
     }
   } else if (value.HasMember("cameraType") && value["cameraType"].IsNumber()) {
     camera.type = static_cast<CameraType>(value["cameraType"].GetInt());
   } else {
-    GlobalLogger::Log(LogLevel::Warning, "Camera type not specified, using perspective as default");
+    LOG_WARN("Camera type not specified, using perspective as default");
     camera.type = CameraType::Perspective;
   }
 
@@ -172,7 +172,7 @@ Entity g_createEntityFromConfig(Registry& registry, const ConfigValue& entityCon
 
   if (entityConfig.HasMember("name") && entityConfig["name"].IsString()) {
     std::string entityName = entityConfig["name"].GetString();
-    GlobalLogger::Log(LogLevel::Info, "Created entity: " + entityName);
+    LOG_INFO("Created entity: " + entityName);
   }
 
   if (entityConfig.HasMember("components") && entityConfig["components"].IsArray()) {
@@ -185,7 +185,7 @@ Entity g_createEntityFromConfig(Registry& registry, const ConfigValue& entityCon
 
 void g_processEntityComponents(Registry& registry, Entity entity, const ConfigValue& components) {
   if (!components.IsArray()) {
-    GlobalLogger::Log(LogLevel::Warning, "Components value is not an array");
+    LOG_WARN("Components value is not an array");
     return;
   }
 
@@ -193,7 +193,7 @@ void g_processEntityComponents(Registry& registry, Entity entity, const ConfigVa
     const auto& component = *it;
 
     if (!component.HasMember("type") || !component["type"].IsString()) {
-      GlobalLogger::Log(LogLevel::Warning, "Component missing type field");
+      LOG_WARN("Component missing type field");
       continue;
     }
 
@@ -214,13 +214,13 @@ void g_processEntityComponents(Registry& registry, Entity entity, const ConfigVa
         auto assetLoader = ServiceLocator::s_get<AssetLoader>();
 
         if (assetLoader) {
-          GlobalLogger::Log(LogLevel::Info, "Starting async load for model: " + modelPath);
+          LOG_INFO("Starting async load for model: " + modelPath);
 
           registry.emplace<ModelLoadingTag>(entity, modelPath);
 
           assetLoader->loadModel(modelPath, [registryPtr = &registry, entity, modelPath](bool success) {
             if (!registryPtr->valid(entity)) {
-              GlobalLogger::Log(LogLevel::Warning, "Entity no longer exists after model loaded: " + modelPath);
+              LOG_WARN("Entity no longer exists after model loaded: " + modelPath);
               return;
             }
 
@@ -258,11 +258,10 @@ void g_processEntityComponents(Registry& registry, Entity entity, const ConfigVa
                 }
               }
 
-              GlobalLogger::Log(
-                  LogLevel::Info,
-                  "Async model load completed (GPU=" + std::string(renderModel ? "yes" : "no") + ") for: " + modelPath);
+              LOG_INFO("Async model load completed (GPU=" + std::string(renderModel ? "yes" : "no")
+                       + ") for: " + modelPath);
             } else {
-              GlobalLogger::Log(LogLevel::Error, "Failed to load model asynchronously: " + modelPath);
+              LOG_ERROR("Failed to load model asynchronously: " + modelPath);
             }
           });
 
@@ -295,9 +294,7 @@ void g_processEntityComponents(Registry& registry, Entity entity, const ConfigVa
           }
 
           if (!renderModel) {
-            GlobalLogger::Log(
-                LogLevel::Warning,
-                "GPU resources not yet available for model: " + modelPath + ". Model will render once reloaded.");
+            LOG_WARN("GPU resources not yet available for model: " + modelPath + ". Model will render once reloaded.");
           }
         }
       }
@@ -310,7 +307,7 @@ void g_processEntityComponents(Registry& registry, Entity entity, const ConfigVa
     } else if (componentType == "spotLight") {
       registry.emplace<SpotLight>(entity, g_loadSpotLight(component));
     } else {
-      GlobalLogger::Log(LogLevel::Warning, "Unknown component type: " + componentType);
+      LOG_WARN("Unknown component type: " + componentType);
     }
   }
 }

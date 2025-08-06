@@ -7,7 +7,7 @@
 #ifdef ARISE_USE_GPU_PROFILING
 
 #include "utils/color/color.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 #include "utils/service/service_locator.h"
 
 namespace arise {
@@ -19,7 +19,7 @@ class ProfileZone {
       : m_cmdBuffer(cmdBuffer)
       , m_active(false) {
     if (!cmdBuffer) {
-      GlobalLogger::Log(LogLevel::Error, "CommandBuffer is null, cannot create ProfileZone");
+      LOG_ERROR("CommandBuffer is null, cannot create ProfileZone");
       return;
     }
 

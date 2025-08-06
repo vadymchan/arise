@@ -1,7 +1,7 @@
 #include "gfx/rhi/backends/vulkan/shader_vk.h"
 
 #include "gfx/rhi/backends/vulkan/device_vk.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 namespace arise {
 namespace gfx {
@@ -29,7 +29,7 @@ void ShaderVk::initialize(const std::vector<uint8_t>& code) {
   createInfo.pCode                    = reinterpret_cast<const uint32_t*>(code.data());
 
   if (vkCreateShaderModule(m_device_->getDevice(), &createInfo, nullptr, &m_shaderModule_) != VK_SUCCESS) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create Vulkan shader module");
+    LOG_ERROR("Failed to create Vulkan shader module");
     return;
   }
 }

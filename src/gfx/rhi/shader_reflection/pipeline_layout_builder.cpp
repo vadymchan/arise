@@ -1,6 +1,6 @@
 #include "gfx/rhi/shader_reflection/pipeline_layout_builder.h"
 
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 namespace arise {
 namespace gfx {
@@ -60,9 +60,8 @@ PipelineLayoutDesc PipelineLayoutBuilder::build() {
 void PipelineLayoutBuilder::mergeBinding_(ShaderResourceBinding& existing, const ShaderResourceBinding& newBinding) {
   // Validate that bindings are compatible
   if (existing.type != newBinding.type) {
-    GlobalLogger::Log(LogLevel::Warning,
-                      "Binding type mismatch for set " + std::to_string(newBinding.set) + " binding "
-                          + std::to_string(newBinding.binding) + ": " + existing.name + " vs " + newBinding.name);
+    LOG_WARN("Binding type mismatch for set " + std::to_string(newBinding.set) + " binding "
+             + std::to_string(newBinding.binding) + ": " + existing.name + " vs " + newBinding.name);
   }
 
   if (existing.descriptorCount != newBinding.descriptorCount) {

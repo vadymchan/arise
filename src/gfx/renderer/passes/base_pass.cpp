@@ -15,7 +15,7 @@
 #include "gfx/rhi/shader_reflection/shader_reflection_utils.h"
 #include "gfx/rhi/shader_reflection/vertex_input_builder.h"
 #include "profiler/profiler.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 #include <algorithm>
 #include <cstring>
@@ -36,7 +36,7 @@ void BasePass::initialize(rhi::Device*           device,
     m_vertexShader = shaderManager->getShader(m_vertexShaderPath_);
     m_pixelShader  = shaderManager->getShader(m_pixelShaderPath_);
   } else {
-    GlobalLogger::Log(LogLevel::Error, "ShaderManager not found");
+    LOG_ERROR("ShaderManager not found");
   }
 
   setupRenderPass_();
@@ -117,7 +117,7 @@ void BasePass::render(const RenderContext& context) {
 
   uint32_t currentIndex = context.currentImageIndex;
   if (currentIndex >= m_framebuffers.size()) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid framebuffer index");
+    LOG_ERROR("Invalid framebuffer index");
     return;
   }
 
@@ -167,7 +167,7 @@ void BasePass::clearSceneResources() {
   m_instanceBufferCache.clear();
   m_materialCache.clear();
   m_drawData.clear();
-  GlobalLogger::Log(LogLevel::Info, "Base pass resources cleared for scene switch");
+  LOG_INFO("Base pass resources cleared for scene switch");
 }
 
 void BasePass::cleanup() {
@@ -212,7 +212,7 @@ void BasePass::setupRenderPass_() {
 
 void BasePass::createFramebuffer_(const math::Dimension2i& dimension) {
   if (!m_renderPass) {
-    GlobalLogger::Log(LogLevel::Error, "Render pass must be created before framebuffer");
+    LOG_ERROR("Render pass must be created before framebuffer");
     return;
   }
 
@@ -285,14 +285,14 @@ void BasePass::prepareDrawCalls_(const RenderContext& context) {
 
     for (const auto& renderMesh : model->renderMeshes) {
       if (!renderMesh->material) {
-        GlobalLogger::Log(LogLevel::Debug, "RenderMesh has null material, skipping");
+        LOG_DEBUG("RenderMesh has null material, skipping");
         continue;
       }
 
       rhi::DescriptorSet* materialDescriptorSet = getOrCreateMaterialDescriptorSet_(renderMesh->material);
 
       if (!materialDescriptorSet) {
-        GlobalLogger::Log(LogLevel::Debug, "Could not create valid material descriptor set, skipping");
+        LOG_DEBUG("Could not create valid material descriptor set, skipping");
         continue;
       }
 
@@ -315,12 +315,11 @@ void BasePass::prepareDrawCalls_(const RenderContext& context) {
                                                         sizeof(ecs::Vertex),
                                                         sizeof(math::Matrix4f<>));
 
-          GlobalLogger::Log(
-              LogLevel::Info,
-              "Generated vertex input from shader reflection: " + std::to_string(pipelineDesc.vertexBindings.size())
-                  + " bindings, " + std::to_string(pipelineDesc.vertexAttributes.size()) + " attributes");
+          LOG_INFO("Generated vertex input from shader reflection: "
+                   + std::to_string(pipelineDesc.vertexBindings.size()) + " bindings, "
+                   + std::to_string(pipelineDesc.vertexAttributes.size()) + " attributes");
         } else {
-          GlobalLogger::Log(LogLevel::Error, "Shader reflection vertex inputs not available - cannot create pipeline");
+          LOG_ERROR("Shader reflection vertex inputs not available - cannot create pipeline");
           continue;
         }
 
@@ -373,9 +372,8 @@ void BasePass::prepareDrawCalls_(const RenderContext& context) {
         m_shaderManager->registerPipelineForShader(pipeline, m_vertexShaderPath_);
         m_shaderManager->registerPipelineForShader(pipeline, m_pixelShaderPath_);
 
-        GlobalLogger::Log(LogLevel::Info,
-                          "BasePass: Created pipeline with " + std::to_string(layoutPtrs.size())
-                              + " automatically generated descriptor sets");
+        LOG_INFO("BasePass: Created pipeline with " + std::to_string(layoutPtrs.size())
+                 + " automatically generated descriptor sets");
       }
 
       DrawData drawData;
@@ -424,16 +422,15 @@ void BasePass::cleanupUnusedBuffers_(
   }
 
   for (auto material : materialsToRemove) {
-    GlobalLogger::Log(LogLevel::Debug,
-                      "Removing cached material parameters for deleted material at address: "
-                          + std::to_string(reinterpret_cast<uintptr_t>(material)));
+    LOG_DEBUG("Removing cached material parameters for deleted material at address: "
+              + std::to_string(reinterpret_cast<uintptr_t>(material)));
     m_materialCache.erase(material);
   }
 }
 
 rhi::DescriptorSet* BasePass::getOrCreateMaterialDescriptorSet_(ecs::Material* material) {
   if (!material) {
-    GlobalLogger::Log(LogLevel::Error, "Material is null");
+    LOG_ERROR("Material is null");
     return nullptr;
   }
 
@@ -444,7 +441,7 @@ rhi::DescriptorSet* BasePass::getOrCreateMaterialDescriptorSet_(ecs::Material* m
 
   auto materialLayout = m_resourceManager->getDescriptorSetLayout("material_layout");
   if (!materialLayout) {
-    GlobalLogger::Log(LogLevel::Error, "Material descriptor set layout not found");
+    LOG_ERROR("Material descriptor set layout not found");
     return nullptr;
   }
 
@@ -482,14 +479,12 @@ rhi::DescriptorSet* BasePass::getOrCreateMaterialDescriptorSet_(ecs::Material* m
           texture = m_frameResources->getDefaultBlackTexture();
         }
 
-        GlobalLogger::Log(LogLevel::Debug,
-                          "Using fallback texture for '" + textureName + "' in material: " + material->materialName);
+        LOG_DEBUG("Using fallback texture for '" + textureName + "' in material: " + material->materialName);
       }
 
       if (!texture) {
-        GlobalLogger::Log(LogLevel::Error,
-                          "No texture available (including fallback) for '" + textureName
-                              + "' in material: " + material->materialName);
+        LOG_ERROR("No texture available (including fallback) for '" + textureName
+                  + "' in material: " + material->materialName);
         allTexturesValid = false;
         break;
       }
@@ -501,8 +496,7 @@ rhi::DescriptorSet* BasePass::getOrCreateMaterialDescriptorSet_(ecs::Material* m
     if (allTexturesValid) {
       descriptorSetPtr = m_resourceManager->addDescriptorSet(std::move(descriptorSet), materialKey);
     } else {
-      GlobalLogger::Log(LogLevel::Warning,
-                        "Material descriptor set creation failed due to invalid textures: " + material->materialName);
+      LOG_WARN("Material descriptor set creation failed due to invalid textures: " + material->materialName);
       return nullptr;
     }
   }

@@ -57,7 +57,7 @@ void WorldGridStrategy::render(const RenderContext& context) {
 
   uint32_t currentIndex = context.currentImageIndex;
   if (currentIndex >= m_framebuffers.size()) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid framebuffer index");
+    LOG_ERROR("Invalid framebuffer index");
     return;
   }
 
@@ -96,8 +96,7 @@ void WorldGridStrategy::render(const RenderContext& context) {
 }
 
 void WorldGridStrategy::clearSceneResources() {
-  GlobalLogger::Log(
-      LogLevel::Warning,
+  LOG_WARN(
       "World grid strategy tried to clear resources after scene switch (it doesn't have anything dependent on that)");
 }
 
@@ -139,7 +138,7 @@ void WorldGridStrategy::setupRenderPass_() {
 
 void WorldGridStrategy::createFramebuffers_(const math::Dimension2i& dimension) {
   if (!m_renderPass) {
-    GlobalLogger::Log(LogLevel::Error, "Render pass must be created before framebuffer");
+    LOG_ERROR("Render pass must be created before framebuffer");
     return;
   }
 

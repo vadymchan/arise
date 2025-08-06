@@ -4,7 +4,7 @@
 #include "ecs/components/input_components.h"
 #include "ecs/components/movement.h"
 #include "ecs/components/transform.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 #include "utils/math/math_util.h"
 
 #include <algorithm>

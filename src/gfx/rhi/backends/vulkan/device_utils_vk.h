@@ -1,8 +1,6 @@
 #ifndef ARISE_DEVICE_UTILS_VK_H
 #define ARISE_DEVICE_UTILS_VK_H
 
-#include "utils/logger/global_logger.h"
-
 #include <vulkan/vulkan.h>
 
 #include <optional>

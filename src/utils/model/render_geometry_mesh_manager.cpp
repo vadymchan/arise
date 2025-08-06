@@ -1,18 +1,17 @@
 #include "utils/model/render_geometry_mesh_manager.h"
 
 #include "utils/buffer/buffer_manager.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 #include "utils/service/service_locator.h"
 
 namespace arise {
 RenderGeometryMeshManager::~RenderGeometryMeshManager() {
   if (!m_renderGeometryMeshes.empty()) {
-    GlobalLogger::Log(LogLevel::Info,
-                      "RenderGeometryMeshManager destroyed, releasing " + std::to_string(m_renderGeometryMeshes.size())
-                          + " geometry meshes");
+    LOG_INFO("RenderGeometryMeshManager destroyed, releasing " + std::to_string(m_renderGeometryMeshes.size())
+             + " geometry meshes");
 
     for (const auto& [mesh, geometryMesh] : m_renderGeometryMeshes) {
-      GlobalLogger::Log(LogLevel::Info, "Released geometry mesh for: " + mesh->meshName);
+      LOG_INFO("Released geometry mesh for: " + mesh->meshName);
     }
   }
 }
@@ -22,13 +21,13 @@ ecs::RenderGeometryMesh* RenderGeometryMeshManager::addRenderGeometryMesh(
   std::lock_guard<std::mutex> lock(m_mutex);
 
   if (!renderGeometryMesh || !sourceMesh) {
-    GlobalLogger::Log(LogLevel::Error, "Attempting to add null render geometry mesh or source mesh");
+    LOG_ERROR("Attempting to add null render geometry mesh or source mesh");
     return nullptr;
   }
 
   auto it = m_renderGeometryMeshes.find(sourceMesh);
   if (it != m_renderGeometryMeshes.end()) {
-    GlobalLogger::Log(LogLevel::Warning, "Render geometry already exists for this mesh. Overwriting.");
+    LOG_WARN("Render geometry already exists for this mesh. Overwriting.");
   }
 
   ecs::RenderGeometryMesh* meshPtr = renderGeometryMesh.get();
@@ -46,17 +45,17 @@ ecs::RenderGeometryMesh* RenderGeometryMeshManager::getRenderGeometryMesh(ecs::M
     return it->second.get();
   }
 
-  GlobalLogger::Log(LogLevel::Warning, "No render geometry found for the specified mesh");
+  LOG_WARN("No render geometry found for the specified mesh");
   return nullptr;
 }
 
 bool RenderGeometryMeshManager::removeRenderGeometryMesh(ecs::RenderGeometryMesh* gpuMesh) {
   if (!gpuMesh) {
-    GlobalLogger::Log(LogLevel::Error, "Cannot remove null render geometry mesh");
+    LOG_ERROR("Cannot remove null render geometry mesh");
     return false;
   }
 
-  GlobalLogger::Log(LogLevel::Info, "Removing render geometry mesh");
+  LOG_INFO("Removing render geometry mesh");
 
   auto bufferManager = ServiceLocator::s_get<BufferManager>();
 
@@ -84,7 +83,7 @@ bool RenderGeometryMeshManager::removeRenderGeometryMesh(ecs::RenderGeometryMesh
     return true;
   }
 
-  GlobalLogger::Log(LogLevel::Warning, "Render geometry mesh not found in manager");
+  LOG_WARN("Render geometry mesh not found in manager");
   return false;
 }
 

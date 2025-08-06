@@ -1,6 +1,6 @@
 #include "input/input_manager.h"
 
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 namespace arise {
 
@@ -15,7 +15,7 @@ void InputManager::createDefault() {
   m_getCurrentMode   = []() { return ApplicationMode::Standalone; };
   auto gameProcessor = std::make_unique<GameInputProcessor>(m_inputMap.get(), m_viewportContext.get(), this);
   m_router->addProcessor(std::move(gameProcessor));
-  GlobalLogger::Log(LogLevel::Info, "InputManager: Created default GameInputProcessor");
+  LOG_INFO("InputManager: Created default GameInputProcessor");
 }
 
 void InputManager::updateViewport(int32_t width,
@@ -40,7 +40,7 @@ void InputManager::routeEvent(const SDL_Event& event) {
 
 void InputManager::setApplicationModeCallback(std::function<ApplicationMode()> callback) {
   m_getCurrentMode = std::move(callback);
-  GlobalLogger::Log(LogLevel::Info, "InputManager: Application mode callback updated");
+  LOG_INFO("InputManager: Application mode callback updated");
 }
 
 ApplicationMode InputManager::getCurrentApplicationMode() const {

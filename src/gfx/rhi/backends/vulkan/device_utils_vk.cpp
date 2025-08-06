@@ -1,5 +1,7 @@
 #include "gfx/rhi/backends/vulkan/device_utils_vk.h"
 
+#include "utils/logger/log.h"
+
 #include <set>
 
 namespace arise {
@@ -105,8 +107,7 @@ QueueFamilyIndices g_findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR sur
     if (presentSupport) {
       indices.presentFamily = i;
     } else {
-      GlobalLogger::Log(LogLevel::Debug,
-                        "Queue family " + std::to_string(i) + " does not support surface presentation.");
+      LOG_DEBUG("Queue family " + std::to_string(i) + " does not support surface presentation.");
     }
 
     if (indices.isComplete()) {
@@ -115,16 +116,16 @@ QueueFamilyIndices g_findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR sur
   }
 
   if (!indices.computeFamily.has_value() && indices.graphicsFamily.has_value()) {
-    GlobalLogger::Log(LogLevel::Warning, "No dedicated compute queue found, using graphics queue instead.");
+    LOG_WARN("No dedicated compute queue found, using graphics queue instead.");
     indices.computeFamily = indices.graphicsFamily;
   }
 
   if (!indices.transferFamily.has_value()) {
     if (indices.computeFamily.has_value()) {
-      GlobalLogger::Log(LogLevel::Warning, "No dedicated transfer queue found, using compute queue instead.");
+      LOG_WARN("No dedicated transfer queue found, using compute queue instead.");
       indices.transferFamily = indices.computeFamily;
     } else if (indices.graphicsFamily.has_value()) {
-      GlobalLogger::Log(LogLevel::Warning, "No dedicated transfer queue found, using graphics queue instead.");
+      LOG_WARN("No dedicated transfer queue found, using graphics queue instead.");
       indices.transferFamily = indices.graphicsFamily;
     }
   }

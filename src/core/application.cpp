@@ -19,7 +19,7 @@
 namespace arise {
 
 void Application::setup() {
-  GlobalLogger::Log(LogLevel::Info, "Application::setup() started");
+  LOG_INFO("Application::setup() started");
 
   Registry registry;
 
@@ -29,14 +29,14 @@ void Application::setup() {
   auto scene = SceneLoader::loadScene(sceneName, sceneManager);
 
   if (!scene) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to load scene: " + sceneName);
+    LOG_ERROR("Failed to load scene: " + sceneName);
     return;
   }
 
   sceneManager->switchToScene(sceneName);
   m_scene_ = sceneManager->getCurrentScene();
 
-  GlobalLogger::Log(LogLevel::Info, "Application::setup() completed");
+  LOG_INFO("Application::setup() completed");
 }
 
 void Application::update(float deltaTime) {

@@ -46,7 +46,7 @@ bool Editor::initialize(Window*                        window,
 
   m_imguiContext = std::make_unique<gfx::ImGuiRHIContext>();
   if (!m_imguiContext->initialize(window, device, frameResources->getFramesCount())) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to initialize ImGui context");
+    LOG_ERROR("Failed to initialize ImGui context");
     return false;
   }
 
@@ -66,7 +66,7 @@ bool Editor::initialize(Window*                        window,
 
   setupInputHandlers_();
 
-  GlobalLogger::Log(LogLevel::Info, "Editor initialized successfully");
+  LOG_INFO("Editor initialized successfully");
   return true;
 }
 
@@ -133,7 +133,7 @@ void Editor::update(float deltaTime) {
 void Editor::onWindowResize(uint32_t width, uint32_t height) {
   if (m_renderParams.appMode == ApplicationMode::Editor) {
     if (width <= 0 || height <= 0) {
-      GlobalLogger::Log(LogLevel::Error, "Invalid window dimensions");
+      LOG_ERROR("Invalid window dimensions");
       return;
     }
 
@@ -147,7 +147,7 @@ void Editor::onWindowResize(uint32_t width, uint32_t height) {
 
 void Editor::resizeViewport(const gfx::renderer::RenderContext& context) {
   if (m_renderParams.renderViewportDimension.width() <= 0 || m_renderParams.renderViewportDimension.height() <= 0) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid viewport dimensions");
+    LOG_ERROR("Invalid viewport dimensions");
     return;
   }
 
@@ -417,11 +417,10 @@ void Editor::renderViewportWindow(gfx::renderer::RenderContext& context) {
       }
 
       const char* buttonName = leftClicked ? "Left" : "Right";
-      GlobalLogger::Log(LogLevel::Info,
-                        std::string("Viewport clicked with ") + buttonName + " mouse button - focused on viewport");
+      LOG_INFO(std::string("Viewport clicked with ") + buttonName + " mouse button - focused on viewport");
 
       if (leftClicked) {
-        GlobalLogger::Log(LogLevel::Debug, "Triggering mouse picking from viewport click");
+        LOG_DEBUG("Triggering mouse picking from viewport click");
         handleMousePicking();
       }
     }
@@ -488,7 +487,7 @@ void Editor::renderModeSelectionWindow() {
     m_preserveRenderModeOnSelection = preserveMode;
 
     std::string mode = preserveMode ? "enabled" : "disabled";
-    GlobalLogger::Log(LogLevel::Info, "Render mode preservation " + mode);
+    LOG_INFO("Render mode preservation " + mode);
   }
 
   if (ImGui::IsItemHovered()) {
@@ -745,9 +744,8 @@ void Editor::renderInspectorWindow() {
           lightType = "Spot Light";
         }
 
-        GlobalLogger::Log(LogLevel::Info,
-                          lightType + " " + std::to_string(static_cast<uint32_t>(m_selectedEntity))
-                              + (isEnabled ? " enabled" : " disabled"));
+        LOG_INFO(lightType + " " + std::to_string(static_cast<uint32_t>(m_selectedEntity))
+                 + (isEnabled ? " enabled" : " disabled"));
       }
 
       float color[3] = {light.color.x(), light.color.y(), light.color.z()};
@@ -889,9 +887,8 @@ void Editor::renderInspectorWindow() {
         highlight.xRay = xRayMode;
 
         std::string mode = xRayMode ? "X-Ray" : "Normal";
-        GlobalLogger::Log(LogLevel::Info,
-                          "Outline mode changed to " + mode
-                              + " for entity: " + std::to_string(static_cast<uint32_t>(m_selectedEntity)));
+        LOG_INFO("Outline mode changed to " + mode
+                 + " for entity: " + std::to_string(static_cast<uint32_t>(m_selectedEntity)));
       }
 
       if (ImGui::IsItemHovered()) {
@@ -1054,40 +1051,39 @@ void Editor::handleGizmoInput(EditorAction action) {
     case EditorAction::GizmoTranslate:
       if (isOperationAllowedForEntity(ImGuizmo::TRANSLATE)) {
         m_currentGizmoOperation = ImGuizmo::TRANSLATE;
-        GlobalLogger::Log(LogLevel::Info, "Gizmo: Switched to Translate operation");
+        LOG_INFO("Gizmo: Switched to Translate operation");
       } else {
-        GlobalLogger::Log(LogLevel::Info, "Translate operation not allowed for this entity type");
+        LOG_INFO("Translate operation not allowed for this entity type");
       }
       break;
 
     case EditorAction::GizmoRotate:
       if (isOperationAllowedForEntity(ImGuizmo::ROTATE)) {
         m_currentGizmoOperation = ImGuizmo::ROTATE;
-        GlobalLogger::Log(LogLevel::Info, "Gizmo: Switched to Rotate operation");
+        LOG_INFO("Gizmo: Switched to Rotate operation");
       } else {
-        GlobalLogger::Log(LogLevel::Info, "Rotate operation not allowed for this entity type");
+        LOG_INFO("Rotate operation not allowed for this entity type");
       }
       break;
 
     case EditorAction::GizmoScale:
       if (isOperationAllowedForEntity(ImGuizmo::SCALE)) {
         m_currentGizmoOperation = ImGuizmo::SCALE;
-        GlobalLogger::Log(LogLevel::Info, "Gizmo: Switched to Scale operation");
+        LOG_INFO("Gizmo: Switched to Scale operation");
       } else {
-        GlobalLogger::Log(LogLevel::Info, "Scale operation not allowed for this entity type");
+        LOG_INFO("Scale operation not allowed for this entity type");
       }
       break;
 
     case EditorAction::GizmoToggleSpace:
       m_currentGizmoMode = (m_currentGizmoMode == ImGuizmo::WORLD) ? ImGuizmo::LOCAL : ImGuizmo::WORLD;
-      GlobalLogger::Log(
-          LogLevel::Info,
-          m_currentGizmoMode == ImGuizmo::WORLD ? "Gizmo: Switched to World space" : "Gizmo: Switched to Local space");
+      LOG_INFO(m_currentGizmoMode == ImGuizmo::WORLD ? "Gizmo: Switched to World space"
+                                                     : "Gizmo: Switched to Local space");
       break;
 
     case EditorAction::GizmoToggleVisibility:
       m_showGizmo = !m_showGizmo;
-      GlobalLogger::Log(LogLevel::Info, m_showGizmo ? "Gizmo: Enabled" : "Gizmo: Disabled");
+      LOG_INFO(m_showGizmo ? "Gizmo: Enabled" : "Gizmo: Disabled");
       break;
 
     default:
@@ -1332,8 +1328,7 @@ void Editor::handleEntitySelection(entt::entity entity) {
     registry.remove<ecs::Selected>(m_selectedEntity);
 
     if (registry.all_of<ecs::RenderModel*>(m_selectedEntity)) {
-      GlobalLogger::Log(LogLevel::Info,
-                        "Entity " + std::to_string(static_cast<uint32_t>(m_selectedEntity)) + " deselected");
+      LOG_INFO("Entity " + std::to_string(static_cast<uint32_t>(m_selectedEntity)) + " deselected");
     }
   }
 
@@ -1361,8 +1356,7 @@ void Editor::handleEntitySelection(entt::entity entity) {
       registry.emplace_or_replace<ecs::Selected>(m_selectedEntity);
       hasSelectedRenderModel = true;
 
-      GlobalLogger::Log(LogLevel::Info,
-                        "Entity " + std::to_string(static_cast<uint32_t>(m_selectedEntity)) + " selected");
+      LOG_INFO("Entity " + std::to_string(static_cast<uint32_t>(m_selectedEntity)) + " selected");
     }
   }
 
@@ -1488,7 +1482,7 @@ bool Editor::performGizmoManipulation_(math::Matrix4f<>& modelMatrix, entt::enti
 
 void Editor::clearUIFocus_() {
   ImGui::SetKeyboardFocusHere(-1);
-  GlobalLogger::Log(LogLevel::Info, "UI focus cleared");
+  LOG_INFO("UI focus cleared");
 }
 
 void Editor::saveCurrentScene_() {
@@ -1496,7 +1490,7 @@ void Editor::saveCurrentScene_() {
   auto scene        = sceneManager->getCurrentScene();
 
   if (!scene) {
-    GlobalLogger::Log(LogLevel::Error, "No scene is currently loaded to save");
+    LOG_ERROR("No scene is currently loaded to save");
     return;
   }
 
@@ -1517,10 +1511,8 @@ void Editor::saveCurrentScene_() {
   m_sceneSaveTimer.pause();
 
   if (success) {
-    GlobalLogger::Log(LogLevel::Info,
-                      "Scene saved in "
-                          + std::to_string(m_sceneSaveTimer.elapsedTime<FrameTime::DurationFloat<std::milli>>())
-                          + " ms");
+    LOG_INFO("Scene saved in " + std::to_string(m_sceneSaveTimer.elapsedTime<FrameTime::DurationFloat<std::milli>>())
+             + " ms");
 
     m_showSaveNotification = true;
     m_notificationTimer.reset();
@@ -1537,12 +1529,12 @@ void Editor::setupInputHandlers_() {
 
   editorProcessor->subscribe(EditorAction::FocusInspector, [this](EditorAction) {
     m_setInspectorFocus = true;
-    GlobalLogger::Log(LogLevel::Info, "Inspector window focused");
+    LOG_INFO("Inspector window focused");
   });
 
   editorProcessor->subscribe(EditorAction::ShowControls, [this](EditorAction) {
     m_showControlsWindow = !m_showControlsWindow;
-    GlobalLogger::Log(LogLevel::Info, "Controls window toggled");
+    LOG_INFO("Controls window toggled");
   });
 
   // Gizmo actions
@@ -1559,17 +1551,17 @@ void Editor::setupInputHandlers_() {
   });
 
   inputManager->addProcessor(std::move(editorProcessor));
-  GlobalLogger::Log(LogLevel::Info, "Editor input handlers configured with new architecture");
+  LOG_INFO("Editor input handlers configured with new architecture");
 }
 
 void Editor::handleMousePicking() {
-  GlobalLogger::Log(LogLevel::Debug, "Editor::handleMousePicking called");
+  LOG_DEBUG("Editor::handleMousePicking called");
 
   auto systemManager      = ServiceLocator::s_get<ecs::SystemManager>();
   auto mousePickingSystem = systemManager->getSystem<ecs::MousePickingSystem>();
 
   if (!mousePickingSystem) {
-    GlobalLogger::Log(LogLevel::Warning, "MousePickingSystem not found");
+    LOG_WARN("MousePickingSystem not found");
     return;
   }
 
@@ -1591,17 +1583,15 @@ void Editor::handleMousePicking() {
 
     if (pickedEntity != entt::null) {
       handleEntitySelection(pickedEntity);
-      GlobalLogger::Log(LogLevel::Error,
-                        "Mouse picking: Selected entity " + std::to_string(static_cast<uint32_t>(pickedEntity))
-                            + " at (" + std::to_string(relativeMouseX) + ", " + std::to_string(relativeMouseY) + ")");
+      LOG_ERROR("Mouse picking: Selected entity " + std::to_string(static_cast<uint32_t>(pickedEntity)) + " at ("
+                + std::to_string(relativeMouseX) + ", " + std::to_string(relativeMouseY) + ")");
     } else {
       handleEntitySelection(entt::null);
-      GlobalLogger::Log(LogLevel::Debug,
-                        "Mouse picking: Nothing picked at (" + std::to_string(relativeMouseX) + ", "
-                            + std::to_string(relativeMouseY) + ")");
+      LOG_DEBUG("Mouse picking: Nothing picked at (" + std::to_string(relativeMouseX) + ", "
+                + std::to_string(relativeMouseY) + ")");
     }
   } else {
-    GlobalLogger::Log(LogLevel::Warning, "No current scene for mouse picking");
+    LOG_WARN("No current scene for mouse picking");
   }
 }
 
@@ -1610,7 +1600,7 @@ void Editor::addDirectionalLight() {
   auto scene        = sceneManager->getCurrentScene();
 
   if (!scene) {
-    GlobalLogger::Log(LogLevel::Error, "No scene is currently loaded");
+    LOG_ERROR("No scene is currently loaded");
     return;
   }
 
@@ -1627,7 +1617,7 @@ void Editor::addDirectionalLight() {
 
   handleEntitySelection(entity);
 
-  GlobalLogger::Log(LogLevel::Info, "Directional light added");
+  LOG_INFO("Directional light added");
 }
 
 void Editor::addPointLight() {
@@ -1635,7 +1625,7 @@ void Editor::addPointLight() {
   auto scene        = sceneManager->getCurrentScene();
 
   if (!scene) {
-    GlobalLogger::Log(LogLevel::Error, "No scene is currently loaded");
+    LOG_ERROR("No scene is currently loaded");
     return;
   }
 
@@ -1657,7 +1647,7 @@ void Editor::addPointLight() {
 
   handleEntitySelection(entity);
 
-  GlobalLogger::Log(LogLevel::Info, "Point light added");
+  LOG_INFO("Point light added");
 }
 
 void Editor::addSpotLight() {
@@ -1665,7 +1655,7 @@ void Editor::addSpotLight() {
   auto scene        = sceneManager->getCurrentScene();
 
   if (!scene) {
-    GlobalLogger::Log(LogLevel::Error, "No scene is currently loaded");
+    LOG_ERROR("No scene is currently loaded");
     return;
   }
 
@@ -1689,7 +1679,7 @@ void Editor::addSpotLight() {
 
   handleEntitySelection(entity);
 
-  GlobalLogger::Log(LogLevel::Info, "Spot light added");
+  LOG_INFO("Spot light added");
 }
 
 void Editor::removeSelectedEntity() {
@@ -1745,9 +1735,8 @@ void Editor::removeSelectedEntity() {
         renderModelManager->removeRenderModel(model);
       }
     } else {
-      GlobalLogger::Log(LogLevel::Info,
-                        "Found " + std::to_string(referenceCount - 1)
-                            + " other entities using the same render model. Keeping resources.");
+      LOG_INFO("Found " + std::to_string(referenceCount - 1)
+               + " other entities using the same render model. Keeping resources.");
     }
 
     if (!entityType.empty()) {
@@ -1758,7 +1747,7 @@ void Editor::removeSelectedEntity() {
   }
 
   registry.destroy(m_selectedEntity);
-  GlobalLogger::Log(LogLevel::Info, entityType + " removed");
+  LOG_INFO(entityType + " removed");
 
   m_selectedEntity = entt::null;
 
@@ -1775,7 +1764,7 @@ math::Vector3f Editor::getPositionInFrontOfCamera_() {
   auto scene        = sceneManager->getCurrentScene();
 
   if (!scene) {
-    GlobalLogger::Log(LogLevel::Warning, "No scene loaded when trying to position in front of camera");
+    LOG_WARN("No scene loaded when trying to position in front of camera");
     return position;
   }
 
@@ -1783,7 +1772,7 @@ math::Vector3f Editor::getPositionInFrontOfCamera_() {
 
   auto cameraView = registry.view<ecs::Camera, ecs::CameraMatrices, ecs::Transform>();
   if (cameraView.begin() == cameraView.end()) {
-    GlobalLogger::Log(LogLevel::Warning, "No camera found for positioning");
+    LOG_WARN("No camera found for positioning");
     return position;
   }
 
@@ -1949,7 +1938,7 @@ void Editor::handleAddModelDialog() {
       }
 
       createModelEntity(fullPath, m_newModelTransform);
-      GlobalLogger::Log(LogLevel::Info, "Model added: " + fullPath.string());
+      LOG_INFO("Model added: " + fullPath.string());
       m_openAddModelDialog = false;
     }
 
@@ -1985,7 +1974,7 @@ void Editor::handleAddModelDialog() {
           strncpy(m_modelPathBuffer, m_modelPath.string().c_str(), MAX_PATH_BUFFER_SIZE - 1);
           m_modelPathBuffer[MAX_PATH_BUFFER_SIZE - 1] = '\0';
 
-          GlobalLogger::Log(LogLevel::Warning, "Selected model path is outside " + modelsDir.string() + " directory.");
+          LOG_WARN("Selected model path is outside " + modelsDir.string() + " directory.");
         }
       }
       ImGuiFileDialog::Instance()->Close();
@@ -1999,7 +1988,7 @@ void Editor::createModelEntity(const std::filesystem::path& modelPath, const ecs
   auto scene        = sceneManager->getCurrentScene();
 
   if (!scene) {
-    GlobalLogger::Log(LogLevel::Error, "No scene is currently loaded");
+    LOG_ERROR("No scene is currently loaded");
     return;
   }
 
@@ -2027,7 +2016,7 @@ void Editor::createModelEntity(const std::filesystem::path& modelPath, const ecs
       auto& registry = scene->getEntityRegistry();
 
       if (!registry.valid(entity)) {
-        GlobalLogger::Log(LogLevel::Warning, "Entity was destroyed while model was loading");
+        LOG_WARN("Entity was destroyed while model was loading");
         return;
       }
 
@@ -2046,17 +2035,17 @@ void Editor::createModelEntity(const std::filesystem::path& modelPath, const ecs
             registry.emplace<ecs::RenderModel*>(entity, renderModel);
 
             handleEntitySelection(entity);
-            GlobalLogger::Log(LogLevel::Info, "Model loaded successfully: " + modelPath.string());
+            LOG_INFO("Model loaded successfully: " + modelPath.string());
           } else {
-            GlobalLogger::Log(LogLevel::Error, "Failed to load model: " + modelPath.string());
+            LOG_ERROR("Failed to load model: " + modelPath.string());
           }
         }
       } else {
-        GlobalLogger::Log(LogLevel::Error, "Failed to load model: " + modelPath.string());
+        LOG_ERROR("Failed to load model: " + modelPath.string());
       }
     });
 
-    GlobalLogger::Log(LogLevel::Info, "Started async loading for model: " + modelPath.string());
+    LOG_INFO("Started async loading for model: " + modelPath.string());
 
   } else {
     auto modelManager = ServiceLocator::s_get<RenderModelManager>();
@@ -2069,14 +2058,14 @@ void Editor::createModelEntity(const std::filesystem::path& modelPath, const ecs
         registry.emplace<ecs::RenderModel*>(entity, renderModel);
 
         handleEntitySelection(entity);
-        GlobalLogger::Log(LogLevel::Info, "Model loaded successfully: " + modelPath.string());
+        LOG_INFO("Model loaded successfully: " + modelPath.string());
       } else {
-        GlobalLogger::Log(LogLevel::Error, "Failed to load model: " + modelPath.string());
+        LOG_ERROR("Failed to load model: " + modelPath.string());
         registry.destroy(entity);
         return;
       }
     } else {
-      GlobalLogger::Log(LogLevel::Error, "RenderModelManager not available");
+      LOG_ERROR("RenderModelManager not available");
       registry.destroy(entity);
       return;
     }
@@ -2232,7 +2221,7 @@ void Editor::scanAvailableScenes_() {
 
 void Editor::switchToScene_(const std::string& sceneName) {
   if (hasLoadingModels_()) {
-    GlobalLogger::Log(LogLevel::Info, "Waiting for models to finish loading before switching to scene: " + sceneName);
+    LOG_INFO("Waiting for models to finish loading before switching to scene: " + sceneName);
     m_pendingSceneSwitch = sceneName;
     return;
   }
@@ -2241,7 +2230,7 @@ void Editor::switchToScene_(const std::string& sceneName) {
   if (!sceneManager->hasScene(sceneName)) {
     auto scene = SceneLoader::loadScene(sceneName, sceneManager);
     if (!scene) {
-      GlobalLogger::Log(LogLevel::Error, "Failed to load scene: " + sceneName);
+      LOG_ERROR("Failed to load scene: " + sceneName);
       return;
     }
   }
@@ -2252,9 +2241,9 @@ void Editor::switchToScene_(const std::string& sceneName) {
     }
 
     m_selectedEntity = entt::null;
-    GlobalLogger::Log(LogLevel::Info, "Switched to scene: " + sceneName);
+    LOG_INFO("Switched to scene: " + sceneName);
   } else {
-    GlobalLogger::Log(LogLevel::Error, "Failed to switch to scene: " + sceneName);
+    LOG_ERROR("Failed to switch to scene: " + sceneName);
   }
 }
 
@@ -2262,12 +2251,12 @@ void Editor::createNewScene_() {
   std::string sceneName = m_newSceneNameBuffer;
 
   if (sceneName.empty()) {
-    GlobalLogger::Log(LogLevel::Warning, "Scene name cannot be empty");
+    LOG_WARN("Scene name cannot be empty");
     return;
   }
 
   if (hasLoadingModels_()) {
-    GlobalLogger::Log(LogLevel::Info, "Waiting for models to finish loading before creating new scene...");
+    LOG_INFO("Waiting for models to finish loading before creating new scene...");
     m_pendingSceneSwitch = "CREATE:" + sceneName;
     return;
   }
@@ -2275,7 +2264,7 @@ void Editor::createNewScene_() {
   auto sceneManager = ServiceLocator::s_get<SceneManager>();
 
   if (sceneManager->hasScene(sceneName)) {
-    GlobalLogger::Log(LogLevel::Warning, "Scene already exists: " + sceneName);
+    LOG_WARN("Scene already exists: " + sceneName);
     return;
   }
 
@@ -2283,11 +2272,11 @@ void Editor::createNewScene_() {
   sceneManager->addScene(sceneName, std::move(emptyRegistry));
 
   if (sceneManager->switchToScene(sceneName)) {
-    GlobalLogger::Log(LogLevel::Info, "Created and switched to new scene: " + sceneName);
+    LOG_INFO("Created and switched to new scene: " + sceneName);
     createDefaultCamera_();
     saveCurrentScene_();
   } else {
-    GlobalLogger::Log(LogLevel::Error, "Failed to switch to new scene: " + sceneName);
+    LOG_ERROR("Failed to switch to new scene: " + sceneName);
   }
 }
 
@@ -2296,7 +2285,7 @@ void Editor::createDefaultCamera_() {
   auto scene        = sceneManager->getCurrentScene();
 
   if (!scene) {
-    GlobalLogger::Log(LogLevel::Error, "No current scene when creating default camera");
+    LOG_ERROR("No current scene when creating default camera");
     return;
   }
 
@@ -2327,7 +2316,7 @@ void Editor::createDefaultCamera_() {
 
   registry.emplace<ecs::Movement>(cameraEntity);
 
-  GlobalLogger::Log(LogLevel::Info, "Created default camera with input components");
+  LOG_INFO("Created default camera with input components");
 }
 
 void Editor::renderNewSceneDialog_() {
@@ -2390,12 +2379,12 @@ bool Editor::hasLoadingModels_() const {
 
 bool Editor::switchRenderingApi_(gfx::rhi::RenderingApi newApi) {
   if (!m_renderer) {
-    GlobalLogger::Log(LogLevel::Error, "Renderer not available for API switch");
+    LOG_ERROR("Renderer not available for API switch");
     return false;
   }
 
   std::string apiName = (newApi == gfx::rhi::RenderingApi::Vulkan) ? "Vulkan" : "DirectX 12";
-  GlobalLogger::Log(LogLevel::Info, "Starting seamless API switch to " + apiName);
+  LOG_INFO("Starting seamless API switch to " + apiName);
 
   if (m_device) {
     m_device->waitIdle();
@@ -2410,20 +2399,20 @@ bool Editor::switchRenderingApi_(gfx::rhi::RenderingApi newApi) {
 
   Window* newWindow = nullptr;
   if (m_windowRecreationCallback) {
-    GlobalLogger::Log(LogLevel::Info, "Recreating window for API compatibility");
+    LOG_INFO("Recreating window for API compatibility");
     newWindow = m_windowRecreationCallback(newApi);
     if (!newWindow) {
-      GlobalLogger::Log(LogLevel::Error, "Failed to recreate window for API switch");
+      LOG_ERROR("Failed to recreate window for API switch");
       return false;
     }
 
     m_window = newWindow;
-    GlobalLogger::Log(LogLevel::Info, "Window reference updated");
+    LOG_INFO("Window reference updated");
   }
 
   bool success = m_renderer->switchRenderingApi(newApi);
   if (!success) {
-    GlobalLogger::Log(LogLevel::Error, "Renderer API switch failed");
+    LOG_ERROR("Renderer API switch failed");
     return false;
   }
 
@@ -2431,9 +2420,9 @@ bool Editor::switchRenderingApi_(gfx::rhi::RenderingApi newApi) {
 
   bool imguiSuccess = recreateImGuiContext_();
   if (imguiSuccess) {
-    GlobalLogger::Log(LogLevel::Info, "API switch to " + apiName + " completed successfully");
+    LOG_INFO("API switch to " + apiName + " completed successfully");
   } else {
-    GlobalLogger::Log(LogLevel::Error, "Failed to recreate ImGui context after API switch");
+    LOG_ERROR("Failed to recreate ImGui context after API switch");
   }
 
   return imguiSuccess;
@@ -2441,7 +2430,7 @@ bool Editor::switchRenderingApi_(gfx::rhi::RenderingApi newApi) {
 
 void Editor::scheduleApiSwitch_(gfx::rhi::RenderingApi newApi) {
   std::string apiName = (newApi == gfx::rhi::RenderingApi::Vulkan) ? "Vulkan" : "DirectX 12";
-  GlobalLogger::Log(LogLevel::Info, "Scheduling API switch to " + apiName);
+  LOG_INFO("Scheduling API switch to " + apiName);
 
   m_pendingApiSwitch = true;
   m_pendingApi       = newApi;
@@ -2453,12 +2442,12 @@ void Editor::processPendingApiSwitch_() {
   }
 
   std::string apiName = (m_pendingApi == gfx::rhi::RenderingApi::Vulkan) ? "Vulkan" : "DirectX 12";
-  GlobalLogger::Log(LogLevel::Info, "Processing API switch to " + apiName);
+  LOG_INFO("Processing API switch to " + apiName);
 
   if (switchRenderingApi_(m_pendingApi)) {
-    GlobalLogger::Log(LogLevel::Info, "API switch to " + apiName + " completed successfully");
+    LOG_INFO("API switch to " + apiName + " completed successfully");
   } else {
-    GlobalLogger::Log(LogLevel::Error, "API switch to " + apiName + " failed");
+    LOG_ERROR("API switch to " + apiName + " failed");
   }
 
   m_pendingApiSwitch = false;
@@ -2467,7 +2456,7 @@ void Editor::processPendingApiSwitch_() {
 bool Editor::recreateImGuiContext_() {
   auto newDevice = m_renderer->getDevice();
   if (!newDevice) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to get new device after API switch");
+    LOG_ERROR("Failed to get new device after API switch");
     return false;
   }
 
@@ -2475,19 +2464,19 @@ bool Editor::recreateImGuiContext_() {
   m_frameResources = m_renderer->getFrameResources();
 
   if (!m_frameResources) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to get frame resources after API switch");
+    LOG_ERROR("Failed to get frame resources after API switch");
     return false;
   }
 
   m_imguiContext = std::make_unique<gfx::ImGuiRHIContext>();
   if (!m_imguiContext->initialize(m_window, newDevice, m_frameResources->getFramesCount())) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to recreate ImGui context");
+    LOG_ERROR("Failed to recreate ImGui context");
     m_imguiContext.reset();
     return false;
   }
 
   ImGuizmo::SetImGuiContext(ImGui::GetCurrentContext());
-  GlobalLogger::Log(LogLevel::Info, "ImGui context recreated successfully");
+  LOG_INFO("ImGui context recreated successfully");
   return true;
 }
 

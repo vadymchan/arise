@@ -4,7 +4,7 @@
 
 #include "resources/cgltf/cgltf_common.h"
 #include "utils/image/image_manager.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 #include "utils/service/service_locator.h"
 #include "utils/texture/texture_manager.h"
 
@@ -14,20 +14,18 @@
 namespace arise {
 
 std::vector<std::unique_ptr<ecs::Material>> CgltfMaterialLoader::loadMaterials(const std::filesystem::path& filePath) {
-  GlobalLogger::Log(LogLevel::Info, "Loading materials from " + filePath.string());
+  LOG_INFO("Loading materials from " + filePath.string());
 
   auto scene = CgltfSceneCache::getOrLoad(filePath);
   if (!scene) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to load GLTF scene: " + filePath.string());
+    LOG_ERROR("Failed to load GLTF scene: " + filePath.string());
     return {};
   }
   const cgltf_data* data = scene.get();
 
   auto materials = processMaterials(data, filePath);
 
-  GlobalLogger::Log(
-      LogLevel::Info,
-      "Successfully loaded " + std::to_string(materials.size()) + " material(s) from " + filePath.string());
+  LOG_INFO("Successfully loaded " + std::to_string(materials.size()) + " material(s) from " + filePath.string());
 
   return materials;
 }
@@ -89,7 +87,7 @@ void CgltfMaterialLoader::loadTextures(const cgltf_material*        material,
     if (image == nullptr && texture->has_basisu && texture->basisu_image) {
       image = texture->basisu_image;
     } else {
-      GlobalLogger::Log(LogLevel::Warning, "Image is null for base color texture");
+      LOG_WARN("Image is null for base color texture");
     }
 
     if (image) {
@@ -108,7 +106,7 @@ void CgltfMaterialLoader::loadTextures(const cgltf_material*        material,
     if (image == nullptr && texture->has_basisu && texture->basisu_image) {
       image = texture->basisu_image;
     } else {
-      GlobalLogger::Log(LogLevel::Warning, "Image is null for metallic roughness texture");
+      LOG_WARN("Image is null for metallic roughness texture");
     }
 
     if (image) {
@@ -127,7 +125,7 @@ void CgltfMaterialLoader::loadTextures(const cgltf_material*        material,
     if (image == nullptr && texture->has_basisu && texture->basisu_image) {
       image = texture->basisu_image;
     } else {
-      GlobalLogger::Log(LogLevel::Warning, "Image is null for normal map texture");
+      LOG_WARN("Image is null for normal map texture");
     }
 
     if (image) {
@@ -147,28 +145,28 @@ gfx::rhi::Texture* CgltfMaterialLoader::loadTexture(const cgltf_image*          
   if (image->uri) {
     texturePath = basePath / image->uri;
   } else if (image->buffer_view) {
-    GlobalLogger::Log(LogLevel::Warning, "Embedded textures not fully implemented");
+    LOG_WARN("Embedded textures not fully implemented");
     return nullptr;
   } else {
-    GlobalLogger::Log(LogLevel::Error, "Invalid image source in GLTF");
+    LOG_ERROR("Invalid image source in GLTF");
     return nullptr;
   }
 
   auto imageManager = ServiceLocator::s_get<ImageManager>();
   if (!imageManager) {
-    GlobalLogger::Log(LogLevel::Error, "ImageManager not available");
+    LOG_ERROR("ImageManager not available");
     return nullptr;
   }
 
   auto imagePtr = imageManager->getImage(texturePath);
   if (!imagePtr) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to load image: " + texturePath.string());
+    LOG_ERROR("Failed to load image: " + texturePath.string());
     return nullptr;
   }
 
   auto textureManager = ServiceLocator::s_get<TextureManager>();
   if (!textureManager) {
-    GlobalLogger::Log(LogLevel::Error, "TextureManager not found in ServiceLocator");
+    LOG_ERROR("TextureManager not found in ServiceLocator");
     return nullptr;
   }
 

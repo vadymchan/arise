@@ -12,7 +12,7 @@
 #include "gfx/rhi/backends/dx12/texture_dx12.h"
 #include "profiler/gpu.h"
 #include "utils/color/color.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 #include <algorithm>
 
@@ -45,7 +45,7 @@ CommandBufferDx12::~CommandBufferDx12() {
 
 void CommandBufferDx12::begin() {
   if (m_isRecording_) {
-    GlobalLogger::Log(LogLevel::Warning, "Command buffer is already recording");
+    LOG_WARN("Command buffer is already recording");
     return;
   }
 
@@ -54,7 +54,7 @@ void CommandBufferDx12::begin() {
 
 void CommandBufferDx12::end() {
   if (!m_isRecording_) {
-    GlobalLogger::Log(LogLevel::Warning, "Command buffer is not recording");
+    LOG_WARN("Command buffer is not recording");
     return;
   }
 
@@ -64,7 +64,7 @@ void CommandBufferDx12::end() {
 
   HRESULT hr = m_commandList_->Close();
   if (FAILED(hr)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to close command list");
+    LOG_ERROR("Failed to close command list");
     return;
   }
 
@@ -73,19 +73,19 @@ void CommandBufferDx12::end() {
 
 void CommandBufferDx12::reset() {
   if (m_isRecording_) {
-    GlobalLogger::Log(LogLevel::Warning, "Cannot reset while recording");
+    LOG_WARN("Cannot reset while recording");
     return;
   }
 
   HRESULT hr = m_commandAllocator_->Reset();
   if (FAILED(hr)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to reset command allocator");
+    LOG_ERROR("Failed to reset command allocator");
     return;
   }
 
   hr = m_commandList_->Reset(m_commandAllocator_, nullptr);
   if (FAILED(hr)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to reset command list");
+    LOG_ERROR("Failed to reset command list");
     return;
   }
 
@@ -97,13 +97,13 @@ void CommandBufferDx12::reset() {
 
 void CommandBufferDx12::setPipeline(Pipeline* pipeline) {
   if (!m_isRecording_) {
-    GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording");
+    LOG_ERROR("Command buffer is not recording");
     return;
   }
 
   auto pipelineDx12 = dynamic_cast<GraphicsPipelineDx12*>(pipeline);
   if (!pipelineDx12) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid pipeline type");
+    LOG_ERROR("Invalid pipeline type");
     return;
   }
 
@@ -122,9 +122,7 @@ void CommandBufferDx12::setPipeline(Pipeline* pipeline) {
       uint32_t backRef  = desc.depthStencil.back.reference;
 
       if (frontRef != backRef) {
-        GlobalLogger::Log(
-            LogLevel::Warning,
-            "DX12 limitation: Different front/back stencil references not supported. Using front reference.");
+        LOG_WARN("DX12 limitation: Different front/back stencil references not supported. Using front reference.");
       }
 
       m_commandList_->OMSetStencilRef(frontRef);
@@ -142,7 +140,7 @@ void CommandBufferDx12::setPipeline(Pipeline* pipeline) {
 
 void CommandBufferDx12::setViewport(const Viewport& viewport) {
   if (!m_isRecording_) {
-    GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording");
+    LOG_ERROR("Command buffer is not recording");
     return;
   }
 
@@ -159,7 +157,7 @@ void CommandBufferDx12::setViewport(const Viewport& viewport) {
 
 void CommandBufferDx12::setScissor(const ScissorRect& scissor) {
   if (!m_isRecording_) {
-    GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording");
+    LOG_ERROR("Command buffer is not recording");
     return;
   }
 
@@ -174,18 +172,18 @@ void CommandBufferDx12::setScissor(const ScissorRect& scissor) {
 
 void CommandBufferDx12::bindVertexBuffer(uint32_t binding, Buffer* buffer, uint64_t offset) {
   if (!m_isRecording_) {
-    GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording");
+    LOG_ERROR("Command buffer is not recording");
     return;
   }
 
   DirectBufferDx12* directBuffer = dynamic_cast<DirectBufferDx12*>(buffer);
   if (!directBuffer) {
-    GlobalLogger::Log(LogLevel::Error, "Buffer must be a DirectBufferDx12 type");
+    LOG_ERROR("Buffer must be a DirectBufferDx12 type");
     return;
   }
 
   if (!directBuffer->isVertexBuffer() && !directBuffer->isInstanceBuffer()) {
-    GlobalLogger::Log(LogLevel::Warning, "Buffer is not marked as vertex or instance buffer");
+    LOG_WARN("Buffer is not marked as vertex or instance buffer");
   }
 
   D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
@@ -198,19 +196,19 @@ void CommandBufferDx12::bindVertexBuffer(uint32_t binding, Buffer* buffer, uint6
 
 void CommandBufferDx12::bindIndexBuffer(Buffer* buffer, uint64_t offset, bool use32BitIndices) {
   if (!m_isRecording_) {
-    GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording");
+    LOG_ERROR("Command buffer is not recording");
     return;
   }
 
   BufferDx12* bufferDx12 = dynamic_cast<BufferDx12*>(buffer);
   if (!bufferDx12) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid buffer type");
+    LOG_ERROR("Invalid buffer type");
     return;
   }
 
   DirectBufferDx12* directBuffer = dynamic_cast<DirectBufferDx12*>(buffer);
   if (directBuffer && !directBuffer->isIndexBuffer()) {
-    GlobalLogger::Log(LogLevel::Warning, "Buffer is not marked as index buffer");
+    LOG_WARN("Buffer is not marked as index buffer");
   }
 
   D3D12_INDEX_BUFFER_VIEW indexBufferView;
@@ -223,24 +221,24 @@ void CommandBufferDx12::bindIndexBuffer(Buffer* buffer, uint64_t offset, bool us
 
 void CommandBufferDx12::bindDescriptorSet(uint32_t rootParameterIndex, DescriptorSet* set) {
   if (!m_isRecording_) {
-    GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording");
+    LOG_ERROR("Command buffer is not recording");
     return;
   }
 
   if (!m_currentPipeline_) {
-    GlobalLogger::Log(LogLevel::Error, "No active pipeline");
+    LOG_ERROR("No active pipeline");
     return;
   }
 
   DescriptorSetDx12* descriptorSetDx12 = dynamic_cast<DescriptorSetDx12*>(set);
   if (!descriptorSetDx12) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid descriptor set type");
+    LOG_ERROR("Invalid descriptor set type");
     return;
   }
 
   auto descriptorSetLayoutDx12 = dynamic_cast<const DescriptorSetLayoutDx12*>(descriptorSetDx12->getLayout());
   if (!descriptorSetLayoutDx12) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid descriptor set layout type");
+    LOG_ERROR("Invalid descriptor set layout type");
     return;
   }
 
@@ -269,7 +267,7 @@ void CommandBufferDx12::bindDescriptorSet(uint32_t rootParameterIndex, Descripto
 
 void CommandBufferDx12::draw(uint32_t vertexCount, uint32_t firstVertex) {
   if (!m_isRecording_ || !m_isRenderPassActive_) {
-    GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording or render pass is not active");
+    LOG_ERROR("Command buffer is not recording or render pass is not active");
     return;
   }
 
@@ -278,7 +276,7 @@ void CommandBufferDx12::draw(uint32_t vertexCount, uint32_t firstVertex) {
 
 void CommandBufferDx12::drawIndexed(uint32_t indexCount, uint32_t firstIndex, int32_t vertexOffset) {
   if (!m_isRecording_ || !m_isRenderPassActive_) {
-    GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording or render pass is not active");
+    LOG_ERROR("Command buffer is not recording or render pass is not active");
     return;
   }
 
@@ -290,7 +288,7 @@ void CommandBufferDx12::drawInstanced(uint32_t vertexCount,
                                       uint32_t firstVertex,
                                       uint32_t firstInstance) {
   if (!m_isRecording_ || !m_isRenderPassActive_) {
-    GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording or render pass is not active");
+    LOG_ERROR("Command buffer is not recording or render pass is not active");
     return;
   }
 
@@ -300,7 +298,7 @@ void CommandBufferDx12::drawInstanced(uint32_t vertexCount,
 void CommandBufferDx12::drawIndexedInstanced(
     uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset, uint32_t firstInstance) {
   if (!m_isRecording_ || !m_isRenderPassActive_) {
-    GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording or render pass is not active");
+    LOG_ERROR("Command buffer is not recording or render pass is not active");
     return;
   }
   m_commandList_->DrawIndexedInstanced(indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
@@ -308,18 +306,18 @@ void CommandBufferDx12::drawIndexedInstanced(
 
 void CommandBufferDx12::resourceBarrier(const ResourceBarrierDesc& barrier) {
   if (!m_isRecording_) {
-    GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording");
+    LOG_ERROR("Command buffer is not recording");
     return;
   }
 
   if (!barrier.texture) {
-    GlobalLogger::Log(LogLevel::Error, "Null texture");
+    LOG_ERROR("Null texture");
     return;
   }
 
   TextureDx12* textureDx12 = dynamic_cast<TextureDx12*>(barrier.texture);
   if (!textureDx12) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid texture type");
+    LOG_ERROR("Invalid texture type");
     return;
   }
 
@@ -328,7 +326,7 @@ void CommandBufferDx12::resourceBarrier(const ResourceBarrierDesc& barrier) {
 
   if (oldState == newState) {
     // TODO: uncomment this if needed
-    // GlobalLogger::Log(LogLevel::Warning, "Skipping redundant barrier, states are identical");
+    // LOG_WARN("Skipping redundant barrier, states are identical");
     return;
   }
 
@@ -349,12 +347,12 @@ void CommandBufferDx12::beginRenderPass(RenderPass*                    renderPas
                                         Framebuffer*                   framebuffer,
                                         const std::vector<ClearValue>& clearValues) {
   if (!m_isRecording_) {
-    GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording");
+    LOG_ERROR("Command buffer is not recording");
     return;
   }
 
   if (m_isRenderPassActive_) {
-    GlobalLogger::Log(LogLevel::Error, "Render pass is already active");
+    LOG_ERROR("Render pass is already active");
     return;
   }
 
@@ -362,7 +360,7 @@ void CommandBufferDx12::beginRenderPass(RenderPass*                    renderPas
   FramebufferDx12* framebufferDx12 = dynamic_cast<FramebufferDx12*>(framebuffer);
 
   if (!renderPassDx12 || !framebufferDx12) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid render pass or framebuffer type");
+    LOG_ERROR("Invalid render pass or framebuffer type");
     return;
   }
 
@@ -411,7 +409,7 @@ void CommandBufferDx12::beginRenderPass(RenderPass*                    renderPas
 
 void CommandBufferDx12::endRenderPass() {
   if (!m_isRecording_ || !m_isRenderPassActive_) {
-    GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording or render pass is not active");
+    LOG_ERROR("Command buffer is not recording or render pass is not active");
     return;
   }
 
@@ -427,7 +425,7 @@ void CommandBufferDx12::endRenderPass() {
 void CommandBufferDx12::copyBuffer(
     Buffer* srcBuffer, Buffer* dstBuffer, uint64_t srcOffset, uint64_t dstOffset, uint64_t size) {
   if (!m_isRecording_) {
-    GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording");
+    LOG_ERROR("Command buffer is not recording");
     return;
   }
 
@@ -435,7 +433,7 @@ void CommandBufferDx12::copyBuffer(
   BufferDx12* dstBufferDx12 = dynamic_cast<BufferDx12*>(dstBuffer);
 
   if (!srcBufferDx12 || !dstBufferDx12) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid buffer type");
+    LOG_ERROR("Invalid buffer type");
     return;
   }
 
@@ -446,7 +444,7 @@ void CommandBufferDx12::copyBuffer(
   }
 
   if (dstOffset + copySize > dstBufferDx12->getSize()) {
-    GlobalLogger::Log(LogLevel::Error, "Copy operation exceeds destination buffer size");
+    LOG_ERROR("Copy operation exceeds destination buffer size");
     return;
   }
 
@@ -459,7 +457,7 @@ void CommandBufferDx12::copyBufferToTexture(Buffer*  srcBuffer,
                                             uint32_t mipLevel,
                                             uint32_t arrayLayer) {
   if (!m_isRecording_) {
-    GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording");
+    LOG_ERROR("Command buffer is not recording");
     return;
   }
 
@@ -467,7 +465,7 @@ void CommandBufferDx12::copyBufferToTexture(Buffer*  srcBuffer,
   TextureDx12* dstTextureDx12 = dynamic_cast<TextureDx12*>(dstTexture);
 
   if (!srcBufferDx12 || !dstTextureDx12) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid buffer or texture type");
+    LOG_ERROR("Invalid buffer or texture type");
     return;
   }
 
@@ -520,7 +518,7 @@ void CommandBufferDx12::copyTextureToBuffer(Texture* srcTexture,
                                             uint32_t mipLevel,
                                             uint32_t arrayLayer) {
   if (!m_isRecording_) {
-    GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording");
+    LOG_ERROR("Command buffer is not recording");
     return;
   }
 
@@ -528,7 +526,7 @@ void CommandBufferDx12::copyTextureToBuffer(Texture* srcTexture,
   BufferDx12*  dstBufferDx12  = dynamic_cast<BufferDx12*>(dstBuffer);
 
   if (!srcTextureDx12 || !dstBufferDx12) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid texture or buffer type");
+    LOG_ERROR("Invalid texture or buffer type");
     return;
   }
 
@@ -583,14 +581,14 @@ void CommandBufferDx12::copyTexture(Texture* srcTexture,
                                     uint32_t dstMipLevel,
                                     uint32_t dstArrayLayer) {
   if (!m_isRecording_) {
-    GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording");
+    LOG_ERROR("Command buffer is not recording");
     return;
   }
 
   auto* srcTexDx12 = dynamic_cast<TextureDx12*>(srcTexture);
   auto* dstTexDx12 = dynamic_cast<TextureDx12*>(dstTexture);
   if (!srcTexDx12 || !dstTexDx12) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid texture type");
+    LOG_ERROR("Invalid texture type");
     return;
   }
 
@@ -674,20 +672,20 @@ void CommandBufferDx12::copyTexture(Texture* srcTexture,
 
 void CommandBufferDx12::clearColor(Texture* texture, const float color[4], uint32_t mipLevel, uint32_t arrayLayer) {
   if (!m_isRecording_) {
-    GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording");
+    LOG_ERROR("Command buffer is not recording");
     return;
   }
 
   TextureDx12* textureDx12 = dynamic_cast<TextureDx12*>(texture);
   if (!textureDx12) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid texture type");
+    LOG_ERROR("Invalid texture type");
     return;
   }
 
   // Get RTV handle for this mip/array slice
   D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = textureDx12->getRtvHandle(mipLevel, arrayLayer);
   if (rtvHandle.ptr == 0) {
-    GlobalLogger::Log(LogLevel::Error, "No valid RTV handle for texture");
+    LOG_ERROR("No valid RTV handle for texture");
     return;
   }
 
@@ -712,19 +710,19 @@ void CommandBufferDx12::clearColor(Texture* texture, const float color[4], uint3
 void CommandBufferDx12::clearDepthStencil(
     Texture* texture, float depth, uint8_t stencil, uint32_t mipLevel, uint32_t arrayLayer) {
   if (!m_isRecording_) {
-    GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording");
+    LOG_ERROR("Command buffer is not recording");
     return;
   }
 
   TextureDx12* textureDx12 = dynamic_cast<TextureDx12*>(texture);
   if (!textureDx12) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid texture type");
+    LOG_ERROR("Invalid texture type");
     return;
   }
 
   D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = textureDx12->getDsvHandle(mipLevel, arrayLayer);
   if (dsvHandle.ptr == 0) {
-    GlobalLogger::Log(LogLevel::Error, "No valid DSV handle for texture");
+    LOG_ERROR("No valid DSV handle for texture");
     return;
   }
 
@@ -831,7 +829,7 @@ CommandAllocatorManager::~CommandAllocatorManager() {
 
 bool CommandAllocatorManager::initialize(ID3D12Device* device, uint32_t allocatorCount) {
   if (!device) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid device");
+    LOG_ERROR("Invalid device");
     return false;
   }
 
@@ -845,7 +843,7 @@ bool CommandAllocatorManager::initialize(ID3D12Device* device, uint32_t allocato
     HRESULT hr = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&allocator));
 
     if (FAILED(hr)) {
-      GlobalLogger::Log(LogLevel::Error, "Failed to create command allocator");
+      LOG_ERROR("Failed to create command allocator");
       return false;
     }
 
@@ -863,7 +861,7 @@ void CommandAllocatorManager::release() {
 
 ID3D12CommandAllocator* CommandAllocatorManager::getCommandAllocator() {
   if (!m_device) {
-    GlobalLogger::Log(LogLevel::Error, "Manager not initialized");
+    LOG_ERROR("Manager not initialized");
     return nullptr;
   }
 
@@ -883,7 +881,7 @@ ID3D12CommandAllocator* CommandAllocatorManager::getCommandAllocator() {
   HRESULT hr = m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&allocator));
 
   if (FAILED(hr)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create command allocator");
+    LOG_ERROR("Failed to create command allocator");
     return nullptr;
   }
 
@@ -905,7 +903,7 @@ void CommandAllocatorManager::returnCommandAllocator(ID3D12CommandAllocator* all
     }
   }
 
-  GlobalLogger::Log(LogLevel::Warning, "Allocator not found in used list");
+  LOG_WARN("Allocator not found in used list");
 }
 
 }  // namespace rhi

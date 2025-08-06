@@ -1,6 +1,6 @@
 #include "scene/scene.h"
 
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 #include "utils/model/render_model_manager.h"
 #include "utils/service/service_locator.h"
 

@@ -60,7 +60,7 @@ void FrameResources::updatePerFrameResources(const RenderContext& context) {
     auto systemManager = ServiceLocator::s_get<ecs::SystemManager>();
     m_lightSystem      = systemManager->getSystem<ecs::LightSystem>();
     if (!m_lightSystem) {
-      GlobalLogger::Log(LogLevel::Error, "LightSystem not found!");
+      LOG_ERROR("LightSystem not found!");
       return;
     }
   }
@@ -78,7 +78,7 @@ void FrameResources::clearSceneResources() {
   m_sortedModels.clear();
   m_modelMatrixCache.clear();
   m_materialParamCache.clear();
-  GlobalLogger::Log(LogLevel::Info, "Frame resources cleared for scene switch");
+  LOG_INFO("Frame resources cleared for scene switch");
 }
 
 void FrameResources::cleanup() {
@@ -111,7 +111,7 @@ rhi::DescriptorSet* FrameResources::getOrCreateModelMatrixDescriptorSet(ecs::Ren
   }
 
   if (!renderMesh->transformMatrixBuffer) {
-    GlobalLogger::Log(LogLevel::Warning, "RenderMesh has no model matrix buffer");
+    LOG_WARN("RenderMesh has no model matrix buffer");
     return nullptr;
   }
 
@@ -131,7 +131,7 @@ rhi::DescriptorSetLayout* FrameResources::getLightDescriptorSetLayout() const {
 
 rhi::Buffer* FrameResources::getOrCreateMaterialParamBuffer(ecs::Material* material) {
   if (!material) {
-    GlobalLogger::Log(LogLevel::Warning, "Material is null");
+    LOG_WARN("Material is null");
     return nullptr;
   }
 
@@ -358,7 +358,7 @@ void FrameResources::updateViewResources_(const RenderContext& context) {
   auto  view     = registry.view<ecs::Transform, ecs::Camera, ecs::CameraMatrices>();
 
   if (view.begin() == view.end()) {
-    GlobalLogger::Log(LogLevel::Warning, "No main Camera exists!");
+    LOG_WARN("No main Camera exists!");
     return;
   }
 
@@ -465,9 +465,8 @@ void FrameResources::updateModelList_(const RenderContext& context) {
   }
 
   for (auto material : materialsToRemove) {
-    GlobalLogger::Log(LogLevel::Debug,
-                      "Removing cached material parameters for deleted material at address: "
-                          + std::to_string(reinterpret_cast<uintptr_t>(material)));
+    LOG_DEBUG("Removing cached material parameters for deleted material at address: "
+              + std::to_string(reinterpret_cast<uintptr_t>(material)));
     m_materialParamCache.erase(material);
   }
 

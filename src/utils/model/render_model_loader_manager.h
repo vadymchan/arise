@@ -2,7 +2,6 @@
 #define ARISE_RENDER_MODEL_LOADER_MANAGER_H
 
 #include "resources/i_render_model_loader.h"
-#include "utils/logger/global_logger.h"
 #include "utils/model/model_type.h"
 
 #include <filesystem>

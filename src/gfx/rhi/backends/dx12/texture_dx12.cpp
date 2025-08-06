@@ -7,7 +7,7 @@
 #include "gfx/rhi/backends/dx12/device_dx12.h"
 #include "gfx/rhi/backends/dx12/rhi_enums_dx12.h"
 #include "gfx/rhi/backends/dx12/synchronization_dx12.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 namespace arise {
 namespace gfx {
@@ -20,7 +20,7 @@ TextureDx12::TextureDx12(const TextureDesc& desc, DeviceDx12* device)
   m_currentLayout_ = desc.initialLayout;
 
   if (!createResource_() || !createViews_()) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create DirectX 12 texture");
+    LOG_ERROR("Failed to create DirectX 12 texture");
   }
 
   if (!desc.debugName.empty() && m_resource_) {
@@ -99,7 +99,7 @@ bool TextureDx12::createResource_() {
       resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE3D;
       break;
     default:
-      GlobalLogger::Log(LogLevel::Error, "Unsupported texture type");
+      LOG_ERROR("Unsupported texture type");
       return false;
   }
 
@@ -166,7 +166,7 @@ bool TextureDx12::createResource_() {
       &allocationDesc, &resourceDesc, getResourceState(), clearValue, &m_allocation_, IID_PPV_ARGS(&m_resource_));
 
   if (FAILED(hr)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create DirectX 12 texture resource with D3D12MA");
+    LOG_ERROR("Failed to create DirectX 12 texture resource with D3D12MA");
     return false;
   }
 
@@ -177,13 +177,13 @@ bool TextureDx12::createViews_() {
   if (hasRtvUsage()) {
     auto* rtvHeap = m_device_->getCpuRtvHeap();
     if (!rtvHeap) {
-      GlobalLogger::Log(LogLevel::Error, "RTV heap not available");
+      LOG_ERROR("RTV heap not available");
       return false;
     }
 
     m_rtvDescriptorIndex_ = rtvHeap->allocate();
     if (m_rtvDescriptorIndex_ == UINT32_MAX) {
-      GlobalLogger::Log(LogLevel::Error, "Failed to allocate RTV descriptor");
+      LOG_ERROR("Failed to allocate RTV descriptor");
       return false;
     }
 
@@ -233,7 +233,7 @@ bool TextureDx12::createViews_() {
         rtvDesc.Texture3D.WSize       = m_desc_.depth;
         break;
       default:
-        GlobalLogger::Log(LogLevel::Error, "Unsupported texture type for RTV");
+        LOG_ERROR("Unsupported texture type for RTV");
         return false;
     }
 
@@ -243,13 +243,13 @@ bool TextureDx12::createViews_() {
   if (hasDsvUsage()) {
     auto* dsvHeap = m_device_->getCpuDsvHeap();
     if (!dsvHeap) {
-      GlobalLogger::Log(LogLevel::Error, "DSV heap not available");
+      LOG_ERROR("DSV heap not available");
       return false;
     }
 
     m_dsvDescriptorIndex_ = dsvHeap->allocate();
     if (m_dsvDescriptorIndex_ == UINT32_MAX) {
-      GlobalLogger::Log(LogLevel::Error, "Failed to allocate DSV descriptor");
+      LOG_ERROR("Failed to allocate DSV descriptor");
       return false;
     }
 
@@ -291,7 +291,7 @@ bool TextureDx12::createViews_() {
         }
         break;
       default:
-        GlobalLogger::Log(LogLevel::Error, "Unsupported texture type for DSV");
+        LOG_ERROR("Unsupported texture type for DSV");
         return false;
     }
 
@@ -300,13 +300,13 @@ bool TextureDx12::createViews_() {
 
   auto* srvUavHeap = m_device_->getCpuCbvSrvUavHeap();
   if (!srvUavHeap) {
-    GlobalLogger::Log(LogLevel::Error, "SRV/UAV heap not available");
+    LOG_ERROR("SRV/UAV heap not available");
     return false;
   }
 
   m_srvDescriptorIndex_ = srvUavHeap->allocate();
   if (m_srvDescriptorIndex_ == UINT32_MAX) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to allocate SRV descriptor");
+    LOG_ERROR("Failed to allocate SRV descriptor");
     return false;
   }
 
@@ -376,7 +376,7 @@ bool TextureDx12::createViews_() {
       srvDesc.Texture3D.ResourceMinLODClamp = 0.0f;
       break;
     default:
-      GlobalLogger::Log(LogLevel::Error, "Unsupported texture type for SRV");
+      LOG_ERROR("Unsupported texture type for SRV");
       return false;
   }
 
@@ -389,7 +389,7 @@ bool TextureDx12::createViews_() {
     for (uint32_t i = 0; i < m_desc_.mipLevels; i++) {
       m_uavDescriptorIndices_[i] = srvUavHeap->allocate();
       if (m_uavDescriptorIndices_[i] == UINT32_MAX) {
-        GlobalLogger::Log(LogLevel::Error, "Failed to allocate UAV descriptor");
+        LOG_ERROR("Failed to allocate UAV descriptor");
         continue;
       }
 
@@ -429,7 +429,7 @@ bool TextureDx12::createViews_() {
           uavDesc.Texture3D.WSize       = m_desc_.depth >> i;
           break;
         default:
-          GlobalLogger::Log(LogLevel::Error, "Unsupported texture type for UAV");
+          LOG_ERROR("Unsupported texture type for UAV");
           continue;
       }
 
@@ -451,7 +451,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE TextureDx12::getRtvHandle(uint32_t mipLevel, uint32_
     return m_rtvHandle_;
   }
 
-  GlobalLogger::Log(LogLevel::Error, "Invalid mip level or array slice for RTV handle");
+  LOG_ERROR("Invalid mip level or array slice for RTV handle");
   D3D12_CPU_DESCRIPTOR_HANDLE invalidHandle = {};
   return invalidHandle;
 }
@@ -462,7 +462,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE TextureDx12::getDsvHandle(uint32_t mipLevel, uint32_
     return m_dsvHandle_;
   }
 
-  GlobalLogger::Log(LogLevel::Error, "Invalid mip level or array slice for DSV handle");
+  LOG_ERROR("Invalid mip level or array slice for DSV handle");
   D3D12_CPU_DESCRIPTOR_HANDLE invalidHandle = {};
   return invalidHandle;
 }
@@ -472,14 +472,14 @@ D3D12_CPU_DESCRIPTOR_HANDLE TextureDx12::getUavHandle(uint32_t mipLevel) const {
     return m_uavHandles_[mipLevel];
   }
 
-  GlobalLogger::Log(LogLevel::Error, "Invalid mip level for UAV handle");
+  LOG_ERROR("Invalid mip level for UAV handle");
   D3D12_CPU_DESCRIPTOR_HANDLE invalidHandle = {};
   return invalidHandle;
 }
 
 void TextureDx12::update(const void* data, size_t dataSize, uint32_t mipLevel, uint32_t arrayLayer) {
   if (!data || !dataSize) {
-    GlobalLogger::Log(LogLevel::Error, "Invalid data or size for texture update");
+    LOG_ERROR("Invalid data or size for texture update");
     return;
   }
 
@@ -538,7 +538,7 @@ void TextureDx12::update(const void* data, size_t dataSize, uint32_t mipLevel, u
                                                          IID_PPV_ARGS(&stagingResource));
 
   if (FAILED(hr)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create staging buffer for texture update");
+    LOG_ERROR("Failed to create staging buffer for texture update");
     return;
   }
 
@@ -546,7 +546,7 @@ void TextureDx12::update(const void* data, size_t dataSize, uint32_t mipLevel, u
   hr               = stagingResource->Map(0, nullptr, &mappedData);
 
   if (FAILED(hr)) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to map staging buffer for texture update");
+    LOG_ERROR("Failed to map staging buffer for texture update");
     return;
   }
 
@@ -565,7 +565,7 @@ void TextureDx12::update(const void* data, size_t dataSize, uint32_t mipLevel, u
 
   std::unique_ptr<CommandBuffer> commandBuffer = m_device_->createCommandBuffer(cmdBufferDesc);
   if (!commandBuffer) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create command buffer for texture update");
+    LOG_ERROR("Failed to create command buffer for texture update");
     return;
   }
 

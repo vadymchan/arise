@@ -4,7 +4,7 @@
 #include "gfx/rhi/backends/vulkan/rhi_enums_vk.h"
 #include "gfx/rhi/backends/vulkan/synchronization_vk.h"
 #include "gfx/rhi/backends/vulkan/texture_vk.h"
-#include "utils/logger/global_logger.h"
+#include "utils/logger/log.h"
 
 #include <algorithm>
 
@@ -16,12 +16,12 @@ SwapChainVk::SwapChainVk(const SwapchainDesc& desc, DeviceVk* device)
     : SwapChain(desc)
     , m_device_(device) {
   if (!createSwapChain_()) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create swap chain");
+    LOG_ERROR("Failed to create swap chain");
     return;
   }
 
   if (!createImageViews_()) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create swap chain image views");
+    LOG_ERROR("Failed to create swap chain image views");
     return;
   }
 }
@@ -248,7 +248,7 @@ bool SwapChainVk::acquireNextImage(Semaphore* signalSemaphore) {
     resize(m_desc_.width, m_desc_.height);
     return false;
   } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to acquire swap chain image");
+    LOG_ERROR("Failed to acquire swap chain image");
     return false;
   }
 
@@ -289,7 +289,7 @@ bool SwapChainVk::present(Semaphore* waitSemaphore) {
   if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
     resize(m_desc_.width, m_desc_.height);
   } else if (result != VK_SUCCESS) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to present swap chain image");
+    LOG_ERROR("Failed to present swap chain image");
     return false;
   }
 
@@ -309,7 +309,7 @@ bool SwapChainVk::resize(uint32_t width, uint32_t height) {
   cleanup_();
 
   if (!createSwapChain_() || !createImageViews_()) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to recreate swap chain during resize");
+    LOG_ERROR("Failed to recreate swap chain during resize");
     return false;
   }
 

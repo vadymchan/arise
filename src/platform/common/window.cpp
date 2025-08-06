@@ -7,19 +7,19 @@ namespace arise {
 
 bool Window::setWindowIcon(const std::filesystem::path& iconPath) {
   if (!m_window_) {
-    GlobalLogger::Log(LogLevel::Error, "Cannot set window icon: window is null");
+    LOG_ERROR("Cannot set window icon: window is null");
     return false;
   }
 
   auto imageManager = ServiceLocator::s_get<ImageManager>();
   if (!imageManager) {
-    GlobalLogger::Log(LogLevel::Error, "Cannot set window icon: ImageManager not available");
+    LOG_ERROR("Cannot set window icon: ImageManager not available");
     return false;
   }
 
   auto image = imageManager->getImage(iconPath);
   if (!image) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to load icon image: " + iconPath.string());
+    LOG_ERROR("Failed to load icon image: " + iconPath.string());
     return false;
   }
 
@@ -35,7 +35,7 @@ bool Window::setWindowIcon(const std::filesystem::path& iconPath) {
   );
 
   if (!surface) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to create SDL surface for icon: " + std::string(SDL_GetError()));
+    LOG_ERROR("Failed to create SDL surface for icon: " + std::string(SDL_GetError()));
     return false;
   }
 
@@ -43,7 +43,7 @@ bool Window::setWindowIcon(const std::filesystem::path& iconPath) {
 
   SDL_FreeSurface(surface);
 
-  GlobalLogger::Log(LogLevel::Info, "Window icon set successfully from: " + iconPath.string());
+  LOG_INFO("Window icon set successfully from: " + iconPath.string());
   return true;
 }
 

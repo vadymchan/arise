@@ -39,9 +39,9 @@ bool SceneSaver::saveScene(Scene* scene, const std::string& sceneName, const std
 
   bool success = FileSystemManager::writeFile(filePath, buffer.GetString());
   if (success) {
-    LOG_INFO("Scene saved to: " + filePath.string());
+    LOG_INFO("Scene saved to: {}", filePath.string());
   } else {
-    LOG_ERROR("Failed to save scene to: " + filePath.string());
+    LOG_ERROR("Failed to save scene to: {}", filePath.string());
   }
 
   return success;

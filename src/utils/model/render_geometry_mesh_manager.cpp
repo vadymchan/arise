@@ -7,11 +7,10 @@
 namespace arise {
 RenderGeometryMeshManager::~RenderGeometryMeshManager() {
   if (!m_renderGeometryMeshes.empty()) {
-    LOG_INFO("RenderGeometryMeshManager destroyed, releasing " + std::to_string(m_renderGeometryMeshes.size())
-             + " geometry meshes");
+    LOG_INFO("RenderGeometryMeshManager destroyed, releasing {} geometry meshes", m_renderGeometryMeshes.size());
 
     for (const auto& [mesh, geometryMesh] : m_renderGeometryMeshes) {
-      LOG_INFO("Released geometry mesh for: " + mesh->meshName);
+      LOG_INFO("Released geometry mesh for: {}", mesh->meshName);
     }
   }
 }

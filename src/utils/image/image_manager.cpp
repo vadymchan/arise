@@ -25,7 +25,7 @@ Image* ImageManager::getImage(const std::filesystem::path& filepath) {
     return imagePtr;
   }
 
-  LOG_WARN("Failed to load image: " + filepath.string());
+  LOG_WARN("Failed to load image: {}", filepath.string());
   return nullptr;
 }
 

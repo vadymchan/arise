@@ -196,7 +196,7 @@ rhi::DescriptorSet* LightVisualizationStrategy::getOrCreateMaterialDescriptorSet
       normalMapTexture = normalMapIt->second;
     } else {
       normalMapTexture = m_frameResources->getDefaultNormalTexture();
-      LOG_DEBUG("Using fallback normal map texture for material: " + material->materialName);
+      LOG_DEBUG("Using fallback normal map texture for material: {}", material->materialName);
     }
 
     descriptorSet->setTexture(0, normalMapTexture);
@@ -471,8 +471,8 @@ void LightVisualizationStrategy::cleanupUnusedBuffers_(
   }
 
   for (auto material : materialsToRemove) {
-    LOG_DEBUG("Removing cached light visualization material descriptor set for deleted material at address: "
-              + std::to_string(reinterpret_cast<uintptr_t>(material)));
+    LOG_DEBUG("Removing cached light visualization material descriptor set for deleted material at address: {}",
+              reinterpret_cast<uintptr_t>(material));
     m_materialCache.erase(material);
   }
 }

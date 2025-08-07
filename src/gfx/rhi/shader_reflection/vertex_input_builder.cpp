@@ -32,8 +32,7 @@ void VertexInputBuilder::createFromReflection(const std::vector<ShaderVertexInpu
     } else if (isKnownVertexSemantic_(input.semanticName)) {
       hasVertexInputs = true;
     } else {
-      LOG_ERROR("Unknown vertex input semantic: '" + input.semanticName + "' at location "
-                + std::to_string(input.location));
+      LOG_ERROR("Unknown vertex input semantic: '{}' at location {}", input.semanticName, input.location);
     }
   }
 
@@ -98,8 +97,7 @@ void VertexInputBuilder::createFromReflection(const std::vector<ShaderVertexInpu
         return a.location < b.location;
       });
 
-  LOG_INFO("Created vertex input layout: " + std::to_string(bindings.size()) + " bindings, "
-           + std::to_string(attributes.size()) + " attributes");
+  LOG_INFO("Created vertex input layout: {} bindings, {} attributes", bindings.size(), attributes.size());
 }
 
 bool VertexInputBuilder::isKnownVertexSemantic_(const std::string& semanticName) {
@@ -122,8 +120,10 @@ uint32_t VertexInputBuilder::getVertexAttributeOffset_(const std::string& semant
     return offsetof(ecs::Vertex, color);
   }
 
-  LOG_ERROR("Unknown vertex semantic in offset calculation: " + semanticName
-            + ". This should never happen if isKnownVertexSemantic_ is used correctly.");
+  LOG_ERROR(
+      "Unknown vertex semantic in offset calculation: {}. This should never happen if isKnownVertexSemantic_ is used "
+      "correctly.",
+      semanticName);
   return 0;
 }
 

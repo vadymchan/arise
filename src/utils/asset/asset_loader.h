@@ -87,7 +87,7 @@ class AssetLoader {
       std::lock_guard<std::mutex> lock(m_queueMutex);
 
       if (m_pendingAssets.find(assetKey) != m_pendingAssets.end()) {
-        LOG_INFO("Asset already queued for loading: " + filepath.string());
+        LOG_INFO("Asset already queued for loading: {}", filepath.string());
         if (callback) {
           m_pendingCallbacks[assetKey].push_back(callback);
         }
@@ -97,7 +97,7 @@ class AssetLoader {
       auto modelManager = ServiceLocator::s_get<RenderModelManager>();
       if (modelManager) {
         if (modelManager->hasRenderModel(filepath)) {
-          LOG_INFO("Asset already loaded: " + filepath.string());
+          LOG_INFO("Asset already loaded: {}", filepath.string());
           if (callback) {
             callback(true);
           }
@@ -118,7 +118,7 @@ class AssetLoader {
       m_requestQueue.push(request);
       m_condVar.notify_one();
 
-      LOG_INFO("Queued asset for loading: " + filepath.string());
+      LOG_INFO("Queued asset for loading: {}", filepath.string());
     }
   }
 
@@ -134,7 +134,7 @@ class AssetLoader {
       std::lock_guard<std::mutex> lock(m_queueMutex);
 
       if (m_pendingAssets.find(assetKey) != m_pendingAssets.end()) {
-        LOG_INFO("Asset already queued for loading: " + filepath.string());
+        LOG_INFO("Asset already queued for loading: {}", filepath.string());
         if (callback) {
           m_pendingCallbacks[assetKey].push_back(callback);
         }
@@ -144,7 +144,7 @@ class AssetLoader {
       auto textureManager = ServiceLocator::s_get<TextureManager>();
       if (textureManager) {
         if (textureManager->hasTexture(filepath.filename().string())) {
-          LOG_INFO("Asset already loaded: " + filepath.string());
+          LOG_INFO("Asset already loaded: {}", filepath.string());
           if (callback) {
             callback(true);
           }
@@ -165,7 +165,7 @@ class AssetLoader {
       m_requestQueue.push(request);
       m_condVar.notify_one();
 
-      LOG_INFO("Queued asset for loading: " + filepath.string());
+      LOG_INFO("Queued asset for loading: {}", filepath.string());
     }
   }
 
@@ -179,7 +179,7 @@ class AssetLoader {
       m_pendingAssets.erase(it);
       m_pendingCallbacks.erase(assetKey);
 
-      LOG_INFO("Cancelled pending asset load: " + filepath.string());
+      LOG_INFO("Cancelled pending asset load: {}", filepath.string());
       return true;
     }
 
@@ -250,7 +250,7 @@ class AssetLoader {
         success = loadTextureInternal_(request.path);
         break;
       default:
-        LOG_ERROR("Unknown asset type for: " + request.path.string());
+        LOG_ERROR("Unknown asset type for: {}", request.path.string());
         break;
     }
 
@@ -274,15 +274,15 @@ class AssetLoader {
   }
 
   bool loadModelInternal_(const std::filesystem::path& filepath) {
-    LOG_INFO("Loading model: " + filepath.string());
+    LOG_INFO("Loading model: {}", filepath.string());
 
     if (auto renderModelManager = ServiceLocator::s_get<RenderModelManager>()) {
       ecs::RenderModel* gpuModel = renderModelManager->getRenderModel(filepath);
       if (gpuModel) {
-        LOG_INFO("Successfully loaded GPU model: " + filepath.string());
+        LOG_INFO("Successfully loaded GPU model: {}", filepath.string());
         return true;
       }
-      LOG_WARN("GPU model load failed – will attempt CPU-only load for: " + filepath.string());
+      LOG_WARN("GPU model load failed – will attempt CPU-only load for: {}", filepath.string());
     }
 
     if (auto cpuModelManager = ServiceLocator::s_get<ModelManager>()) {
@@ -290,20 +290,20 @@ class AssetLoader {
       bool        success  = (cpuModel != nullptr);
 
       if (success) {
-        LOG_INFO("Successfully loaded CPU model (no GPU resources yet): " + filepath.string());
+        LOG_INFO("Successfully loaded CPU model (no GPU resources yet): {}", filepath.string());
       } else {
-        LOG_ERROR("Failed to load CPU model: " + filepath.string());
+        LOG_ERROR("Failed to load CPU model: {}", filepath.string());
       }
 
       return success;
     }
 
-    LOG_ERROR("Neither GPU nor CPU model managers are available for: " + filepath.string());
+    LOG_ERROR("Neither GPU nor CPU model managers are available for: {}", filepath.string());
     return false;
   }
 
   bool loadTextureInternal_(const std::filesystem::path& filepath) {
-    LOG_INFO("Loading texture: " + filepath.string());
+    LOG_INFO("Loading texture: {}", filepath.string());
 
     auto textureManager = ServiceLocator::s_get<TextureManager>();
     if (!textureManager) {
@@ -316,9 +316,9 @@ class AssetLoader {
     bool success = (texture != nullptr);
 
     if (success) {
-      LOG_INFO("Successfully loaded texture: " + filepath.string());
+      LOG_INFO("Successfully loaded texture: {}", filepath.string());
     } else {
-      LOG_ERROR("Failed to load texture: " + filepath.string());
+      LOG_ERROR("Failed to load texture: {}", filepath.string());
     }
 
     return success;

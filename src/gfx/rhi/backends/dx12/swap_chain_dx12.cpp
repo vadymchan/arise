@@ -68,7 +68,7 @@ bool SwapChainDx12::createSwapChain_() {
   SDL_SysWMinfo wmInfo;
   SDL_VERSION(&wmInfo.version);
   if (!SDL_GetWindowWMInfo(static_cast<SDL_Window*>(window->getNativeWindowHandle()), &wmInfo)) {
-    LOG_ERROR("Failed to get window handle" + std::string(SDL_GetError()));
+    LOG_ERROR("Failed to get window handle: {}", SDL_GetError());
     return false;
   }
 

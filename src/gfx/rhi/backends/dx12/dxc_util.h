@@ -85,7 +85,7 @@ class DxcUtil {
                                             const OptionalShaderParams&  optionalParams = {}) {
     std::string code = readFile_(shaderPath);
     if (code.empty()) {
-      LOG_ERROR("Failed to read shader file: " + shaderPath.string());
+      LOG_ERROR("Failed to read shader file: {}", shaderPath.string());
       return nullptr;
     }
     return compileHlslCode(code, stage, entryPoint, backend, optionalParams);

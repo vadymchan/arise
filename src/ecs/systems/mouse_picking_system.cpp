@@ -56,7 +56,7 @@ entt::entity MousePickingSystem::processMouseClick_(Scene* scene, int mouseX, in
   entt::entity hitEntity = performRaycast_(scene, ray);
 
   if (hitEntity != entt::null) {
-    LOG_INFO("Picked entity " + std::to_string(static_cast<uint32_t>(hitEntity)));
+    LOG_INFO("Picked entity {}", static_cast<uint32_t>(hitEntity));
   } else {
     LOG_DEBUG("No entity picked");
   }
@@ -130,7 +130,7 @@ std::vector<AABBCandidate> MousePickingSystem::performAABBRaycast_(Scene* scene,
     }
   }
 
-  LOG_DEBUG("Found " + std::to_string(candidates.size()) + " AABB candidates");
+  LOG_DEBUG("Found {} AABB candidates", candidates.size());
 
   return candidates;
 }
@@ -174,8 +174,7 @@ entt::entity MousePickingSystem::performTriangleRaycast_(Scene*                 
     }
 
     if (anyTriangleHit) {
-      LOG_INFO("Triangle hit on entity " + std::to_string(static_cast<uint32_t>(candidate.entity)) + " at distance "
-               + std::to_string(closestDistance));
+      LOG_INFO("Triangle hit on entity {} at distance {}", static_cast<uint32_t>(candidate.entity), closestDistance);
       return candidate.entity;
     }
   }

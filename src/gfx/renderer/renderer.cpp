@@ -340,7 +340,7 @@ bool Renderer::onViewportResize(const math::Dimension2i& newDimension) {
   auto width  = newDimension.width() > 0 ? newDimension.width() : 1;
   auto height = newDimension.height() > 0 ? newDimension.height() : 1;
 
-  LOG_INFO("Resizing viewport to " + std::to_string(width) + "x" + std::to_string(height));
+  LOG_INFO("Resizing viewport to {}x{}", width, height);
 
   // this is not ideal solution, but it works for now
   auto scene = ServiceLocator::s_get<SceneManager>()->getCurrentScene();
@@ -412,7 +412,7 @@ bool Renderer::switchRenderingApi(gfx::rhi::RenderingApi newApi) {
     return true;
   }
 
-  LOG_INFO("Starting API switch to " + std::to_string(static_cast<int>(newApi)));
+  LOG_INFO("Starting API switch to {}", static_cast<int>(newApi));
 
   waitForAllFrames_();
 
@@ -674,8 +674,8 @@ void Renderer::reloadSceneModels_() {
     auto* cpuModel = registry.get<ecs::Model*>(entity);
     if (cpuModel && !cpuModel->filePath.empty()) {
       entitiesToUpdate.emplace_back(entity, cpuModel->filePath);
-      LOG_INFO("Entity " + std::to_string(static_cast<uint32_t>(entity))
-               + " scheduled for GPU model reload: " + cpuModel->filePath.string());
+      LOG_INFO(
+          "Entity {} scheduled for GPU model reload: {}", static_cast<uint32_t>(entity), cpuModel->filePath.string());
     }
   }
 
@@ -690,7 +690,7 @@ void Renderer::reloadSceneModels_() {
 
   for (const auto& [entity, modelPath] : entitiesToUpdate) {
     if (!registry.valid(entity)) {
-      LOG_WARN("Entity " + std::to_string(static_cast<uint32_t>(entity)) + " no longer valid during reload");
+      LOG_WARN("Entity {} no longer valid during reload", static_cast<uint32_t>(entity));
       continue;
     }
 
@@ -700,15 +700,13 @@ void Renderer::reloadSceneModels_() {
     if (newRenderModel) {
       registry.emplace<ecs::RenderModel*>(entity, newRenderModel);
 
-      LOG_INFO("Entity " + std::to_string(static_cast<uint32_t>(entity))
-               + " GPU model successfully reloaded: " + modelPath.string());
+      LOG_INFO("Entity {} GPU model successfully reloaded: {}", static_cast<uint32_t>(entity), modelPath.string());
     } else {
-      LOG_ERROR("Failed to reload GPU model for entity " + std::to_string(static_cast<uint32_t>(entity)) + ": "
-                + modelPath.string());
+      LOG_ERROR("Failed to reload GPU model for entity {}: {}", static_cast<uint32_t>(entity), modelPath.string());
     }
   }
 
-  LOG_INFO("Reloaded GPU models for " + std::to_string(entitiesToUpdate.size()) + " entities");
+  LOG_INFO("Reloaded GPU models for {} entities", entitiesToUpdate.size());
 }
 
 }  // namespace renderer

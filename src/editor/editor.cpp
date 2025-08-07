@@ -417,7 +417,7 @@ void Editor::renderViewportWindow(gfx::renderer::RenderContext& context) {
       }
 
       const char* buttonName = leftClicked ? "Left" : "Right";
-      LOG_INFO(std::string("Viewport clicked with ") + buttonName + " mouse button - focused on viewport");
+      LOG_INFO("Viewport clicked with {} mouse button - focused on viewport", buttonName);
 
       if (leftClicked) {
         LOG_DEBUG("Triggering mouse picking from viewport click");
@@ -487,7 +487,7 @@ void Editor::renderModeSelectionWindow() {
     m_preserveRenderModeOnSelection = preserveMode;
 
     std::string mode = preserveMode ? "enabled" : "disabled";
-    LOG_INFO("Render mode preservation " + mode);
+    LOG_INFO("Render mode preservation {}", mode);
   }
 
   if (ImGui::IsItemHovered()) {
@@ -744,8 +744,7 @@ void Editor::renderInspectorWindow() {
           lightType = "Spot Light";
         }
 
-        LOG_INFO(lightType + " " + std::to_string(static_cast<uint32_t>(m_selectedEntity))
-                 + (isEnabled ? " enabled" : " disabled"));
+        LOG_INFO("{} {}{}", lightType, static_cast<uint32_t>(m_selectedEntity), (isEnabled ? " enabled" : " disabled"));
       }
 
       float color[3] = {light.color.x(), light.color.y(), light.color.z()};
@@ -887,8 +886,7 @@ void Editor::renderInspectorWindow() {
         highlight.xRay = xRayMode;
 
         std::string mode = xRayMode ? "X-Ray" : "Normal";
-        LOG_INFO("Outline mode changed to " + mode
-                 + " for entity: " + std::to_string(static_cast<uint32_t>(m_selectedEntity)));
+        LOG_INFO("Outline mode changed to {} for entity: {}", mode, static_cast<uint32_t>(m_selectedEntity));
       }
 
       if (ImGui::IsItemHovered()) {
@@ -1328,7 +1326,7 @@ void Editor::handleEntitySelection(entt::entity entity) {
     registry.remove<ecs::Selected>(m_selectedEntity);
 
     if (registry.all_of<ecs::RenderModel*>(m_selectedEntity)) {
-      LOG_INFO("Entity " + std::to_string(static_cast<uint32_t>(m_selectedEntity)) + " deselected");
+      LOG_INFO("Entity {} deselected", static_cast<uint32_t>(m_selectedEntity));
     }
   }
 
@@ -1356,7 +1354,7 @@ void Editor::handleEntitySelection(entt::entity entity) {
       registry.emplace_or_replace<ecs::Selected>(m_selectedEntity);
       hasSelectedRenderModel = true;
 
-      LOG_INFO("Entity " + std::to_string(static_cast<uint32_t>(m_selectedEntity)) + " selected");
+      LOG_INFO("Entity {} selected", static_cast<uint32_t>(m_selectedEntity));
     }
   }
 
@@ -1511,8 +1509,7 @@ void Editor::saveCurrentScene_() {
   m_sceneSaveTimer.pause();
 
   if (success) {
-    LOG_INFO("Scene saved in " + std::to_string(m_sceneSaveTimer.elapsedTime<FrameTime::DurationFloat<std::milli>>())
-             + " ms");
+    LOG_INFO("Scene saved in {} ms", m_sceneSaveTimer.elapsedTime<FrameTime::DurationFloat<std::milli>>());
 
     m_showSaveNotification = true;
     m_notificationTimer.reset();
@@ -1583,12 +1580,13 @@ void Editor::handleMousePicking() {
 
     if (pickedEntity != entt::null) {
       handleEntitySelection(pickedEntity);
-      LOG_ERROR("Mouse picking: Selected entity " + std::to_string(static_cast<uint32_t>(pickedEntity)) + " at ("
-                + std::to_string(relativeMouseX) + ", " + std::to_string(relativeMouseY) + ")");
+      LOG_ERROR("Mouse picking: Selected entity {} at ({}, {})",
+                static_cast<uint32_t>(pickedEntity),
+                relativeMouseX,
+                relativeMouseY);
     } else {
       handleEntitySelection(entt::null);
-      LOG_DEBUG("Mouse picking: Nothing picked at (" + std::to_string(relativeMouseX) + ", "
-                + std::to_string(relativeMouseY) + ")");
+      LOG_DEBUG("Mouse picking: Nothing picked at ({}, {})", relativeMouseX, relativeMouseY);
     }
   } else {
     LOG_WARN("No current scene for mouse picking");
@@ -1735,8 +1733,7 @@ void Editor::removeSelectedEntity() {
         renderModelManager->removeRenderModel(model);
       }
     } else {
-      LOG_INFO("Found " + std::to_string(referenceCount - 1)
-               + " other entities using the same render model. Keeping resources.");
+      LOG_INFO("Found {} other entities using the same render model. Keeping resources.", referenceCount - 1);
     }
 
     if (!entityType.empty()) {
@@ -1747,7 +1744,7 @@ void Editor::removeSelectedEntity() {
   }
 
   registry.destroy(m_selectedEntity);
-  LOG_INFO(entityType + " removed");
+  LOG_INFO("{} removed", entityType);
 
   m_selectedEntity = entt::null;
 
@@ -1938,7 +1935,7 @@ void Editor::handleAddModelDialog() {
       }
 
       createModelEntity(fullPath, m_newModelTransform);
-      LOG_INFO("Model added: " + fullPath.string());
+      LOG_INFO("Model added: {}", fullPath.string());
       m_openAddModelDialog = false;
     }
 
@@ -1974,7 +1971,7 @@ void Editor::handleAddModelDialog() {
           strncpy(m_modelPathBuffer, m_modelPath.string().c_str(), MAX_PATH_BUFFER_SIZE - 1);
           m_modelPathBuffer[MAX_PATH_BUFFER_SIZE - 1] = '\0';
 
-          LOG_WARN("Selected model path is outside " + modelsDir.string() + " directory.");
+          LOG_WARN("Selected model path is outside {} directory.", modelsDir.string());
         }
       }
       ImGuiFileDialog::Instance()->Close();
@@ -2035,17 +2032,17 @@ void Editor::createModelEntity(const std::filesystem::path& modelPath, const ecs
             registry.emplace<ecs::RenderModel*>(entity, renderModel);
 
             handleEntitySelection(entity);
-            LOG_INFO("Model loaded successfully: " + modelPath.string());
+            LOG_INFO("Model loaded successfully: {}", modelPath.string());
           } else {
-            LOG_ERROR("Failed to load model: " + modelPath.string());
+            LOG_ERROR("Failed to load model: {}", modelPath.string());
           }
         }
       } else {
-        LOG_ERROR("Failed to load model: " + modelPath.string());
+        LOG_ERROR("Failed to load model: {}", modelPath.string());
       }
     });
 
-    LOG_INFO("Started async loading for model: " + modelPath.string());
+    LOG_INFO("Started async loading for model: {}", modelPath.string());
 
   } else {
     auto modelManager = ServiceLocator::s_get<RenderModelManager>();
@@ -2058,9 +2055,9 @@ void Editor::createModelEntity(const std::filesystem::path& modelPath, const ecs
         registry.emplace<ecs::RenderModel*>(entity, renderModel);
 
         handleEntitySelection(entity);
-        LOG_INFO("Model loaded successfully: " + modelPath.string());
+        LOG_INFO("Model loaded successfully: {}", modelPath.string());
       } else {
-        LOG_ERROR("Failed to load model: " + modelPath.string());
+        LOG_ERROR("Failed to load model: {}", modelPath.string());
         registry.destroy(entity);
         return;
       }
@@ -2221,7 +2218,7 @@ void Editor::scanAvailableScenes_() {
 
 void Editor::switchToScene_(const std::string& sceneName) {
   if (hasLoadingModels_()) {
-    LOG_INFO("Waiting for models to finish loading before switching to scene: " + sceneName);
+    LOG_INFO("Waiting for models to finish loading before switching to scene: {}", sceneName);
     m_pendingSceneSwitch = sceneName;
     return;
   }
@@ -2230,7 +2227,7 @@ void Editor::switchToScene_(const std::string& sceneName) {
   if (!sceneManager->hasScene(sceneName)) {
     auto scene = SceneLoader::loadScene(sceneName, sceneManager);
     if (!scene) {
-      LOG_ERROR("Failed to load scene: " + sceneName);
+      LOG_ERROR("Failed to load scene: {}", sceneName);
       return;
     }
   }
@@ -2241,9 +2238,9 @@ void Editor::switchToScene_(const std::string& sceneName) {
     }
 
     m_selectedEntity = entt::null;
-    LOG_INFO("Switched to scene: " + sceneName);
+    LOG_INFO("Switched to scene: {}", sceneName);
   } else {
-    LOG_ERROR("Failed to switch to scene: " + sceneName);
+    LOG_ERROR("Failed to switch to scene: {}", sceneName);
   }
 }
 
@@ -2264,7 +2261,7 @@ void Editor::createNewScene_() {
   auto sceneManager = ServiceLocator::s_get<SceneManager>();
 
   if (sceneManager->hasScene(sceneName)) {
-    LOG_WARN("Scene already exists: " + sceneName);
+    LOG_WARN("Scene already exists: {}", sceneName);
     return;
   }
 
@@ -2272,11 +2269,11 @@ void Editor::createNewScene_() {
   sceneManager->addScene(sceneName, std::move(emptyRegistry));
 
   if (sceneManager->switchToScene(sceneName)) {
-    LOG_INFO("Created and switched to new scene: " + sceneName);
+    LOG_INFO("Created and switched to new scene: {}", sceneName);
     createDefaultCamera_();
     saveCurrentScene_();
   } else {
-    LOG_ERROR("Failed to switch to new scene: " + sceneName);
+    LOG_ERROR("Failed to switch to new scene: {}", sceneName);
   }
 }
 
@@ -2384,7 +2381,7 @@ bool Editor::switchRenderingApi_(gfx::rhi::RenderingApi newApi) {
   }
 
   std::string apiName = (newApi == gfx::rhi::RenderingApi::Vulkan) ? "Vulkan" : "DirectX 12";
-  LOG_INFO("Starting seamless API switch to " + apiName);
+  LOG_INFO("Starting seamless API switch to {}", apiName);
 
   if (m_device) {
     m_device->waitIdle();
@@ -2420,7 +2417,7 @@ bool Editor::switchRenderingApi_(gfx::rhi::RenderingApi newApi) {
 
   bool imguiSuccess = recreateImGuiContext_();
   if (imguiSuccess) {
-    LOG_INFO("API switch to " + apiName + " completed successfully");
+    LOG_INFO("API switch to {} completed successfully", apiName);
   } else {
     LOG_ERROR("Failed to recreate ImGui context after API switch");
   }
@@ -2430,7 +2427,7 @@ bool Editor::switchRenderingApi_(gfx::rhi::RenderingApi newApi) {
 
 void Editor::scheduleApiSwitch_(gfx::rhi::RenderingApi newApi) {
   std::string apiName = (newApi == gfx::rhi::RenderingApi::Vulkan) ? "Vulkan" : "DirectX 12";
-  LOG_INFO("Scheduling API switch to " + apiName);
+  LOG_INFO("Scheduling API switch to {}", apiName);
 
   m_pendingApiSwitch = true;
   m_pendingApi       = newApi;
@@ -2442,12 +2439,12 @@ void Editor::processPendingApiSwitch_() {
   }
 
   std::string apiName = (m_pendingApi == gfx::rhi::RenderingApi::Vulkan) ? "Vulkan" : "DirectX 12";
-  LOG_INFO("Processing API switch to " + apiName);
+  LOG_INFO("Processing API switch to {}", apiName);
 
   if (switchRenderingApi_(m_pendingApi)) {
-    LOG_INFO("API switch to " + apiName + " completed successfully");
+    LOG_INFO("API switch to {} completed successfully", apiName);
   } else {
-    LOG_ERROR("API switch to " + apiName + " failed");
+    LOG_ERROR("API switch to {} failed", apiName);
   }
 
   m_pendingApiSwitch = false;

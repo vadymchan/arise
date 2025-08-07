@@ -9,10 +9,10 @@
 namespace arise {
 RenderMeshManager::~RenderMeshManager() {
   if (!m_renderMeshes.empty()) {
-    LOG_INFO("RenderMeshManager destroyed, releasing " + std::to_string(m_renderMeshes.size()) + " render meshes");
+    LOG_INFO("RenderMeshManager destroyed, releasing {} render meshes", m_renderMeshes.size());
 
     for (const auto& [mesh, renderMesh] : m_renderMeshes) {
-      LOG_INFO("Released render mesh for: " + mesh->meshName);
+      LOG_INFO("Released render mesh for: {}", mesh->meshName);
     }
   }
 }

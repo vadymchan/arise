@@ -19,7 +19,7 @@ bool Window::setWindowIcon(const std::filesystem::path& iconPath) {
 
   auto image = imageManager->getImage(iconPath);
   if (!image) {
-    LOG_ERROR("Failed to load icon image: " + iconPath.string());
+    LOG_ERROR("Failed to load icon image: {}", iconPath.string());
     return false;
   }
 
@@ -35,7 +35,7 @@ bool Window::setWindowIcon(const std::filesystem::path& iconPath) {
   );
 
   if (!surface) {
-    LOG_ERROR("Failed to create SDL surface for icon: " + std::string(SDL_GetError()));
+    LOG_ERROR("Failed to create SDL surface for icon: {}", SDL_GetError());
     return false;
   }
 
@@ -43,7 +43,7 @@ bool Window::setWindowIcon(const std::filesystem::path& iconPath) {
 
   SDL_FreeSurface(surface);
 
-  LOG_INFO("Window icon set successfully from: " + iconPath.string());
+  LOG_INFO("Window icon set successfully from: {}", iconPath.string());
   return true;
 }
 

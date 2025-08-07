@@ -315,9 +315,9 @@ void BasePass::prepareDrawCalls_(const RenderContext& context) {
                                                         sizeof(ecs::Vertex),
                                                         sizeof(math::Matrix4f<>));
 
-          LOG_INFO("Generated vertex input from shader reflection: "
-                   + std::to_string(pipelineDesc.vertexBindings.size()) + " bindings, "
-                   + std::to_string(pipelineDesc.vertexAttributes.size()) + " attributes");
+          LOG_INFO("Generated vertex input from shader reflection: {} bindings, {} attributes",
+                   pipelineDesc.vertexBindings.size(),
+                   pipelineDesc.vertexAttributes.size());
         } else {
           LOG_ERROR("Shader reflection vertex inputs not available - cannot create pipeline");
           continue;
@@ -372,8 +372,7 @@ void BasePass::prepareDrawCalls_(const RenderContext& context) {
         m_shaderManager->registerPipelineForShader(pipeline, m_vertexShaderPath_);
         m_shaderManager->registerPipelineForShader(pipeline, m_pixelShaderPath_);
 
-        LOG_INFO("BasePass: Created pipeline with " + std::to_string(layoutPtrs.size())
-                 + " automatically generated descriptor sets");
+        LOG_INFO("BasePass: Created pipeline with {} automatically generated descriptor sets", layoutPtrs.size());
       }
 
       DrawData drawData;
@@ -422,8 +421,8 @@ void BasePass::cleanupUnusedBuffers_(
   }
 
   for (auto material : materialsToRemove) {
-    LOG_DEBUG("Removing cached material parameters for deleted material at address: "
-              + std::to_string(reinterpret_cast<uintptr_t>(material)));
+    LOG_DEBUG("Removing cached material parameters for deleted material at address: {}",
+              reinterpret_cast<uintptr_t>(material));
     m_materialCache.erase(material);
   }
 }
@@ -479,12 +478,12 @@ rhi::DescriptorSet* BasePass::getOrCreateMaterialDescriptorSet_(ecs::Material* m
           texture = m_frameResources->getDefaultBlackTexture();
         }
 
-        LOG_DEBUG("Using fallback texture for '" + textureName + "' in material: " + material->materialName);
+        LOG_DEBUG("Using fallback texture for '{}' in material: {}", textureName, material->materialName);
       }
 
       if (!texture) {
-        LOG_ERROR("No texture available (including fallback) for '" + textureName
-                  + "' in material: " + material->materialName);
+        LOG_ERROR(
+            "No texture available (including fallback) for '{}' in material: {}", textureName, material->materialName);
         allTexturesValid = false;
         break;
       }
@@ -496,7 +495,7 @@ rhi::DescriptorSet* BasePass::getOrCreateMaterialDescriptorSet_(ecs::Material* m
     if (allTexturesValid) {
       descriptorSetPtr = m_resourceManager->addDescriptorSet(std::move(descriptorSet), materialKey);
     } else {
-      LOG_WARN("Material descriptor set creation failed due to invalid textures: " + material->materialName);
+      LOG_WARN("Material descriptor set creation failed due to invalid textures: {}", material->materialName);
       return nullptr;
     }
   }

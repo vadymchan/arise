@@ -381,7 +381,7 @@ void LightSystem::createOrResizeBuffer_(size_t             requiredSize,
     buffer          = m_resourceManager->addBuffer(std::move(newBuffer), debugName);
     currentCapacity = newCapacity;
 
-    LOG_INFO("Created/Resized light buffer: " + debugName + " with capacity: " + std::to_string(newCapacity));
+    LOG_INFO("Created/Resized light buffer: {} with capacity: {}", debugName, newCapacity);
   }
 }
 

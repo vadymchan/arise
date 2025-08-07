@@ -23,7 +23,7 @@ ecs::Model* ModelManager::getModel(const std::filesystem::path& filepath) {
     return modelPtr;
   }
 
-  LOG_WARN("Failed to load model: " + filepath.string());
+  LOG_WARN("Failed to load model: {}", filepath.string());
   return nullptr;
 }
 }  // namespace arise

@@ -60,8 +60,11 @@ PipelineLayoutDesc PipelineLayoutBuilder::build() {
 void PipelineLayoutBuilder::mergeBinding_(ShaderResourceBinding& existing, const ShaderResourceBinding& newBinding) {
   // Validate that bindings are compatible
   if (existing.type != newBinding.type) {
-    LOG_WARN("Binding type mismatch for set " + std::to_string(newBinding.set) + " binding "
-             + std::to_string(newBinding.binding) + ": " + existing.name + " vs " + newBinding.name);
+    LOG_WARN("Binding type mismatch for set {} binding {}: {} vs {}",
+             newBinding.set,
+             newBinding.binding,
+             existing.name,
+             newBinding.name);
   }
 
   if (existing.descriptorCount != newBinding.descriptorCount) {

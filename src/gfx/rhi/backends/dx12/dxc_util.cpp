@@ -28,7 +28,7 @@ std::shared_ptr<IDxcBlob> DxcUtil::compileHlslCode(const std::string&          h
     return nullptr;
   }
 
-  LOG_INFO("Compiling shader for target: " + wstring_to_utf8_(targetProfile));
+  LOG_INFO("Compiling shader for target: {}", wstring_to_utf8_(targetProfile));
 
   IDxcCompiler3* compilerRaw = nullptr;
   IDxcUtils*     utilsRaw    = nullptr;
@@ -106,7 +106,8 @@ std::shared_ptr<IDxcBlob> DxcUtil::compileHlslCode(const std::string&          h
   hr                      = result->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&errorsRaw), nullptr);
   auto errorsPtr          = MakeDxcSharedPtr(errorsRaw);
   if (errorsPtr && errorsPtr->GetStringLength() > 0) {
-    LOG_WARN(std::string(errorsPtr->GetStringPointer(), errorsPtr->GetStringPointer() + errorsPtr->GetStringLength()));
+    LOG_WARN("{}",
+             std::string(errorsPtr->GetStringPointer(), errorsPtr->GetStringPointer() + errorsPtr->GetStringLength()));
   }
 
   HRESULT status;
@@ -205,7 +206,7 @@ std::wstring DxcUtil::getTargetProfile_(gfx::rhi::ShaderStageFlag stage) {
 std::string DxcUtil::readFile_(const std::filesystem::path& path) {
   std::ifstream ifs(path, std::ios::binary);
   if (!ifs) {
-    LOG_ERROR("Failed to open shader file: " + path.string());
+    LOG_ERROR("Failed to open shader file: {}", path.string());
     return {};
   }
   std::stringstream ss;
@@ -349,7 +350,7 @@ gfx::rhi::ShaderMeta DxcUtil::reflectDxil_(const std::shared_ptr<IDxcBlob>& shad
     }
   }
 
-  LOG_INFO("Extracted " + std::to_string(meta.bindings.size()) + " resource bindings from DXIL shader.");
+  LOG_INFO("Extracted {} resource bindings from DXIL shader.", meta.bindings.size());
 
   return meta;
 }
@@ -514,7 +515,7 @@ gfx::rhi::ShaderMeta DxcUtil::reflectSpirv_(const std::shared_ptr<IDxcBlob>& sha
 
   spvReflectDestroyShaderModule(&module);
 
-  LOG_INFO("Extracted " + std::to_string(meta.bindings.size()) + " resource bindings from SPIRV shader.");
+  LOG_INFO("Extracted {} resource bindings from SPIRV shader.", meta.bindings.size());
 
 #else
   LOG_WARN("SPIRV reflection not available - SPIRV-Reflect not enabled.");

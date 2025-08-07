@@ -24,7 +24,7 @@ void BoundingVolumeSystem::update(Scene* scene, float deltaTime) {
       worldBounds.isDirty     = true;
       registry.emplace<WorldBounds>(entity, worldBounds);
 
-      LOG_DEBUG("Added WorldBounds component to entity " + std::to_string(static_cast<uint32_t>(entity)));
+      LOG_DEBUG("Added WorldBounds component to entity {}", static_cast<uint32_t>(entity));
     }
   }
 
@@ -70,8 +70,9 @@ void BoundingVolumeSystem::updateEntityWorldBounds_(entt::entity entity, Scene* 
   worldBounds.boundingBox          = bounds::transformAABB(localBounds, transformMatrix);
   worldBounds.isDirty              = false;
 
-  LOG_DEBUG("BoundingVolumeSystem: Updated world bounds for entity " + std::to_string(static_cast<uint32_t>(entity))
-            + " using model: " + model->filePath.string());
+  LOG_DEBUG("BoundingVolumeSystem: Updated world bounds for entity {} using model: {}",
+            static_cast<uint32_t>(entity),
+            model->filePath.string());
 }
 
 }  // namespace ecs

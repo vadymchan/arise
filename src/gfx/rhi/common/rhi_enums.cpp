@@ -30,7 +30,7 @@ int g_getTextureComponentCount(TextureFormat format, RenderingApi api) {
 
     default:
       // TODO: add logger with assertion (prob macro function)
-      LOG_ERROR("Unsupported rendering API for g_getTextureComponentCount: " + std::to_string(static_cast<int>(api)));
+      LOG_ERROR("Unsupported rendering API for g_getTextureComponentCount: {}", static_cast<int>(api));
       assert(false && "Unsupported rendering API");
       return 0;
   }

@@ -8,7 +8,7 @@ namespace arise {
 std::optional<std::string> FileSystemManager::readFile(const std::filesystem::path& filePath) {
   std::ifstream file(filePath, std::ios::in | std::ios::binary);
   if (!file) {
-    LOG_ERROR("Failed to open file: " + filePath.string());
+    LOG_ERROR("Failed to open file: {}", filePath.string());
     return std::nullopt;
   }
 
@@ -20,13 +20,13 @@ std::optional<std::string> FileSystemManager::readFile(const std::filesystem::pa
 bool FileSystemManager::writeFile(const std::filesystem::path& filePath, const std::string& content) {
   std::ofstream file(filePath, std::ios::out | std::ios::binary);
   if (!file) {
-    LOG_ERROR("Failed to open file for writing: " + filePath.string());
+    LOG_ERROR("Failed to open file for writing: {}", filePath.string());
     return false;
   }
 
   file << content;
   file.close();
-  LOG_INFO("File written successfully: " + filePath.string());
+  LOG_INFO("File written successfully: {}", filePath.string());
   return true;
 }
 
@@ -44,7 +44,7 @@ std::vector<std::filesystem::path> FileSystemManager::getAllFilesInDirectory(con
       }
     }
   } else {
-    LOG_ERROR("Directory does not exist or is not a directory: " + dirPath.string());
+    LOG_ERROR("Directory does not exist or is not a directory: {}", dirPath.string());
   }
 
   return filePaths;
@@ -53,14 +53,14 @@ std::vector<std::filesystem::path> FileSystemManager::getAllFilesInDirectory(con
 bool FileSystemManager::createDirectory(const std::filesystem::path& dirPath) {
   if (!std::filesystem::exists(dirPath)) {
     if (std::filesystem::create_directory(dirPath)) {
-      LOG_INFO("Directory created successfully: " + dirPath.string());
+      LOG_INFO("Directory created successfully: {}", dirPath.string());
       return true;
     } else {
-      LOG_ERROR("Failed to create directory: " + dirPath.string());
+      LOG_ERROR("Failed to create directory: {}", dirPath.string());
       return false;
     }
   } else {
-    LOG_WARN("Directory already exists: " + dirPath.string());
+    LOG_WARN("Directory already exists: {}", dirPath.string());
     return false;
   }
 }
@@ -68,14 +68,14 @@ bool FileSystemManager::createDirectory(const std::filesystem::path& dirPath) {
 bool FileSystemManager::remove(const std::filesystem::path& filePath) {
   if (std::filesystem::exists(filePath)) {
     if (std::filesystem::remove_all(filePath) > 0) {
-      LOG_INFO("File or directory removed successfully: " + filePath.string());
+      LOG_INFO("File or directory removed successfully: {}", filePath.string());
       return true;
     } else {
-      LOG_ERROR("Failed to remove file or directory: " + filePath.string());
+      LOG_ERROR("Failed to remove file or directory: {}", filePath.string());
       return false;
     }
   } else {
-    LOG_WARN("File or directory does not exist: " + filePath.string());
+    LOG_WARN("File or directory does not exist: {}", filePath.string());
     return false;
   }
 }

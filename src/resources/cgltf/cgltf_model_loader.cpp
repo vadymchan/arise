@@ -22,7 +22,7 @@ namespace arise {
 std::unique_ptr<ecs::Model> CgltfModelLoader::loadModel(const std::filesystem::path& filePath) {
   auto scene = CgltfSceneCache::getOrLoad(filePath);
   if (!scene) {
-    LOG_ERROR("Failed to load GLTF scene: " + filePath.string());
+    LOG_ERROR("Failed to load GLTF scene: {}", filePath.string());
     return nullptr;
   }
   const cgltf_data* data = scene.get();
@@ -75,11 +75,14 @@ std::unique_ptr<ecs::Model> CgltfModelLoader::loadModel(const std::filesystem::p
             ecs::BoundingBox transformedBounds = ecs::bounds::transformAABB(mesh->boundingBox, mesh->transformMatrix);
             meshBoundingBoxes.push_back(transformedBounds);
 
-            LOG_DEBUG("Mesh '" + mesh->meshName + "' bounding box: min(" + std::to_string(mesh->boundingBox.min.x())
-                      + ", " + std::to_string(mesh->boundingBox.min.y()) + ", "
-                      + std::to_string(mesh->boundingBox.min.z()) + ") max(" + std::to_string(mesh->boundingBox.max.x())
-                      + ", " + std::to_string(mesh->boundingBox.max.y()) + ", "
-                      + std::to_string(mesh->boundingBox.max.z()) + ")");
+            LOG_DEBUG("Mesh '{}' bounding box: min({}, {}, {}) max({}, {}, {})",
+                      mesh->meshName,
+                      mesh->boundingBox.min.x(),
+                      mesh->boundingBox.min.y(),
+                      mesh->boundingBox.min.z(),
+                      mesh->boundingBox.max.x(),
+                      mesh->boundingBox.max.y(),
+                      mesh->boundingBox.max.z());
           }
         }
 
@@ -91,10 +94,11 @@ std::unique_ptr<ecs::Model> CgltfModelLoader::loadModel(const std::filesystem::p
 
   if (!meshBoundingBoxes.empty()) {
     model->boundingBox = ecs::bounds::combineAABBs(meshBoundingBoxes);
-    LOG_INFO("Model '" + filePath.filename().string() + "' combined bounding box calculated from "
-             + std::to_string(meshBoundingBoxes.size()) + " meshes");
+    LOG_INFO("Model '{}' combined bounding box calculated from {} meshes",
+             filePath.filename().string(),
+             meshBoundingBoxes.size());
   } else {
-    LOG_WARN("Model '" + filePath.filename().string() + "' has no valid bounding boxes");
+    LOG_WARN("Model '{}' has no valid bounding boxes", filePath.filename().string());
   }
 
   return model;

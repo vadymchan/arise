@@ -22,14 +22,14 @@ bool Config::loadFromFile(const std::filesystem::path& filePath) {
 
   auto fileContent = FileSystemManager::readFile(filePath);
   if (!fileContent) {
-    LOG_ERROR("Failed to read file: " + filePath.string());
+    LOG_ERROR("Failed to read file: {}", filePath.string());
     return false;
   }
 
   m_root_.Parse(fileContent->c_str());
 
   if (m_root_.HasParseError()) {
-    LOG_ERROR("Failed to parse JSON in file: " + filePath.string());
+    LOG_ERROR("Failed to parse JSON in file: {}", filePath.string());
     return false;
   }
 
@@ -71,7 +71,7 @@ const ConfigValue& Config::getMember_(const std::string& key) const {
 
       if (!currentValue->IsObject() || !currentValue->HasMember(keyPart.c_str())) {
         static ConfigValue nullValue(rapidjson::kNullType);
-        LOG_ERROR("Key \"" + key + "\" not found in config (failed at \"" + keyPart + "\").");
+        LOG_ERROR("Key \"{}\" not found in config (failed at \"{}\").", key, keyPart);
         return nullValue;
       }
 
@@ -90,7 +90,7 @@ const ConfigValue& Config::getMember_(const std::string& key) const {
   // Handle direct key access (original behavior)
   if (!m_root_.HasMember(key.c_str())) {
     static ConfigValue nullValue(rapidjson::kNullType);
-    LOG_ERROR("Key \"" + key + "\" not found in config.");
+    LOG_ERROR("Key \"{}\" not found in config.", key);
     return nullValue;
   }
   return m_root_[key.c_str()];

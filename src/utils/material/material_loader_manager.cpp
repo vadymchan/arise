@@ -34,7 +34,7 @@ std::vector<std::unique_ptr<ecs::Material>> MaterialLoaderManager::loadMaterials
   MaterialType materialType = getMaterialTypeFromExtension(extension);
 
   if (materialType == MaterialType::UNKNOWN) {
-    LOG_ERROR("Unknown material type for extension: " + extension);
+    LOG_ERROR("Unknown material type for extension: {}", extension);
     return {};
   }
 
@@ -51,7 +51,7 @@ std::vector<std::unique_ptr<ecs::Material>> MaterialLoaderManager::loadMaterials
     return loader->loadMaterials(filePath);
   }
 
-  LOG_ERROR("No suitable loader found for material type: " + extension);
+  LOG_ERROR("No suitable loader found for material type: {}", extension);
   return {};
 }
 }  // namespace arise

@@ -33,11 +33,11 @@ std::unique_ptr<Image> KtxImageLoader::loadKtx2_(const std::filesystem::path& fi
 
   ktxResult res = ktxTexture2_CreateFromNamedFile(filepath.string().c_str(), flags, &texture);
   if (res != KTX_SUCCESS) {
-    LOG_ERROR("Failed to load KTX2 '" + filepath.string() + "': " + ktxErrorString(res));
+    LOG_ERROR("Failed to load KTX2 '{}': {}", filepath.string(), ktxErrorString(res));
     return nullptr;
   }
   if (!texture) {
-    LOG_ERROR("KTX2 loader returned empty texture for '" + filepath.string() + "'");
+    LOG_ERROR("KTX2 loader returned empty texture for '{}'", filepath.string());
     return nullptr;
   }
 
@@ -51,7 +51,7 @@ std::unique_ptr<Image> KtxImageLoader::loadKtx2_(const std::filesystem::path& fi
 
     ktxResult txRes = ktxTexture2_TranscodeBasis(texture, transcodeFormat_(textureFormat), 0);
     if (txRes != KTX_SUCCESS) {
-      LOG_ERROR("Failed to transcode BasisU for '" + filepath.string() + "': " + ktxErrorString(txRes));
+      LOG_ERROR("Failed to transcode BasisU for '{}': {}", filepath.string(), ktxErrorString(txRes));
       ktxTexture_Destroy(reinterpret_cast<ktxTexture*>(texture));
       return nullptr;
     }
@@ -70,17 +70,17 @@ std::unique_ptr<Image> KtxImageLoader::loadKtx1_(const std::filesystem::path& fi
 
   ktxResult result = ktxTexture1_CreateFromNamedFile(filepath.string().c_str(), flags, &texture);
   if (result != KTX_SUCCESS) {
-    LOG_ERROR("Failed to load KTX1 '" + filepath.string() + "': " + ktxErrorString(result));
+    LOG_ERROR("Failed to load KTX1 '{}': {}", filepath.string(), ktxErrorString(result));
     return nullptr;
   }
   if (!texture) {
-    LOG_ERROR("KTX1 loader returned empty texture for '" + filepath.string() + "'");
+    LOG_ERROR("KTX1 loader returned empty texture for '{}'", filepath.string());
     return nullptr;
   }
 
   // TODO: use fallback since KTX1 doesn't have vkFormat (only GL format)
   TextureFormat format = TextureFormat::Rgba8;
-  LOG_WARN("Using RGBA8 fallback for KTX1 '" + filepath.string() + "'");
+  LOG_WARN("Using RGBA8 fallback for KTX1 '{}'", filepath.string());
 
   auto image = copyToImageStruct_(reinterpret_cast<ktxTexture*>(texture), format);
   ktxTexture_Destroy(reinterpret_cast<ktxTexture*>(texture));
@@ -108,7 +108,7 @@ std::unique_ptr<Image> KtxImageLoader::copyToImageStruct_(ktxTexture* texture, T
   for (uint32_t level = 0; level < texture->numLevels; ++level) {
     for (uint32_t layer = 0; layer < image->arraySize; ++layer) {
       if (ktxTexture_GetImageOffset(texture, level, layer, 0, &offset) != KTX_SUCCESS) {
-        LOG_WARN("Cannot get image offset at level " + std::to_string(level) + ", layer " + std::to_string(layer));
+        LOG_WARN("Cannot get image offset at level {}, layer {}", level, layer);
         continue;
       }
       SubImage subImage;

@@ -20,8 +20,7 @@ void RenderSystem::update(Scene* scene, float deltaTime) {
   for (auto entity : modelView) {
     auto& renderModel = modelView.get<RenderModel>(entity);
 
-    LOG_INFO("Entity " + std::to_string(static_cast<int>(entity))
-             + " has RenderModel: " + renderModel.filePath.string());
+    LOG_INFO("Entity {} has RenderModel: {}", static_cast<int>(entity), renderModel.filePath.string());
   }
 
   // Handle entities with RenderMesh components
@@ -31,8 +30,7 @@ void RenderSystem::update(Scene* scene, float deltaTime) {
     auto& renderMesh = meshView.get<RenderMesh>(entity);
 
     if (renderMesh.material) {
-      LOG_INFO("Entity " + std::to_string(static_cast<int>(entity))
-               + " has Material: " + renderMesh.material->materialName);
+      LOG_INFO("Entity {} has Material: {}", static_cast<int>(entity), renderMesh.material->materialName);
     }
   }
 }

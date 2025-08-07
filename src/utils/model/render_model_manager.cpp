@@ -9,10 +9,10 @@
 namespace arise {
 RenderModelManager::~RenderModelManager() {
   if (!renderModelCache_.empty()) {
-    LOG_INFO("RenderModelManager destroyed, releasing " + std::to_string(renderModelCache_.size()) + " render models");
+    LOG_INFO("RenderModelManager destroyed, releasing {} render models", renderModelCache_.size());
 
     for (const auto& [path, renderModel] : renderModelCache_) {
-      LOG_INFO("Released render model: " + path.string());
+      LOG_INFO("Released render model: {}", path.string());
     }
   }
 }
@@ -26,9 +26,9 @@ ecs::RenderModel* RenderModelManager::getRenderModel(const std::filesystem::path
         auto modelManager = ServiceLocator::s_get<ModelManager>();
         if (modelManager) {
           *outModel = modelManager->getModel(filepath);
-          LOG_DEBUG("CPU model retrieved from cache for: " + filepath.string());
+          LOG_DEBUG("CPU model retrieved from cache for: {}", filepath.string());
         } else {
-          LOG_WARN("ModelManager not available for cached model: " + filepath.string());
+          LOG_WARN("ModelManager not available for cached model: {}", filepath.string());
           *outModel = nullptr;
         }
       }
@@ -58,7 +58,7 @@ ecs::RenderModel* RenderModelManager::getRenderModel(const std::filesystem::path
     return modelPtr;
   }
 
-  LOG_WARN("Failed to load render model: " + filepath.string());
+  LOG_WARN("Failed to load render model: {}", filepath.string());
   return nullptr;
 }
 
@@ -73,7 +73,7 @@ bool RenderModelManager::removeRenderModel(ecs::RenderModel* renderModel) {
     return false;
   }
 
-  LOG_INFO("Removing render model: " + renderModel->filePath.string());
+  LOG_INFO("Removing render model: {}", renderModel->filePath.string());
 
   auto renderMeshManager = ServiceLocator::s_get<RenderMeshManager>();
 

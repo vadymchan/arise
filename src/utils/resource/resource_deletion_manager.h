@@ -41,13 +41,16 @@ class ResourceDeletionManager {
 
     auto deletionCallback = [deleter, resource, resourceName, resourceType]() {
       deleter(resource);
-      LOG_INFO(resourceType + " '" + resourceName + "' has been deleted");
+      LOG_INFO("{} '{}' has been deleted", resourceType, resourceName);
     };
 
     m_pendingDeletions.push_back({m_currentFrame + frameDelay, deletionCallback, resourceName, resourceType});
 
-    LOG_DEBUG(resourceType + " '" + resourceName + "' scheduled for deletion in " + std::to_string(frameDelay)
-              + " frames (frame " + std::to_string(m_currentFrame + frameDelay) + ")");
+    LOG_DEBUG("{} '{}' scheduled for deletion in {} frames (frame {})",
+              resourceType,
+              resourceName,
+              frameDelay,
+              m_currentFrame + frameDelay);
   }
 
   void processPendingDeletions() {
@@ -74,8 +77,10 @@ class ResourceDeletionManager {
     m_pendingDeletions = std::move(remainingDeletions);
 
     if (deletionCount > 0) {
-      LOG_DEBUG("Deleted " + std::to_string(deletionCount) + " resources, " + std::to_string(m_pendingDeletions.size())
-                + " still pending (current frame: " + std::to_string(m_currentFrame) + ")");
+      LOG_DEBUG("Deleted {} resources, {} still pending (current frame: {})",
+                deletionCount,
+                m_pendingDeletions.size(),
+                m_currentFrame);
     }
   }
 

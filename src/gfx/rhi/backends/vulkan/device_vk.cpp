@@ -178,7 +178,7 @@ bool DeviceVk::setupDebugMessenger_() {
 bool DeviceVk::createSurface_() {
   if (!SDL_Vulkan_CreateSurface(
           static_cast<SDL_Window*>(getWindow()->getNativeWindowHandle()), m_instance_, &m_surface_)) {
-    LOG_ERROR("Failed to create Vulkan surface: " + std::string(SDL_GetError()));
+    LOG_ERROR("Failed to create Vulkan surface: {}", SDL_GetError());
     return false;
   }
 

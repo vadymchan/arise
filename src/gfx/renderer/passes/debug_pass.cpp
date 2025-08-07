@@ -111,7 +111,7 @@ void DebugPass::createDebugStrategy_() {
       m_debugStrategy = std::make_unique<BoundingBoxVisualizationStrategy>();
       break;
     default:
-      LOG_ERROR("DebugPass: Unsupported render mode: " + std::to_string(static_cast<int>(m_currentRenderMode)));
+      LOG_ERROR("DebugPass: Unsupported render mode: {}", static_cast<int>(m_currentRenderMode));
       break;
   }
 }

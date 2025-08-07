@@ -29,7 +29,7 @@ void Application::setup() {
   auto scene = SceneLoader::loadScene(sceneName, sceneManager);
 
   if (!scene) {
-    LOG_ERROR("Failed to load scene: " + sceneName);
+    LOG_ERROR("Failed to load scene: {}", sceneName);
     return;
   }
 

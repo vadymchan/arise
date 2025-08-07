@@ -14,18 +14,18 @@
 namespace arise {
 
 std::vector<std::unique_ptr<ecs::Material>> CgltfMaterialLoader::loadMaterials(const std::filesystem::path& filePath) {
-  LOG_INFO("Loading materials from " + filePath.string());
+  LOG_INFO("Loading materials from {}", filePath.string());
 
   auto scene = CgltfSceneCache::getOrLoad(filePath);
   if (!scene) {
-    LOG_ERROR("Failed to load GLTF scene: " + filePath.string());
+    LOG_ERROR("Failed to load GLTF scene: {}", filePath.string());
     return {};
   }
   const cgltf_data* data = scene.get();
 
   auto materials = processMaterials(data, filePath);
 
-  LOG_INFO("Successfully loaded " + std::to_string(materials.size()) + " material(s) from " + filePath.string());
+  LOG_INFO("Successfully loaded {} material(s) from {}", materials.size(), filePath.string());
 
   return materials;
 }
@@ -160,7 +160,7 @@ gfx::rhi::Texture* CgltfMaterialLoader::loadTexture(const cgltf_image*          
 
   auto imagePtr = imageManager->getImage(texturePath);
   if (!imagePtr) {
-    LOG_ERROR("Failed to load image: " + texturePath.string());
+    LOG_ERROR("Failed to load image: {}", texturePath.string());
     return nullptr;
   }
 

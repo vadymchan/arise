@@ -20,13 +20,13 @@ std::vector<const DescriptorSetLayout*> PipelineLayoutManager::createAndManageLa
     }
   }
 
-  LOG_INFO("Created and managing " + std::to_string(layoutPtrs.size()) + " descriptor set layouts");
+  LOG_INFO("Created and managing {} descriptor set layouts", layoutPtrs.size());
 
   return layoutPtrs;
 }
 
 void PipelineLayoutManager::cleanup() {
-  LOG_INFO("Cleaning up " + std::to_string(m_managedLayouts.size()) + " managed layouts");
+  LOG_INFO("Cleaning up {} managed layouts", m_managedLayouts.size());
   m_managedLayouts.clear();
 }
 

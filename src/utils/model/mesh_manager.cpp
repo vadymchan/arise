@@ -16,7 +16,7 @@ ecs::Mesh* MeshManager::addMesh(std::unique_ptr<ecs::Mesh> mesh, const std::file
 
   auto it = m_meshes.find(key);
   if (it != m_meshes.end()) {
-    LOG_WARN("Mesh '" + mesh->meshName + "' from " + sourcePath.string() + " already exists. Overwriting.");
+    LOG_WARN("Mesh '{}' from {} already exists. Overwriting.", mesh->meshName, sourcePath.string());
   }
 
   ecs::Mesh* meshPtr = mesh.get();
@@ -36,7 +36,7 @@ ecs::Mesh* MeshManager::getMesh(const std::filesystem::path& sourcePath, const s
     return it->second.get();
   }
 
-  LOG_WARN("Mesh '" + meshName + "' from " + sourcePath.string() + " not found");
+  LOG_WARN("Mesh '{}' from {} not found", meshName, sourcePath.string());
   return nullptr;
 }
 

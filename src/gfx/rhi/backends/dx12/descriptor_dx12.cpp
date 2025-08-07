@@ -37,9 +37,10 @@ DescriptorSetLayoutDx12::DescriptorSetLayoutDx12(const DescriptorSetLayoutDesc& 
     if (bindingIsSampler != m_isSamplerLayout) {
       LOG_ERROR(
           "Mixed CBV/SRV/UAV and Sampler bindings not allowed in same layout (invariant). "
-          "Descriptor layout is marked as "
-          + std::string(m_isSamplerLayout ? "sampler" : "non-sampler") + " but binding "
-          + std::to_string(binding.binding) + " is " + std::string(bindingIsSampler ? "sampler" : "non-sampler"));
+          "Descriptor layout is marked as {} but binding {} is {}",
+          m_isSamplerLayout ? "sampler" : "non-sampler",
+          binding.binding,
+          bindingIsSampler ? "sampler" : "non-sampler");
       return;
     }
   }
@@ -363,7 +364,7 @@ uint32_t DescriptorSetDx12::findBindingOffset_(D3D12_DESCRIPTOR_RANGE_TYPE range
           ++offset;
         }
       }
-      LOG_ERROR("Binding not found: " + std::to_string(binding));
+      LOG_ERROR("Binding not found: {}", binding);
       return UINT32_MAX;
     } else {
       for (const auto& desc : list) {
@@ -372,7 +373,7 @@ uint32_t DescriptorSetDx12::findBindingOffset_(D3D12_DESCRIPTOR_RANGE_TYPE range
     }
   }
 
-  LOG_ERROR("Range type not in layout: " + std::to_string(rangeType));
+  LOG_ERROR("Range type not in layout: {}", static_cast<int>(rangeType));
   return UINT32_MAX;
 }
 
@@ -562,7 +563,7 @@ bool FrameResourcesManager::initialize(DeviceDx12* device, uint32_t frameCount) 
     }
   }
 
-  LOG_INFO("Frame resources manager initialized with " + std::to_string(frameCount) + " frames");
+  LOG_INFO("Frame resources manager initialized with {} frames", frameCount);
   return true;
 }
 
@@ -595,7 +596,7 @@ DescriptorHeapDx12* FrameResourcesManager::getCurrentSamplerHeap() {
 inline DescriptorHeapDx12* FrameResourcesManager::getCbvSrvUavHeap(uint32_t frameIndex) {
   std::lock_guard<std::mutex> lock(m_frameResourcesMutex);
   if (frameIndex >= m_frameCount) {
-    LOG_ERROR("Frame index " + std::to_string(frameIndex) + " exceeds frame count " + std::to_string(m_frameCount));
+    LOG_ERROR("Frame index {} exceeds frame count {}", frameIndex, m_frameCount);
     return nullptr;
   }
   return m_cbvSrvUavHeaps[frameIndex].get();
@@ -604,7 +605,7 @@ inline DescriptorHeapDx12* FrameResourcesManager::getCbvSrvUavHeap(uint32_t fram
 inline DescriptorHeapDx12* FrameResourcesManager::getSamplerHeap(uint32_t frameIndex) {
   std::lock_guard<std::mutex> lock(m_frameResourcesMutex);
   if (frameIndex >= m_frameCount) {
-    LOG_ERROR("Frame index " + std::to_string(frameIndex) + " exceeds frame count " + std::to_string(m_frameCount));
+    LOG_ERROR("Frame index {} exceeds frame count {}", frameIndex, m_frameCount);
     return nullptr;
   }
   return m_samplerHeaps[frameIndex].get();

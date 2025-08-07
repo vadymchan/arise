@@ -73,7 +73,7 @@ class Config {
 
     const ConfigValue& value = getMember_(key);
     if (!value.IsArray()) {
-      LOG_ERROR("Value for key \"" + key + "\" is not an array.");
+      LOG_ERROR("Value for key \"{}\" is not an array.", key);
       return Container();
     }
 

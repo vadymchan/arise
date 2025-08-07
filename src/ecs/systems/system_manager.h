@@ -48,7 +48,7 @@ class SystemManager {
       }
     }
 
-    LOG_WARN("No existing system found to replace: " + std::string(typeid(T).name()));
+    LOG_WARN("No existing system found to replace: {}", std::string(typeid(T).name()));
     return false;
   }
 

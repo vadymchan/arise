@@ -18,10 +18,10 @@ BufferManager::BufferManager(gfx::rhi::Device* device)
 
 BufferManager::~BufferManager() {
   if (!m_buffers.empty()) {
-    LOG_INFO("BufferManager destroyed, releasing " + std::to_string(m_buffers.size()) + " buffers");
+    LOG_INFO("BufferManager destroyed, releasing {} buffers", m_buffers.size());
 
     for (const auto& [name, buffer] : m_buffers) {
-      LOG_INFO("Released buffer: " + name);
+      LOG_INFO("Released buffer: {}", name);
     }
   }
   release();
@@ -55,13 +55,13 @@ gfx::rhi::Buffer* BufferManager::createVertexBuffer(const void*        data,
   std::lock_guard<std::mutex> lock(m_mutex);
 
   if (m_buffers.contains(bufferName)) {
-    LOG_WARN("Buffer with name '" + bufferName + "' already exists, will be replaced");
+    LOG_WARN("Buffer with name '{}' already exists, will be replaced", bufferName);
     m_buffers.erase(bufferName);
   }
 
   auto buffer = m_device->createBuffer(bufferDesc);
   if (!buffer) {
-    LOG_ERROR("Failed to create vertex buffer '" + bufferName + "'");
+    LOG_ERROR("Failed to create vertex buffer '{}'", bufferName);
     return nullptr;
   }
 
@@ -70,7 +70,7 @@ gfx::rhi::Buffer* BufferManager::createVertexBuffer(const void*        data,
   gfx::rhi::Buffer* bufferPtr = buffer.get();
   m_buffers[bufferName]       = std::move(buffer);
 
-  LOG_INFO("Created vertex buffer '" + bufferName + "' with " + std::to_string(vertexCount) + " vertices");
+  LOG_INFO("Created vertex buffer '{}' with {} vertices", bufferName, vertexCount);
 
   return bufferPtr;
 }
@@ -102,13 +102,13 @@ gfx::rhi::Buffer* BufferManager::createIndexBuffer(const void*        data,
   std::lock_guard<std::mutex> lock(m_mutex);
 
   if (m_buffers.contains(bufferName)) {
-    LOG_WARN("Buffer with name '" + bufferName + "' already exists, will be replaced");
+    LOG_WARN("Buffer with name '{}' already exists, will be replaced", bufferName);
     m_buffers.erase(bufferName);
   }
 
   auto buffer = m_device->createBuffer(bufferDesc);
   if (!buffer) {
-    LOG_ERROR("Failed to create index buffer '" + bufferName + "'");
+    LOG_ERROR("Failed to create index buffer '{}'", bufferName);
     return nullptr;
   }
 
@@ -117,7 +117,7 @@ gfx::rhi::Buffer* BufferManager::createIndexBuffer(const void*        data,
   gfx::rhi::Buffer* bufferPtr = buffer.get();
   m_buffers[bufferName]       = std::move(buffer);
 
-  LOG_INFO("Created index buffer '" + bufferName + "' with " + std::to_string(indexCount) + " indices");
+  LOG_INFO("Created index buffer '{}' with {} indices", bufferName, indexCount);
 
   return bufferPtr;
 }
@@ -144,13 +144,13 @@ gfx::rhi::Buffer* BufferManager::createUniformBuffer(size_t size, const void* da
   std::lock_guard<std::mutex> lock(m_mutex);
 
   if (m_buffers.contains(bufferName)) {
-    LOG_WARN("Buffer with name '" + bufferName + "' already exists, will be replaced");
+    LOG_WARN("Buffer with name '{}' already exists, will be replaced", bufferName);
     m_buffers.erase(bufferName);
   }
 
   auto buffer = m_device->createBuffer(bufferDesc);
   if (!buffer) {
-    LOG_ERROR("Failed to create uniform buffer '" + bufferName + "'");
+    LOG_ERROR("Failed to create uniform buffer '{}'", bufferName);
     return nullptr;
   }
 
@@ -161,7 +161,7 @@ gfx::rhi::Buffer* BufferManager::createUniformBuffer(size_t size, const void* da
   gfx::rhi::Buffer* bufferPtr = buffer.get();
   m_buffers[bufferName]       = std::move(buffer);
 
-  LOG_INFO("Created uniform buffer '" + bufferName + "' with size " + std::to_string(size) + " bytes");
+  LOG_INFO("Created uniform buffer '{}' with size {} bytes", bufferName, size);
 
   return bufferPtr;
 }
@@ -191,13 +191,13 @@ gfx::rhi::Buffer* BufferManager::createStorageBuffer(size_t size, const void* da
   std::lock_guard<std::mutex> lock(m_mutex);
 
   if (m_buffers.contains(bufferName)) {
-    LOG_WARN("Buffer with name '" + bufferName + "' already exists, will be replaced");
+    LOG_WARN("Buffer with name '{}' already exists, will be replaced", bufferName);
     m_buffers.erase(bufferName);
   }
 
   auto buffer = m_device->createBuffer(bufferDesc);
   if (!buffer) {
-    LOG_ERROR("Failed to create storage buffer '" + bufferName + "'");
+    LOG_ERROR("Failed to create storage buffer '{}'", bufferName);
     return nullptr;
   }
 
@@ -208,7 +208,7 @@ gfx::rhi::Buffer* BufferManager::createStorageBuffer(size_t size, const void* da
   gfx::rhi::Buffer* bufferPtr = buffer.get();
   m_buffers[bufferName]       = std::move(buffer);
 
-  LOG_INFO("Created storage buffer '" + bufferName + "' with size " + std::to_string(size) + " bytes");
+  LOG_INFO("Created storage buffer '{}' with size {} bytes", bufferName, size);
 
   return bufferPtr;
 }
@@ -224,14 +224,14 @@ gfx::rhi::Buffer* BufferManager::addBuffer(std::unique_ptr<gfx::rhi::Buffer> buf
   std::lock_guard<std::mutex> lock(m_mutex);
 
   if (m_buffers.contains(bufferName)) {
-    LOG_WARN("Buffer with name '" + bufferName + "' already exists, will be replaced");
+    LOG_WARN("Buffer with name '{}' already exists, will be replaced", bufferName);
     m_buffers.erase(bufferName);
   }
 
   gfx::rhi::Buffer* bufferPtr = buffer.get();
   m_buffers[bufferName]       = std::move(buffer);
 
-  LOG_INFO("Added external buffer '" + bufferName + "'");
+  LOG_INFO("Added external buffer '{}'", bufferName);
 
   return bufferPtr;
 }
@@ -252,12 +252,12 @@ bool BufferManager::removeBuffer(const std::string& name) {
 
   auto it = m_buffers.find(name);
   if (it != m_buffers.end()) {
-    LOG_INFO("Removing buffer '" + name + "'");
+    LOG_INFO("Removing buffer '{}'", name);
     m_buffers.erase(it);
     return true;
   }
 
-  LOG_WARN("Attempted to remove non-existent buffer '" + name + "'");
+  LOG_WARN("Attempted to remove non-existent buffer '{}'", name);
   return false;
 }
 
@@ -279,7 +279,7 @@ bool BufferManager::removeBuffer(gfx::rhi::Buffer* buffer) {
             buffer,
             [this, bufferName](gfx::rhi::Buffer*) {
               std::lock_guard<std::mutex> lock(m_mutex);
-              LOG_INFO("Buffer '" + bufferName + "' deleted");
+              LOG_INFO("Buffer '{}' deleted", bufferName);
               m_buffers.erase(bufferName);
             },
             bufferName,
@@ -287,7 +287,7 @@ bool BufferManager::removeBuffer(gfx::rhi::Buffer* buffer) {
 
         return true;
       } else {
-        LOG_INFO("Removing buffer: " + it->first);
+        LOG_INFO("Removing buffer: {}", it->first);
         m_buffers.erase(it);
         return true;
       }
@@ -308,7 +308,7 @@ bool BufferManager::updateBuffer(const std::string& name, const void* data, size
 
   auto it = m_buffers.find(name);
   if (it == m_buffers.end()) {
-    LOG_ERROR("Cannot update buffer '" + name + "', not found");
+    LOG_ERROR("Cannot update buffer '{}', not found", name);
     return false;
   }
 
@@ -336,7 +336,7 @@ bool BufferManager::updateBuffer(gfx::rhi::Buffer* buffer, const void* data, siz
 void BufferManager::release() {
   std::lock_guard<std::mutex> lock(m_mutex);
 
-  LOG_INFO("Releasing " + std::to_string(m_buffers.size()) + " buffers");
+  LOG_INFO("Releasing {} buffers", m_buffers.size());
 
   m_buffers.clear();
 }

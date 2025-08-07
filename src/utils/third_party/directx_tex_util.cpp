@@ -46,7 +46,7 @@ std::unique_ptr<Image> DirectXTexImageLoader::loadImage(const std::filesystem::p
   HRESULT hr = DirectX::LoadFromDDSFile(filepath.wstring().c_str(), DirectX::DDS_FLAGS_NONE, &metadata, scratchImage);
 
   if (FAILED(hr)) {
-    LOG_ERROR("Failed to load DDS image: " + filepath.string() + " [HRESULT: " + std::to_string(hr) + "]");
+    LOG_ERROR("Failed to load DDS image: {} [HRESULT: {}]", filepath.string(), hr);
     return nullptr;
   }
 
@@ -72,8 +72,10 @@ std::unique_ptr<Image> DirectXTexImageLoader::loadImage(const std::filesystem::p
       for (auto slice = 0; slice < image->depth; ++slice) {
         const auto* img = scratchImage.GetImage(mip, arraySlice, slice);
         if (!img) {
-          LOG_WARN("Failed to retrieve image data for mip level " + std::to_string(mip) + ", array slice "
-                   + std::to_string(arraySlice) + ", depth slice " + std::to_string(slice) + ".");
+          LOG_WARN("Failed to retrieve image data for mip level {}, array slice {}, depth slice {}.",
+                   mip,
+                   arraySlice,
+                   slice);
           continue;
         }
 

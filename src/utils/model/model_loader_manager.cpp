@@ -15,7 +15,7 @@ std::unique_ptr<ecs::Model> ModelLoaderManager::loadModel(const std::filesystem:
   ModelType modelType = getModelTypeFromExtension(extension);
 
   if (modelType == ModelType::UNKNOWN) {
-    LOG_ERROR("Unknown model type for extension: " + extension);
+    LOG_ERROR("Unknown model type for extension: {}", extension);
     return nullptr;
   }
 
@@ -32,7 +32,7 @@ std::unique_ptr<ecs::Model> ModelLoaderManager::loadModel(const std::filesystem:
     return loader->loadModel(filePath);
   }
 
-  LOG_ERROR("No loader found for model type with extension: " + extension);
+  LOG_ERROR("No loader found for model type with extension: {}", extension);
   return nullptr;
 }
 

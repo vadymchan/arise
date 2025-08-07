@@ -23,7 +23,7 @@ std::unique_ptr<ecs::RenderModel> CgltfRenderModelLoader::loadRenderModel(const 
                                                                           ecs::Model**                 outModelPtr) {
   auto scene = CgltfSceneCache::getOrLoad(filePath);
   if (!scene) {
-    LOG_ERROR("Failed to load GLTF scene for material mapping: " + filePath.string());
+    LOG_ERROR("Failed to load GLTF scene for material mapping: {}", filePath.string());
     return nullptr;
   }
 
@@ -36,7 +36,7 @@ std::unique_ptr<ecs::RenderModel> CgltfRenderModelLoader::loadRenderModel(const 
   auto modelManager              = ServiceLocator::s_get<ModelManager>();
 
   if (!modelManager) {
-    LOG_ERROR("ModelManager not available in ServiceLocator while loading: " + filePath.string());
+    LOG_ERROR("ModelManager not available in ServiceLocator while loading: {}", filePath.string());
     return nullptr;
   }
 
@@ -46,7 +46,7 @@ std::unique_ptr<ecs::RenderModel> CgltfRenderModelLoader::loadRenderModel(const 
   }
 
   if (!materialManager || !renderGeometryMeshManager || !renderMeshManager || !bufferManager) {
-    LOG_WARN("GPU managers not available – loaded CPU model only for: " + filePath.string());
+    LOG_WARN("GPU managers not available – loaded CPU model only for: {}", filePath.string());
     return nullptr;
   }
 
@@ -67,15 +67,15 @@ std::unique_ptr<ecs::RenderModel> CgltfRenderModelLoader::loadRenderModel(const 
 
       auto renderGeometryMesh = createRenderGeometryMesh(meshPtr);
       if (!renderGeometryMesh || !renderGeometryMesh->vertexBuffer || !renderGeometryMesh->indexBuffer) {
-        LOG_WARN("Failed to create GPU geometry buffers for mesh " + meshPtr->meshName
-                 + ". Falling back to CPU-only model.");
+        LOG_WARN("Failed to create GPU geometry buffers for mesh {}. Falling back to CPU-only model.",
+                 meshPtr->meshName);
         return nullptr;
       }
 
       auto gpuMeshPtr = renderGeometryMeshManager->addRenderGeometryMesh(std::move(renderGeometryMesh), meshPtr);
       if (!gpuMeshPtr) {
-        LOG_WARN("Failed to register RenderGeometryMesh for mesh " + meshPtr->meshName
-                 + ". Falling back to CPU-only model.");
+        LOG_WARN("Failed to register RenderGeometryMesh for mesh {}. Falling back to CPU-only model.",
+                 meshPtr->meshName);
         return nullptr;
       }
 
@@ -87,8 +87,7 @@ std::unique_ptr<ecs::RenderModel> CgltfRenderModelLoader::loadRenderModel(const 
             if (materialIndex < materialPointers.size()) {
               materialPtr = materialPointers[materialIndex];
             } else {
-              LOG_WARN("Material index " + std::to_string(materialIndex) + " out of range for mesh "
-                       + meshPtr->meshName);
+              LOG_WARN("Material index {} out of range for mesh {}", materialIndex, meshPtr->meshName);
             }
             break;
           }
@@ -102,9 +101,9 @@ std::unique_ptr<ecs::RenderModel> CgltfRenderModelLoader::loadRenderModel(const 
         renderMeshPtr->transformMatrixBuffer
             = bufferManager->createUniformBuffer(sizeof(math::Matrix4f<>), &meshPtr->transformMatrix, bufferName);
         if (renderMeshPtr->transformMatrixBuffer) {
-          LOG_DEBUG("Created transform matrix buffer for mesh " + meshPtr->meshName);
+          LOG_DEBUG("Created transform matrix buffer for mesh {}", meshPtr->meshName);
         } else {
-          LOG_WARN("Failed to create transform matrix buffer for mesh " + meshPtr->meshName);
+          LOG_WARN("Failed to create transform matrix buffer for mesh {}", meshPtr->meshName);
         }
       }
 
@@ -114,7 +113,7 @@ std::unique_ptr<ecs::RenderModel> CgltfRenderModelLoader::loadRenderModel(const 
 
   if (outModelPtr) {
     *outModelPtr = cpuModelPtr;
-    LOG_DEBUG("CPU model pointer provided to caller: " + filePath.string());
+    LOG_DEBUG("CPU model pointer provided to caller: {}", filePath.string());
   }
 
   return renderModel;

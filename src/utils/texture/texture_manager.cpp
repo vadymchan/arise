@@ -19,10 +19,10 @@ TextureManager::TextureManager(gfx::rhi::Device* device)
 
 TextureManager::~TextureManager() {
   if (!m_textures.empty()) {
-    LOG_INFO("TextureManager destroyed, releasing " + std::to_string(m_textures.size()) + " textures");
+    LOG_INFO("TextureManager destroyed, releasing {} textures", m_textures.size());
 
     for (const auto& [name, texture] : m_textures) {
-      LOG_INFO("Released texture: " + name);
+      LOG_INFO("Released texture: {}", name);
     }
   }
   release();
@@ -55,13 +55,13 @@ gfx::rhi::Texture* TextureManager::createTexture(Image* image, const std::string
   std::lock_guard<std::mutex> lock(m_mutex);
 
   if (m_textures.contains(textureName)) {
-    LOG_WARN("Texture with name '" + textureName + "' already exists, will be replaced");
+    LOG_WARN("Texture with name '{}' already exists, will be replaced", textureName);
     m_textures.erase(textureName);
   }
 
   auto texture = m_device->createTexture(desc);
   if (!texture) {
-    LOG_ERROR("Failed to create texture '" + textureName + "'");
+    LOG_ERROR("Failed to create texture '{}'", textureName);
     return nullptr;
   }
 
@@ -107,8 +107,7 @@ gfx::rhi::Texture* TextureManager::createTexture(Image* image, const std::string
   gfx::rhi::Texture* texturePtr = texture.get();
   m_textures[textureName]       = std::move(texture);
 
-  LOG_INFO("Created texture '" + textureName + "' with dimensions " + std::to_string(desc.width) + "x"
-           + std::to_string(desc.height));
+  LOG_INFO("Created texture '{}' with dimensions {}x{}", textureName, desc.width, desc.height);
 
   return texturePtr;
 }
@@ -123,7 +122,7 @@ gfx::rhi::Texture* TextureManager::createTextureFromFile(const std::filesystem::
 
   Image* image = imageManager->getImage(filepath);
   if (!image) {
-    LOG_ERROR("Failed to load image from file: " + filepath.string());
+    LOG_ERROR("Failed to load image from file: {}", filepath.string());
     return nullptr;
   }
 
@@ -162,21 +161,20 @@ gfx::rhi::Texture* TextureManager::createRenderTarget(uint32_t                wi
   std::lock_guard<std::mutex> lock(m_mutex);
 
   if (m_textures.contains(textureName)) {
-    LOG_WARN("Texture with name '" + textureName + "' already exists, will be replaced");
+    LOG_WARN("Texture with name '{}' already exists, will be replaced", textureName);
     m_textures.erase(textureName);
   }
 
   auto texture = m_device->createTexture(desc);
   if (!texture) {
-    LOG_ERROR("Failed to create render target '" + textureName + "'");
+    LOG_ERROR("Failed to create render target '{}'", textureName);
     return nullptr;
   }
 
   gfx::rhi::Texture* texturePtr = texture.get();
   m_textures[textureName]       = std::move(texture);
 
-  LOG_INFO("Created render target '" + textureName + "' with dimensions " + std::to_string(width) + "x"
-           + std::to_string(height));
+  LOG_INFO("Created render target '{}' with dimensions {}x{}", textureName, width, height);
 
   return texturePtr;
 }
@@ -216,21 +214,20 @@ gfx::rhi::Texture* TextureManager::createDepthStencil(uint32_t                wi
   std::lock_guard<std::mutex> lock(m_mutex);
 
   if (m_textures.contains(textureName)) {
-    LOG_WARN("Texture with name '" + textureName + "' already exists, will be replaced");
+    LOG_WARN("Texture with name '{}' already exists, will be replaced", textureName);
     m_textures.erase(textureName);
   }
 
   auto texture = m_device->createTexture(desc);
   if (!texture) {
-    LOG_ERROR("Failed to create depth stencil '" + textureName + "'");
+    LOG_ERROR("Failed to create depth stencil '{}'", textureName);
     return nullptr;
   }
 
   gfx::rhi::Texture* texturePtr = texture.get();
   m_textures[textureName]       = std::move(texture);
 
-  LOG_INFO("Created depth stencil '" + textureName + "' with dimensions " + std::to_string(width) + "x"
-           + std::to_string(height));
+  LOG_INFO("Created depth stencil '{}' with dimensions {}x{}", textureName, width, height);
 
   return texturePtr;
 }
@@ -246,14 +243,14 @@ gfx::rhi::Texture* TextureManager::addTexture(std::unique_ptr<gfx::rhi::Texture>
   std::lock_guard<std::mutex> lock(m_mutex);
 
   if (m_textures.contains(textureName)) {
-    LOG_WARN("Texture with name '" + textureName + "' already exists, will be replaced");
+    LOG_WARN("Texture with name '{}' already exists, will be replaced", textureName);
     m_textures.erase(textureName);
   }
 
   gfx::rhi::Texture* texturePtr = texture.get();
   m_textures[textureName]       = std::move(texture);
 
-  LOG_INFO("Added external texture '" + textureName + "'");
+  LOG_INFO("Added external texture '{}'", textureName);
 
   return texturePtr;
 }
@@ -282,7 +279,7 @@ bool TextureManager::removeTexture(const std::string& name) {
           texturePtr,
           [this, name](gfx::rhi::Texture*) {
             std::lock_guard<std::mutex> lock(m_mutex);
-            LOG_INFO("Texture '" + name + "' deleted");
+            LOG_INFO("Texture '{}' deleted", name);
             m_textures.erase(name);
           },
           name,
@@ -290,13 +287,13 @@ bool TextureManager::removeTexture(const std::string& name) {
 
       return true;
     } else {
-      LOG_INFO("Removing texture '" + name + "'");
+      LOG_INFO("Removing texture '{}'", name);
       m_textures.erase(it);
       return true;
     }
   }
 
-  LOG_WARN("Attempted to remove non-existent texture '" + name + "'");
+  LOG_WARN("Attempted to remove non-existent texture '{}'", name);
   return false;
 }
 
@@ -317,14 +314,14 @@ bool TextureManager::removeTexture(gfx::rhi::Texture* texture) {
           texture,
           [this, textureName](gfx::rhi::Texture*) {
             std::lock_guard<std::mutex> lock(m_mutex);
-            LOG_INFO("Texture '" + textureName + "' deleted");
+            LOG_INFO("Texture '{}' deleted", textureName);
             m_textures.erase(textureName);
           },
           textureName,
           "Texture");
       return true;
     } else {
-      LOG_INFO("Removing texture '" + textureName + "'");
+      LOG_INFO("Removing texture '{}'", textureName);
       m_textures.erase(it);
       return true;
     }
@@ -347,7 +344,7 @@ size_t TextureManager::getTextureCount() const {
 void TextureManager::release() {
   std::lock_guard<std::mutex> lock(m_mutex);
 
-  LOG_INFO("Releasing " + std::to_string(m_textures.size()) + " textures");
+  LOG_INFO("Releasing {} textures", m_textures.size());
 
   m_textures.clear();
 }

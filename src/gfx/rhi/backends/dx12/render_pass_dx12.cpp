@@ -48,7 +48,7 @@ ResourceLayout RenderPassDx12::getFinalColorAttachmentLayout(uint32_t index) con
     return m_colorFinalLayouts[index];
   }
 
-  LOG_ERROR("Invalid color attachment index: " + std::to_string(index));
+  LOG_ERROR("Invalid color attachment index: {}", index);
   return ResourceLayout::ShaderReadOnly;
 }
 

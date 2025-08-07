@@ -9,7 +9,7 @@ namespace arise {
 
 void ConfigManager::loadAllConfigsFromDirectory(const std::filesystem::path& dirPath) {
   if (!std::filesystem::exists(dirPath) || !std::filesystem::is_directory(dirPath)) {
-    LOG_ERROR("Failed to load configs: Directory does not exist: " + dirPath.string());
+    LOG_ERROR("Failed to load configs: Directory does not exist: {}", dirPath.string());
     return;
   }
 
@@ -22,16 +22,16 @@ void ConfigManager::loadAllConfigsFromDirectory(const std::filesystem::path& dir
 
 void ConfigManager::addConfig(const std::filesystem::path& filePath) {
   if (configs_.contains(filePath)) {
-    LOG_WARN("Config already loaded: " + filePath.string());
+    LOG_WARN("Config already loaded: {}", filePath.string());
     return;
   }
 
   auto config = std::make_unique<Config>();
   if (config->loadFromFile(filePath)) {
     configs_[filePath] = std::move(config);
-    LOG_INFO("Config loaded: " + filePath.string());
+    LOG_INFO("Config loaded: {}", filePath.string());
   } else {
-    LOG_ERROR("Failed to load config: " + filePath.string());
+    LOG_ERROR("Failed to load config: {}", filePath.string());
   }
 }
 
@@ -51,10 +51,10 @@ void ConfigManager::saveAllConfigs() {
 
 bool ConfigManager::unloadConfig(const std::filesystem::path& filePath) {
   if (configs_.erase(filePath)) {
-    LOG_INFO("Config " + filePath.string() + " unloaded from memory.");
+    LOG_INFO("Config {} unloaded from memory.", filePath.string());
     return true;
   } else {
-    LOG_ERROR("Config " + filePath.string() + " not found.");
+    LOG_ERROR("Config {} not found.", filePath.string());
     return false;
   }
 }

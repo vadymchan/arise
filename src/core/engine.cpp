@@ -207,7 +207,7 @@ auto Engine::initialize() -> bool {
     renderingApiString = "vulkan";
   }
 
-  LOG_INFO("RHI API selected from config: " + renderingApiString);
+  LOG_INFO("RHI API selected from config: {}", renderingApiString);
 #endif
 
   // application mode
@@ -220,9 +220,9 @@ auto Engine::initialize() -> bool {
   auto gpuProfiler = gpu::GpuProfilerFactory::create(renderingApi);
   if (gpuProfiler) {
     ServiceLocator::s_provide<gpu::GpuProfiler>(std::move(gpuProfiler));
-    LOG_INFO("GPU profiler created for " + renderingApiString);
+    LOG_INFO("GPU profiler created for {}", renderingApiString);
   } else {
-    LOG_WARN("Failed to create GPU profiler for " + renderingApiString);
+    LOG_WARN("Failed to create GPU profiler for {}", renderingApiString);
   }
 #else
   LOG_INFO("GPU profiling disabled at compile time");
@@ -291,9 +291,9 @@ auto Engine::initialize() -> bool {
     auto logoPath     = PathManager::s_getLogoPath() / logoFilename;
 
     if (!m_window_->setWindowIcon(logoPath)) {
-      LOG_WARN("Failed to set window icon from: " + logoPath.string());
+      LOG_WARN("Failed to set window icon from: {}", logoPath.string());
     } else {
-      LOG_INFO("Window icon set successfully from: " + logoPath.string());
+      LOG_INFO("Window icon set successfully from: {}", logoPath.string());
     }
   } else {
     LOG_INFO("Window icon disabled in settings");
@@ -539,7 +539,7 @@ Window* Engine::recreateWindow_(gfx::rhi::RenderingApi newApi) {
         auto logoPath     = PathManager::s_getLogoPath() / logoFilename;
 
         if (!m_window_->setWindowIcon(logoPath)) {
-          LOG_WARN("Failed to set window icon after recreation: " + logoPath.string());
+          LOG_WARN("Failed to set window icon after recreation: {}", logoPath.string());
         }
       }
     }

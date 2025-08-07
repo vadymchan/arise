@@ -15,7 +15,7 @@ std::unique_ptr<ecs::RenderModel> RenderModelLoaderManager::loadRenderModel(cons
   ModelType modelType = getModelTypeFromExtension(extension);
 
   if (modelType == ModelType::UNKNOWN) {
-    LOG_ERROR("Unknown model type for extension: " + extension);
+    LOG_ERROR("Unknown model type for extension: {}", extension);
     return nullptr;
   }
 
@@ -32,7 +32,7 @@ std::unique_ptr<ecs::RenderModel> RenderModelLoaderManager::loadRenderModel(cons
     return loader->loadRenderModel(filePath, outModel);
   }
 
-  LOG_ERROR("No loader found for model type with extension: " + extension);
+  LOG_ERROR("No loader found for model type with extension: {}", extension);
   return nullptr;
 }
 }  // namespace arise

@@ -31,7 +31,7 @@ Scene* SceneLoader::loadSceneFromFile(const std::filesystem::path& configPath,
     configManager->addConfig(configPath);
     config = configManager->getConfig(configPath);
     if (!config) {
-      LOG_ERROR("Failed to load scene config: " + configPath.string());
+      LOG_ERROR("Failed to load scene config: {}", configPath.string());
       return nullptr;
     }
     config->registerConverter<ecs::Transform>(&ecs::g_loadTransform);
@@ -47,7 +47,7 @@ Scene* SceneLoader::loadSceneFromFile(const std::filesystem::path& configPath,
   document.Parse(jsonStr.c_str());
 
   if (document.HasParseError()) {
-    LOG_ERROR("Failed to parse scene JSON: " + configPath.string());
+    LOG_ERROR("Failed to parse scene JSON: {}", configPath.string());
     return nullptr;
   }
 
@@ -57,7 +57,7 @@ Scene* SceneLoader::loadSceneFromFile(const std::filesystem::path& configPath,
   }
 
   if (sceneName.empty()) {
-    LOG_ERROR("Scene name is missing in config: " + configPath.string());
+    LOG_ERROR("Scene name is missing in config: {}", configPath.string());
     return nullptr;
   }
 

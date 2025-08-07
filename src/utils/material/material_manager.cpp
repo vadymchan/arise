@@ -14,12 +14,11 @@ MaterialManager::~MaterialManager() {
       totalMaterials += materials.size();
     }
 
-    LOG_INFO("MaterialManager destroyed, releasing " + std::to_string(totalMaterials) + " materials from "
-             + std::to_string(materialCache_.size()) + " files");
+    LOG_INFO("MaterialManager destroyed, releasing {} materials from {} files", totalMaterials, materialCache_.size());
 
     for (const auto& [path, materials] : materialCache_) {
       for (const auto& material : materials) {
-        LOG_INFO("Released material: " + material->materialName + " from " + path.filename().string());
+        LOG_INFO("Released material: {} from {}", material->materialName, path.filename().string());
       }
     }
   }
@@ -58,7 +57,7 @@ std::vector<ecs::Material*> MaterialManager::getMaterials(const std::filesystem:
     return result;
   }
 
-  LOG_WARN("Failed to load materials from: " + filepath.string());
+  LOG_WARN("Failed to load materials from: {}", filepath.string());
   return {};
 }
 
@@ -77,13 +76,13 @@ bool MaterialManager::removeMaterial(ecs::Material* material) {
                                    [material](const std::unique_ptr<ecs::Material>& m) { return m.get() == material; });
 
     if (materialIt != materialVec.end()) {
-      LOG_INFO("Removing material: " + material->materialName);
+      LOG_INFO("Removing material: {}", material->materialName);
 
       auto textureManager = ServiceLocator::s_get<TextureManager>();
       if (textureManager) {
         for (const auto& [textureName, texturePtr] : material->textures) {
           if (texturePtr) {
-            LOG_DEBUG("Releasing texture '" + textureName + "' from material '" + material->materialName + "'");
+            LOG_DEBUG("Releasing texture '{}' from material '{}'", textureName, material->materialName);
             textureManager->removeTexture(texturePtr);
           }
         }
@@ -91,7 +90,7 @@ bool MaterialManager::removeMaterial(ecs::Material* material) {
         LOG_WARN("TextureManager not available, textures may not be properly released");
       }
 
-      LOG_INFO("Material '" + material->materialName + "' deleted");
+      LOG_INFO("Material '{}' deleted", material->materialName);
 
       materialVec.erase(materialIt);
       if (materialVec.empty()) {

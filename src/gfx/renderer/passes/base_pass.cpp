@@ -371,8 +371,6 @@ void BasePass::prepareDrawCalls_(const RenderContext& context) {
 
         m_shaderManager->registerPipelineForShader(pipeline, m_vertexShaderPath_);
         m_shaderManager->registerPipelineForShader(pipeline, m_pixelShaderPath_);
-
-        LOG_INFO("BasePass: Created pipeline with {} automatically generated descriptor sets", layoutPtrs.size());
       }
 
       DrawData drawData;

@@ -26,8 +26,13 @@ void VertexInputBuilder::createFromReflection(const std::vector<ShaderVertexInpu
   bool hasVertexInputs   = false;
   bool hasInstanceInputs = false;
 
+  auto isInstanceLikeSemantic = [](const std::string& name) {
+    return name == "INSTANCE" || name == "LOCAL_MIN_CORNER" || name == "LOCAL_MAX_CORNER" || name == "WORLD_MIN_CORNER"
+        || name == "WORLD_MAX_CORNER";
+  };
+
   for (const auto& input : vertexInputs) {
-    if (input.semanticName == "INSTANCE") {
+    if (isInstanceLikeSemantic(input.semanticName)) {
       hasInstanceInputs = true;
     } else if (isKnownVertexSemantic_(input.semanticName)) {
       hasVertexInputs = true;
@@ -62,9 +67,77 @@ void VertexInputBuilder::createFromReflection(const std::vector<ShaderVertexInpu
     }
   }
 
+  // Pre-compute offsets for extra instance attributes (custom semantics), ordered by location
+  struct InstanceExtraDesc {
+    uint32_t     location;
+    std::string  semantic;
+    VertexFormat format;
+  };
+  std::vector<InstanceExtraDesc> instanceExtras;
+  instanceExtras.reserve(vertexInputs.size());
+  for (const auto& input : vertexInputs) {
+    if (input.semanticName != "INSTANCE" && isInstanceLikeSemantic(input.semanticName)) {
+      instanceExtras.push_back({input.location, input.semanticName, input.format});
+    }
+  }
+  std::sort(instanceExtras.begin(), instanceExtras.end(), [](const InstanceExtraDesc& a, const InstanceExtraDesc& b) {
+    return a.location < b.location;
+  });
+
+  auto getFormatSizeBytes = [api](VertexFormat fmt) -> uint32_t {
+    switch (fmt) {
+      case VertexFormat::R8:
+      case VertexFormat::R8ui:
+        return 1;
+      case VertexFormat::R16f:
+        return 2;
+      case VertexFormat::R32f:
+      case VertexFormat::R32ui:
+      case VertexFormat::R32si:
+        return 4;
+
+      case VertexFormat::Rg8:
+        return 2;
+      case VertexFormat::Rg16f:
+        return 4;
+      case VertexFormat::Rg32f:
+        return 8;
+
+      case VertexFormat::Rgb8:
+        return 3;
+      case VertexFormat::Rgb16f:
+        return 6;
+      case VertexFormat::Rgb32f:
+        return 12;
+
+      case VertexFormat::Rgba8:
+      case VertexFormat::Rgba8ui:
+      case VertexFormat::Rgba8si:
+        return 4;
+      case VertexFormat::Rgba16f:
+        return 8;
+      case VertexFormat::Rgba32f:
+        return 16;
+
+      case VertexFormat::Count:
+      default:
+        LOG_WARN("Unknown VertexFormat in getFormatSizeBytes, defaulting to 16 bytes");
+        return 16;
+    }
+  };
+
+  std::unordered_map<uint32_t, uint32_t> instanceExtraOffsetByLocation;         // key: location, value: byte offset
+  {
+    uint32_t runningOffset = (firstInstanceLocation != UINT32_MAX) ? 64u : 0u;  // 4 vec4 rows of the instance matrix
+    for (const auto& extra : instanceExtras) {
+      instanceExtraOffsetByLocation[extra.location]  = runningOffset;
+      runningOffset                                 += getFormatSizeBytes(extra.format);
+    }
+  }
+
   // Create attributes from reflection data
   for (const auto& input : vertexInputs) {
-    if (input.semanticName != "INSTANCE" && !isKnownVertexSemantic_(input.semanticName)) {
+    if (!isInstanceLikeSemantic(input.semanticName) && !isKnownVertexSemantic_(input.semanticName)) {
       continue;  // Skip unknown semantics
     }
 
@@ -76,13 +149,16 @@ void VertexInputBuilder::createFromReflection(const std::vector<ShaderVertexInpu
       attribute.location     = input.location + i;
       attribute.format       = getFormatForLocation_(input, i, api);
       attribute.semanticName = input.semanticName;
-      attribute.binding      = (input.semanticName == "INSTANCE") ? 1 : 0;
+      attribute.binding      = (isInstanceLikeSemantic(input.semanticName)) ? 1 : 0;
 
       // Calculate offset - special handling for instance matrices
       if (input.semanticName == "INSTANCE") {
         uint32_t       matrixRowIndex = input.location - firstInstanceLocation;
         const uint32_t matrixRowSize  = 16;
         attribute.offset              = matrixRowIndex * matrixRowSize;
+      } else if (isInstanceLikeSemantic(input.semanticName)) {
+        auto it          = instanceExtraOffsetByLocation.find(input.location);
+        attribute.offset = (it != instanceExtraOffsetByLocation.end()) ? it->second : 0u;
       } else {
         attribute.offset = getVertexAttributeOffset_(input.semanticName);
       }
@@ -91,7 +167,7 @@ void VertexInputBuilder::createFromReflection(const std::vector<ShaderVertexInpu
     }
   }
 
-  // Sort attributes by location for consistency
+  // Sort for consistency
   std::sort(
       attributes.begin(), attributes.end(), [](const VertexInputAttributeDesc& a, const VertexInputAttributeDesc& b) {
         return a.location < b.location;
@@ -131,20 +207,20 @@ uint32_t VertexInputBuilder::calculateLocationsNeeded_(const ShaderVertexInput& 
   // Calculate how many locations are needed based on format component count and arraySize
 
   uint32_t componentsPerLocation = 4;  // vec4
-  uint32_t componentCount        = g_getTextureComponentCount(input.format, api);
+  uint32_t componentCount        = g_getVertexFormatComponentCount(input.format);
   uint32_t totalComponents       = componentCount * input.arraySize;
 
   // Ceiling division to get number of locations needed
   return (totalComponents + componentsPerLocation - 1) / componentsPerLocation;
 }
 
-TextureFormat VertexInputBuilder::getFormatForLocation_(const ShaderVertexInput& input,
-                                                        uint32_t                 locationIndex,
-                                                        RenderingApi             api) {
-  bool isFloat = (input.format == TextureFormat::R32f || input.format == TextureFormat::Rg32f
-                  || input.format == TextureFormat::Rgb32f || input.format == TextureFormat::Rgba32f);
+VertexFormat VertexInputBuilder::getFormatForLocation_(const ShaderVertexInput& input,
+                                                       uint32_t                 locationIndex,
+                                                       RenderingApi             api) {
+  bool isFloat = (input.format == VertexFormat::R32f || input.format == VertexFormat::Rg32f
+                  || input.format == VertexFormat::Rgb32f || input.format == VertexFormat::Rgba32f);
 
-  uint32_t componentCount           = g_getTextureComponentCount(input.format, api);
+  uint32_t componentCount           = g_getVertexFormatComponentCount(input.format);
   uint32_t totalComponents          = componentCount * input.arraySize;
   uint32_t componentsPerLocation    = 4;
   uint32_t startComponent           = locationIndex * componentsPerLocation;
@@ -154,21 +230,21 @@ TextureFormat VertexInputBuilder::getFormatForLocation_(const ShaderVertexInput&
   if (isFloat) {
     switch (componentsInThisLocation) {
       case 1:
-        return TextureFormat::R32f;
+        return VertexFormat::R32f;
       case 2:
-        return TextureFormat::Rg32f;
+        return VertexFormat::Rg32f;
       case 3:
-        return TextureFormat::Rgb32f;
+        return VertexFormat::Rgb32f;
       case 4:
       default:
-        return TextureFormat::Rgba32f;
+        return VertexFormat::Rgba32f;
     }
   } else {
     LOG_WARN("Non-float vertex input format detected. Defaulting to Rgba32f for multi-location inputs.");
     if (locationIndex == 0 && totalComponents <= 4) {
       return input.format;
     } else {
-      return TextureFormat::Rgba32f;
+      return VertexFormat::Rgba32f;
     }
   }
 }

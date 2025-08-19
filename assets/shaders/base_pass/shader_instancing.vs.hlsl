@@ -1,22 +1,14 @@
+#include "../shader_semantics.hlsli"
+
 struct VSInput
 {
-#ifdef __spirv__
-    [[vk::location(0)]] float3   Position  : POSITION0;
-    [[vk::location(1)]] float2   TexCoord  : TEXCOORD1;
-    [[vk::location(2)]] float3   Normal    : NORMAL2;
-    [[vk::location(3)]] float3   Tangent   : TANGENT3;
-    [[vk::location(4)]] float3   Bitangent : BITANGENT4;
-    [[vk::location(5)]] float4   Color     : COLOR5;
-    [[vk::location(6)]] float4x4 Instance  : INSTANCE6;
-#else
-    float3 Position : POSITION0;
-    float2 TexCoord : TEXCOORD1;
-    float3 Normal : NORMAL2;
-    float3 Tangent : TANGENT3;
-    float3 Bitangent : BITANGENT4;
-    float4 Color : COLOR5;
-    float4x4 Instance : INSTANCE6;
-#endif
+    VERTEX_ATTR(POSITION,  float3,   Position);
+    VERTEX_ATTR(TEXCOORD,  float2,   TexCoord);
+    VERTEX_ATTR(NORMAL,    float3,   Normal);
+    VERTEX_ATTR(TANGENT,   float3,   Tangent);
+    VERTEX_ATTR(BITANGENT, float3,   Bitangent);
+    VERTEX_ATTR(COLOR,     float4,   Color);
+    VERTEX_ATTR(INSTANCE,  float4x4, Instance);
 };
 
 struct ViewUniformBuffer

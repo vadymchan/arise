@@ -3,6 +3,7 @@
 
 #include "gfx/renderer/debug_strategies/debug_draw_strategy.h"
 #include "gfx/rhi/interface/render_pass.h"
+#include "gfx/rhi/shader_reflection/pipeline_layout_manager.h"
 
 #include <unordered_map>
 #include <vector>
@@ -101,6 +102,8 @@ class LightVisualizationStrategy : public DebugDrawStrategy {
 
   std::unordered_map<ecs::Material*, MaterialCache> m_materialCache;
   rhi::DescriptorSetLayout*                         m_materialDescriptorSetLayout = nullptr;
+
+  rhi::PipelineLayoutManager m_layoutManager;
 };
 
 }  // namespace renderer

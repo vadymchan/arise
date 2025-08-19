@@ -7,6 +7,11 @@
 #include "gfx/rhi/interface/descriptor.h"
 #include "gfx/rhi/interface/pipeline.h"
 #include "gfx/rhi/shader_manager.h"
+#include "gfx/rhi/shader_reflection/pipeline_layout_builder.h"
+#include "gfx/rhi/shader_reflection/pipeline_layout_manager.h"
+#include "gfx/rhi/shader_reflection/pipeline_utils.h"
+#include "gfx/rhi/shader_reflection/shader_reflection_utils.h"
+#include "gfx/rhi/shader_reflection/vertex_input_builder.h"
 #include "utils/memory/align.h"
 
 namespace arise {
@@ -83,7 +88,7 @@ void WorldGridStrategy::render(const RenderContext& context) {
 
   commandBuffer->setPipeline(m_pipeline);
 
-  if (m_frameResources->getViewDescriptorSet()) {
+  if (m_pipeline->hasBindingSlot(0) && m_frameResources->getViewDescriptorSet()) {
     commandBuffer->bindDescriptorSet(0, m_frameResources->getViewDescriptorSet());
   }
 
@@ -109,6 +114,7 @@ void WorldGridStrategy::cleanup() {
   m_framebuffers.clear();
   m_vertexShader = nullptr;
   m_pixelShader  = nullptr;
+  m_layoutManager.cleanup();
 }
 
 void WorldGridStrategy::setupRenderPass_() {
@@ -203,7 +209,18 @@ void WorldGridStrategy::createPipeline_() {
 
   pipelineDesc.multisample.rasterizationSamples = rhi::MSAASamples::Count1;
 
-  pipelineDesc.setLayouts.push_back(m_frameResources->getViewDescriptorSetLayout());
+  std::vector<rhi::Shader*> shaders;
+  if (m_vertexShader) {
+    shaders.push_back(m_vertexShader);
+  }
+  if (m_pixelShader) {
+    shaders.push_back(m_pixelShader);
+  }
+
+  rhi::PipelineLayoutDesc reflectionLayout = rhi::pipeline_utils::generatePipelineLayoutFromShaders(shaders);
+
+  auto layoutPtrs         = m_layoutManager.createAndManageLayouts(m_device, reflectionLayout);
+  pipelineDesc.setLayouts = layoutPtrs;
 
   pipelineDesc.renderPass = m_renderPass;
 

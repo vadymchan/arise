@@ -476,26 +476,29 @@ if(CMAKE_GENERATOR MATCHES "Visual Studio")
     set_target_properties(${PROJECT_NAME} PROPERTIES VS_GLOBAL_EnableClangTidyCodeAnalysis true)
     set_target_properties(${PROJECT_NAME} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${WORKING_DIRECTORY}")
 
-    # Set shader model
+    # shader include directory
+    set(SHADER_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/assets/shaders")
+    
     foreach(SHADER_FILE ${HLSL_SHADERS})
         set_source_files_properties(${SHADER_FILE} PROPERTIES
             VS_SHADER_MODEL ${HLSL_SHADER_MODEL}
         )
-    endforeach()
-
-    # Set shader types based on file extensions
-    foreach(SHADER_FILE ${HLSL_SHADERS})
+        
+        # shader options (shader type and include directory)
         if(SHADER_FILE MATCHES "\\.vs\\.hlsl$")
             set_source_files_properties(${SHADER_FILE} PROPERTIES
                 VS_SHADER_TYPE Vertex
+                VS_SHADER_FLAGS "/I \"${SHADER_INCLUDE_DIR}\""
             )
         elseif(SHADER_FILE MATCHES "\\.ps\\.hlsl$")
             set_source_files_properties(${SHADER_FILE} PROPERTIES
                 VS_SHADER_TYPE Pixel
+                VS_SHADER_FLAGS "/I \"${SHADER_INCLUDE_DIR}\""
             )
         elseif(SHADER_FILE MATCHES "\\.gs\\.hlsl$")
             set_source_files_properties(${SHADER_FILE} PROPERTIES 
                 VS_SHADER_TYPE Geometry
+                VS_SHADER_FLAGS "/I \"${SHADER_INCLUDE_DIR}\""
             )
         endif()
     endforeach()

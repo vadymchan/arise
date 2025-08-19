@@ -12,6 +12,11 @@
 #include "gfx/rhi/interface/pipeline.h"
 #include "gfx/rhi/interface/render_pass.h"
 #include "gfx/rhi/shader_manager.h"
+#include "gfx/rhi/shader_reflection/pipeline_layout_builder.h"
+#include "gfx/rhi/shader_reflection/pipeline_layout_manager.h"
+#include "gfx/rhi/shader_reflection/pipeline_utils.h"
+#include "gfx/rhi/shader_reflection/shader_reflection_utils.h"
+#include "gfx/rhi/shader_reflection/vertex_input_builder.h"
 #include "profiler/profiler.h"
 #include "utils/logger/log.h"
 
@@ -148,12 +153,16 @@ void BoundingBoxVisualizationStrategy::render(const RenderContext& context) {
     for (const auto& drawData : m_drawData) {
       commandBuffer->setPipeline(drawData.pipeline);
 
-      if (m_frameResources->getViewDescriptorSet()) {
-        commandBuffer->bindDescriptorSet(0, m_frameResources->getViewDescriptorSet());
+      if (drawData.pipeline->hasBindingSlot(0)) {
+        if (auto* viewSet = m_frameResources->getViewDescriptorSet()) {
+          commandBuffer->bindDescriptorSet(0, viewSet);
+        }
       }
 
-      if (drawData.modelMatrixDescriptorSet) {
-        commandBuffer->bindDescriptorSet(1, drawData.modelMatrixDescriptorSet);
+      if (drawData.pipeline->hasBindingSlot(1)) {
+        if (drawData.modelMatrixDescriptorSet) {
+          commandBuffer->bindDescriptorSet(1, drawData.modelMatrixDescriptorSet);
+        }
       }
 
       commandBuffer->bindVertexBuffer(0, m_cubeVertexBuffer);
@@ -185,6 +194,8 @@ void BoundingBoxVisualizationStrategy::cleanup() {
   m_framebuffers.clear();
   m_vertexShader = nullptr;
   m_pixelShader  = nullptr;
+
+  m_layoutManager.cleanup();
 }
 
 void BoundingBoxVisualizationStrategy::setupRenderPass_() {
@@ -249,9 +260,6 @@ void BoundingBoxVisualizationStrategy::createFramebuffers_(const math::Dimension
 void BoundingBoxVisualizationStrategy::prepareDrawCalls_(const RenderContext& context) {
   m_drawData.clear();
 
-  auto viewDescriptorSetLayout = m_frameResources->getViewDescriptorSetLayout();
-  auto modelMatrixLayout       = m_frameResources->getModelMatrixDescriptorSetLayout();
-
   for (const auto& [model, cache] : m_instanceBufferCache) {
     if (cache.count == 0) {
       continue;
@@ -267,67 +275,21 @@ void BoundingBoxVisualizationStrategy::prepareDrawCalls_(const RenderContext& co
       pipelineDesc.shaders.push_back(m_vertexShader);
       pipelineDesc.shaders.push_back(m_pixelShader);
 
-      rhi::VertexInputBindingDesc vertexBinding;
-      vertexBinding.binding   = 0;
-      vertexBinding.stride    = sizeof(math::Vector3f);
-      vertexBinding.inputRate = rhi::VertexInputRate::Vertex;
-      pipelineDesc.vertexBindings.push_back(vertexBinding);
+      if (m_vertexShader && !m_vertexShader->getMeta().vertexInputs.empty()) {
+        rhi::VertexInputBuilder::createFromReflection(m_vertexShader->getMeta().vertexInputs,
+                                                      pipelineDesc.vertexBindings,
+                                                      pipelineDesc.vertexAttributes,
+                                                      m_device->getApiType(),
+                                                      sizeof(math::Vector3f),
+                                                      sizeof(BoundingBoxData));
 
-      rhi::VertexInputBindingDesc instanceBinding;
-      instanceBinding.binding   = 1;
-      instanceBinding.stride    = sizeof(BoundingBoxData);
-      instanceBinding.inputRate = rhi::VertexInputRate::Instance;
-      pipelineDesc.vertexBindings.push_back(instanceBinding);
-
-      rhi::VertexInputAttributeDesc positionAttr;
-      positionAttr.location     = 0;
-      positionAttr.binding      = 0;
-      positionAttr.format       = rhi::TextureFormat::Rgb32f;
-      positionAttr.offset       = 0;
-      positionAttr.semanticName = "POSITION";
-      pipelineDesc.vertexAttributes.push_back(positionAttr);
-
-      for (int i = 0; i < 4; ++i) {
-        rhi::VertexInputAttributeDesc matrixAttr;
-        matrixAttr.location     = 1 + i;
-        matrixAttr.binding      = 1;
-        matrixAttr.format       = rhi::TextureFormat::Rgba32f;
-        matrixAttr.offset       = offsetof(BoundingBoxData, modelMatrix) + i * sizeof(math::Vector4f);
-        matrixAttr.semanticName = "INSTANCE";
-        pipelineDesc.vertexAttributes.push_back(matrixAttr);
+        LOG_INFO("Generated vertex input from shader reflection: {} bindings, {} attributes",
+                 pipelineDesc.vertexBindings.size(),
+                 pipelineDesc.vertexAttributes.size());
+      } else {
+        LOG_ERROR("Shader reflection vertex inputs not available - cannot create pipeline");
+        continue;
       }
-
-      rhi::VertexInputAttributeDesc localMinCornerAttr;
-      localMinCornerAttr.location     = 5;
-      localMinCornerAttr.binding      = 1;
-      localMinCornerAttr.format       = rhi::TextureFormat::Rgb32f;
-      localMinCornerAttr.offset       = offsetof(BoundingBoxData, localMinCorner);
-      localMinCornerAttr.semanticName = "LOCAL_MIN_CORNER";
-      pipelineDesc.vertexAttributes.push_back(localMinCornerAttr);
-
-      rhi::VertexInputAttributeDesc localMaxCornerAttr;
-      localMaxCornerAttr.location     = 6;
-      localMaxCornerAttr.binding      = 1;
-      localMaxCornerAttr.format       = rhi::TextureFormat::Rgb32f;
-      localMaxCornerAttr.offset       = offsetof(BoundingBoxData, localMaxCorner);
-      localMaxCornerAttr.semanticName = "LOCAL_MAX_CORNER";
-      pipelineDesc.vertexAttributes.push_back(localMaxCornerAttr);
-
-      rhi::VertexInputAttributeDesc worldMinCornerAttr;
-      worldMinCornerAttr.location     = 7;
-      worldMinCornerAttr.binding      = 1;
-      worldMinCornerAttr.format       = rhi::TextureFormat::Rgb32f;
-      worldMinCornerAttr.offset       = offsetof(BoundingBoxData, worldMinCorner);
-      worldMinCornerAttr.semanticName = "WORLD_MIN_CORNER";
-      pipelineDesc.vertexAttributes.push_back(worldMinCornerAttr);
-
-      rhi::VertexInputAttributeDesc worldMaxCornerAttr;
-      worldMaxCornerAttr.location     = 8;
-      worldMaxCornerAttr.binding      = 1;
-      worldMaxCornerAttr.format       = rhi::TextureFormat::Rgb32f;
-      worldMaxCornerAttr.offset       = offsetof(BoundingBoxData, worldMaxCorner);
-      worldMaxCornerAttr.semanticName = "WORLD_MAX_CORNER";
-      pipelineDesc.vertexAttributes.push_back(worldMaxCornerAttr);
 
       pipelineDesc.inputAssembly.topology               = rhi::PrimitiveType::Lines;
       pipelineDesc.inputAssembly.primitiveRestartEnable = false;
@@ -348,8 +310,18 @@ void BoundingBoxVisualizationStrategy::prepareDrawCalls_(const RenderContext& co
 
       pipelineDesc.multisample.rasterizationSamples = rhi::MSAASamples::Count1;
 
-      pipelineDesc.setLayouts.push_back(viewDescriptorSetLayout);
-      pipelineDesc.setLayouts.push_back(modelMatrixLayout);
+      std::vector<rhi::Shader*> shaders;
+      if (m_vertexShader) {
+        shaders.push_back(m_vertexShader);
+      }
+      if (m_pixelShader) {
+        shaders.push_back(m_pixelShader);
+      }
+
+      rhi::PipelineLayoutDesc reflectionLayout = rhi::pipeline_utils::generatePipelineLayoutFromShaders(shaders);
+
+      auto layoutPtrs         = m_layoutManager.createAndManageLayouts(m_device, reflectionLayout);
+      pipelineDesc.setLayouts = layoutPtrs;
 
       pipelineDesc.renderPass = m_renderPass;
 

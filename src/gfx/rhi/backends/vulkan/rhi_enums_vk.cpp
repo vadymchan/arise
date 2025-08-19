@@ -71,6 +71,29 @@ static const std::unordered_map<TextureFormat, VkFormat> formatMapping = {
   { TextureFormat::Bc7Unorm,   VK_FORMAT_BC7_UNORM_BLOCK         }
 };
 
+static const std::unordered_map<VertexFormat, VkFormat> vertexFormatMapping = {
+  { VertexFormat::R8,      VK_FORMAT_R8_UNORM          },
+  { VertexFormat::R8ui,    VK_FORMAT_R8_UINT           },
+  { VertexFormat::R16f,    VK_FORMAT_R16_SFLOAT        },
+  { VertexFormat::R32f,    VK_FORMAT_R32_SFLOAT        },
+  { VertexFormat::R32ui,   VK_FORMAT_R32_UINT          },
+  { VertexFormat::R32si,   VK_FORMAT_R32_SINT          },
+
+  { VertexFormat::Rg8,     VK_FORMAT_R8G8_UNORM        },
+  { VertexFormat::Rg16f,   VK_FORMAT_R16G16_SFLOAT     },
+  { VertexFormat::Rg32f,   VK_FORMAT_R32G32_SFLOAT     },
+
+  { VertexFormat::Rgb8,    VK_FORMAT_R8G8B8_UNORM      },
+  { VertexFormat::Rgb16f,  VK_FORMAT_R16G16B16_SFLOAT  },
+  { VertexFormat::Rgb32f,  VK_FORMAT_R32G32B32_SFLOAT  },
+
+  { VertexFormat::Rgba8,   VK_FORMAT_R8G8B8A8_UNORM    },
+  { VertexFormat::Rgba16f, VK_FORMAT_R16G16B16A16_SFLOAT },
+  { VertexFormat::Rgba32f, VK_FORMAT_R32G32B32A32_SFLOAT },
+  { VertexFormat::Rgba8ui, VK_FORMAT_R8G8B8A8_UINT     },
+  { VertexFormat::Rgba8si, VK_FORMAT_R8G8B8A8_SINT     }
+};
+
 static const std::unordered_map<PrimitiveType, VkPrimitiveTopology> topologyMapping = {
   { PrimitiveType::Points,                 VK_PRIMITIVE_TOPOLOGY_POINT_LIST                    },
   { PrimitiveType::Lines,                  VK_PRIMITIVE_TOPOLOGY_LINE_LIST                     },
@@ -495,6 +518,10 @@ VkFormat g_getTextureFormatVk(TextureFormat textureFormat) {
 
 TextureFormat g_getTextureFormatVk(VkFormat format) {
   return getEnumMapping(formatReverseMapping, format, TextureFormat::Count);
+}
+
+VkFormat g_getVertexFormatVk(VertexFormat vertexFormat) {
+  return getEnumMapping(vertexFormatMapping, vertexFormat, VK_FORMAT_UNDEFINED);
 }
 
 VkPrimitiveTopology g_getPrimitiveTopologyVk(PrimitiveType primitiveType) {

@@ -3,6 +3,7 @@
 
 #include "gfx/rhi/common/rhi_enums.h"
 #include "gfx/rhi/common/rhi_types.h"
+#include "gfx/rhi/shader_reflection/shader_reflection_types.h"
 
 #include <atomic>
 
@@ -43,8 +44,9 @@ class Pipeline {
  */
 class GraphicsPipeline : public Pipeline {
   public:
-  GraphicsPipeline(const GraphicsPipelineDesc& desc)
-      : m_desc_(desc) {}
+  GraphicsPipeline(const GraphicsPipelineDesc& desc, const PipelineLayoutDesc& reflectionLayout = {})
+      : m_desc_(desc)
+      , m_reflectionLayout_(reflectionLayout) {}
 
   virtual ~GraphicsPipeline() = default;
 
@@ -54,8 +56,11 @@ class GraphicsPipeline : public Pipeline {
 
   PrimitiveType getPrimitiveType() const { return m_desc_.inputAssembly.topology; }
 
+  virtual bool hasBindingSlot(uint32_t slot) const;
+
   protected:
   GraphicsPipelineDesc m_desc_;
+  PipelineLayoutDesc   m_reflectionLayout_; 
 };
 
 }  // namespace rhi

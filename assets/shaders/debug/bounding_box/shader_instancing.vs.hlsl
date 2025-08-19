@@ -18,23 +18,16 @@
 // To switch modes: Comment/uncomment the #define lines in main()
 // ======================================
 
+#include "../../shader_semantics.hlsli"
+
 struct VSInput
 {
-#ifdef __spirv__
-    [[vk::location(0)]] float3   Position        : POSITION0;
-    [[vk::location(1)]] float4x4 InstanceMatrix  : INSTANCE1;
-    [[vk::location(5)]] float3   LocalMinCorner  : LOCAL_MIN_CORNER5;
-    [[vk::location(6)]] float3   LocalMaxCorner  : LOCAL_MAX_CORNER6;
-    [[vk::location(7)]] float3   WorldMinCorner  : WORLD_MIN_CORNER7;
-    [[vk::location(8)]] float3   WorldMaxCorner  : WORLD_MAX_CORNER8;
-#else
-    float3 Position : POSITION0;
-    float4x4 InstanceMatrix : INSTANCE1;
-    float3 LocalMinCorner : LOCAL_MIN_CORNER5;
-    float3 LocalMaxCorner : LOCAL_MAX_CORNER6;
-    float3 WorldMinCorner : WORLD_MIN_CORNER7;
-    float3 WorldMaxCorner : WORLD_MAX_CORNER8;
-#endif
+    VERTEX_ATTR(POSITION,         float3,   Position);
+    VERTEX_ATTR(INSTANCE,         float4x4, InstanceMatrix);
+    VERTEX_ATTR(LOCAL_MIN_CORNER, float3,   LocalMinCorner);
+    VERTEX_ATTR(LOCAL_MAX_CORNER, float3,   LocalMaxCorner);
+    VERTEX_ATTR(WORLD_MIN_CORNER, float3,   WorldMinCorner);
+    VERTEX_ATTR(WORLD_MAX_CORNER, float3,   WorldMaxCorner);
 };
 
 struct ViewUniformBuffer

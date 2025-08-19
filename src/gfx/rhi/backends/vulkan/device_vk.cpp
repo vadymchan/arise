@@ -376,7 +376,7 @@ std::unique_ptr<Shader> DeviceVk::createShader(const ShaderDesc& desc) {
 }
 
 std::unique_ptr<GraphicsPipeline> DeviceVk::createGraphicsPipeline(const GraphicsPipelineDesc& desc) {
-  return std::make_unique<GraphicsPipelineVk>(desc, this);
+  return std::make_unique<GraphicsPipelineVk>(desc, PipelineLayoutDesc{}, this);
 }
 
 std::unique_ptr<GraphicsPipeline> DeviceVk::createGraphicsPipelineWithReflection(const GraphicsPipelineDesc& desc) {
@@ -388,7 +388,7 @@ std::unique_ptr<GraphicsPipeline> DeviceVk::createGraphicsPipelineWithReflection
   GraphicsPipelineDesc modifiedDesc = desc;
   modifiedDesc.setLayouts           = layoutPtrs;
 
-  auto pipeline = std::make_unique<GraphicsPipelineVk>(modifiedDesc, this);
+  auto pipeline = std::make_unique<GraphicsPipelineVk>(modifiedDesc, reflectionLayout, this);
 
   return std::move(pipeline);
 }

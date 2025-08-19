@@ -2,6 +2,7 @@
 #define ARISE_MESH_HIGHLIGHT_STRATEGY_H
 
 #include "gfx/renderer/debug_strategies/debug_draw_strategy.h"
+#include "gfx/rhi/shader_reflection/pipeline_layout_manager.h"
 
 #include <unordered_map>
 #include <vector>
@@ -71,7 +72,6 @@ class MeshHighlightStrategy : public DebugDrawStrategy {
   };
 
   void setupRenderPass_();
-  void setupVertexInput_(rhi::GraphicsPipelineDesc& pipelineDesc);
   void createFramebuffers_(const math::Dimension2i& dimension);
   void prepareDrawCalls_(const RenderContext& context);
   void updateInstanceBuffer_(ecs::RenderModel*                    model,
@@ -114,6 +114,8 @@ class MeshHighlightStrategy : public DebugDrawStrategy {
   };
 
   std::unordered_map<std::string, PipelineCache> m_pipelineCache;
+
+  rhi::PipelineLayoutManager m_layoutManager;
 };
 
 }  // namespace renderer

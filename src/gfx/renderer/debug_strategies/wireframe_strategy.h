@@ -2,6 +2,7 @@
 #define ARISE_WIREFRAME_STRATEGY_H
 
 #include "gfx/renderer/debug_strategies/debug_draw_strategy.h"
+#include "gfx/rhi/shader_reflection/pipeline_layout_manager.h"
 
 #include <unordered_map>
 #include <vector>
@@ -90,6 +91,8 @@ class WireframeStrategy : public DebugDrawStrategy {
 
   std::unordered_map<ecs::RenderModel*, ModelBufferCache> m_instanceBufferCache;
   std::vector<DrawData>                                   m_drawData;
+
+  rhi::PipelineLayoutManager m_layoutManager;
 };
 
 }  // namespace renderer

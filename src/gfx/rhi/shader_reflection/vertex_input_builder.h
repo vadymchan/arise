@@ -59,7 +59,7 @@ class VertexInputBuilder {
    * Get the appropriate format for a specific location within a multi-location input
    * @param locationIndex - index within the spanned locations (0-based)
    */
-  static TextureFormat getFormatForLocation_(const ShaderVertexInput& input, uint32_t locationIndex, RenderingApi api);
+  static VertexFormat getFormatForLocation_(const ShaderVertexInput& input, uint32_t locationIndex, RenderingApi api);
 };
 
 }  // namespace rhi

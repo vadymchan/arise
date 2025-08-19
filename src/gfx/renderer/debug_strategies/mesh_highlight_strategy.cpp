@@ -10,6 +10,11 @@
 #include "gfx/rhi/interface/pipeline.h"
 #include "gfx/rhi/interface/render_pass.h"
 #include "gfx/rhi/shader_manager.h"
+#include "gfx/rhi/shader_reflection/pipeline_layout_builder.h"
+#include "gfx/rhi/shader_reflection/pipeline_layout_manager.h"
+#include "gfx/rhi/shader_reflection/pipeline_utils.h"
+#include "gfx/rhi/shader_reflection/shader_reflection_utils.h"
+#include "gfx/rhi/shader_reflection/vertex_input_builder.h"
 #include "utils/memory/align.h"
 
 namespace arise {
@@ -140,10 +145,10 @@ void MeshHighlightStrategy::render(const RenderContext& context) {
   for (const auto& drawData : m_drawData) {
     commandBuffer->setPipeline(drawData.stencilMarkPipeline);
 
-    if (m_frameResources->getViewDescriptorSet()) {
+    if (drawData.stencilMarkPipeline->hasBindingSlot(0) && m_frameResources->getViewDescriptorSet()) {
       commandBuffer->bindDescriptorSet(0, m_frameResources->getViewDescriptorSet());
     }
-    if (drawData.modelMatrixDescriptorSet) {
+    if (drawData.stencilMarkPipeline->hasBindingSlot(1) && drawData.modelMatrixDescriptorSet) {
       commandBuffer->bindDescriptorSet(1, drawData.modelMatrixDescriptorSet);
     }
 
@@ -158,13 +163,13 @@ void MeshHighlightStrategy::render(const RenderContext& context) {
   for (const auto& drawData : m_drawData) {
     commandBuffer->setPipeline(drawData.outlinePipeline);
 
-    if (m_frameResources->getViewDescriptorSet()) {
+    if (drawData.outlinePipeline->hasBindingSlot(0) && m_frameResources->getViewDescriptorSet()) {
       commandBuffer->bindDescriptorSet(0, m_frameResources->getViewDescriptorSet());
     }
-    if (drawData.modelMatrixDescriptorSet) {
+    if (drawData.outlinePipeline->hasBindingSlot(1) && drawData.modelMatrixDescriptorSet) {
       commandBuffer->bindDescriptorSet(1, drawData.modelMatrixDescriptorSet);
     }
-    if (drawData.highlightParamsDescriptorSet) {
+    if (drawData.outlinePipeline->hasBindingSlot(2) && drawData.highlightParamsDescriptorSet) {
       commandBuffer->bindDescriptorSet(2, drawData.highlightParamsDescriptorSet);
     }
 
@@ -196,6 +201,7 @@ void MeshHighlightStrategy::cleanup() {
   m_outlineVertexShader     = nullptr;
   m_pixelShader             = nullptr;
   m_highlightParamsCache.clear();
+  m_layoutManager.cleanup();
 }
 
 void MeshHighlightStrategy::setupRenderPass_() {
@@ -223,46 +229,6 @@ void MeshHighlightStrategy::setupRenderPass_() {
 
   auto renderPass = m_device->createRenderPass(renderPassDesc);
   m_renderPass    = m_resourceManager->addRenderPass(std::move(renderPass), "highlight_render_pass");
-}
-
-void MeshHighlightStrategy::setupVertexInput_(rhi::GraphicsPipelineDesc& pipelineDesc) {
-  rhi::VertexInputBindingDesc vertexBinding;
-  vertexBinding.binding   = 0;
-  vertexBinding.stride    = sizeof(ecs::Vertex);
-  vertexBinding.inputRate = rhi::VertexInputRate::Vertex;
-  pipelineDesc.vertexBindings.push_back(vertexBinding);
-
-  rhi::VertexInputBindingDesc instanceBinding;
-  instanceBinding.binding   = 1;
-  instanceBinding.stride    = sizeof(math::Matrix4f<>);
-  instanceBinding.inputRate = rhi::VertexInputRate::Instance;
-  pipelineDesc.vertexBindings.push_back(instanceBinding);
-
-  rhi::VertexInputAttributeDesc positionAttr;
-  positionAttr.location     = 0;
-  positionAttr.binding      = 0;
-  positionAttr.format       = rhi::TextureFormat::Rgb32f;
-  positionAttr.offset       = offsetof(ecs::Vertex, position);
-  positionAttr.semanticName = "POSITION";
-  pipelineDesc.vertexAttributes.push_back(positionAttr);
-
-  rhi::VertexInputAttributeDesc normalAttr;
-  normalAttr.location     = 1;
-  normalAttr.binding      = 0;
-  normalAttr.format       = rhi::TextureFormat::Rgb32f;
-  normalAttr.offset       = offsetof(ecs::Vertex, normal);
-  normalAttr.semanticName = "NORMAL";
-  pipelineDesc.vertexAttributes.push_back(normalAttr);
-
-  for (uint32_t i = 0; i < 4; i++) {
-    rhi::VertexInputAttributeDesc matrixCol;
-    matrixCol.location     = 2 + i;
-    matrixCol.binding      = 1;
-    matrixCol.format       = rhi::TextureFormat::Rgba32f;
-    matrixCol.offset       = i * 16;
-    matrixCol.semanticName = "INSTANCE";
-    pipelineDesc.vertexAttributes.push_back(matrixCol);
-  }
 }
 
 void MeshHighlightStrategy::createFramebuffers_(const math::Dimension2i& dimension) {
@@ -381,8 +347,21 @@ rhi::GraphicsPipeline* MeshHighlightStrategy::getOrCreateStencilMarkPipeline_(co
   pipelineDesc.shaders.push_back(m_stencilMarkVertexShader);
   pipelineDesc.shaders.push_back(m_pixelShader);
 
-  // Vertex input
-  setupVertexInput_(pipelineDesc);
+  if (m_stencilMarkVertexShader && !m_stencilMarkVertexShader->getMeta().vertexInputs.empty()) {
+    rhi::VertexInputBuilder::createFromReflection(m_stencilMarkVertexShader->getMeta().vertexInputs,
+                                                  pipelineDesc.vertexBindings,
+                                                  pipelineDesc.vertexAttributes,
+                                                  m_device->getApiType(),
+                                                  sizeof(ecs::Vertex),
+                                                  sizeof(math::Matrix4f<>));
+
+    LOG_INFO("Generated vertex input from shader reflection: {} bindings, {} attributes",
+             pipelineDesc.vertexBindings.size(),
+             pipelineDesc.vertexAttributes.size());
+  } else {
+    LOG_ERROR("Shader reflection vertex inputs not available - cannot create stencil mark pipeline");
+    return nullptr;
+  }
 
   pipelineDesc.inputAssembly.topology               = rhi::PrimitiveType::Triangles;
   pipelineDesc.inputAssembly.primitiveRestartEnable = false;
@@ -418,11 +397,18 @@ rhi::GraphicsPipeline* MeshHighlightStrategy::getOrCreateStencilMarkPipeline_(co
 
   pipelineDesc.multisample.rasterizationSamples = rhi::MSAASamples::Count1;
 
-  auto viewLayout        = m_frameResources->getViewDescriptorSetLayout();
-  auto modelMatrixLayout = m_frameResources->getModelMatrixDescriptorSetLayout();
+  std::vector<rhi::Shader*> shaders;
+  if (m_stencilMarkVertexShader) {
+    shaders.push_back(m_stencilMarkVertexShader);
+  }
+  if (m_pixelShader) {
+    shaders.push_back(m_pixelShader);
+  }
 
-  pipelineDesc.setLayouts.push_back(viewLayout);
-  pipelineDesc.setLayouts.push_back(modelMatrixLayout);
+  rhi::PipelineLayoutDesc reflectionLayout = rhi::pipeline_utils::generatePipelineLayoutFromShaders(shaders);
+
+  auto layoutPtrs         = m_layoutManager.createAndManageLayouts(m_device, reflectionLayout);
+  pipelineDesc.setLayouts = layoutPtrs;
 
   pipelineDesc.renderPass = m_renderPass;
 
@@ -448,7 +434,21 @@ rhi::GraphicsPipeline* MeshHighlightStrategy::getOrCreateOutlinePipeline_(const 
   pipelineDesc.shaders.push_back(m_outlineVertexShader);
   pipelineDesc.shaders.push_back(m_pixelShader);
 
-  setupVertexInput_(pipelineDesc);
+  if (m_outlineVertexShader && !m_outlineVertexShader->getMeta().vertexInputs.empty()) {
+    rhi::VertexInputBuilder::createFromReflection(m_outlineVertexShader->getMeta().vertexInputs,
+                                                  pipelineDesc.vertexBindings,
+                                                  pipelineDesc.vertexAttributes,
+                                                  m_device->getApiType(),
+                                                  sizeof(ecs::Vertex),
+                                                  sizeof(math::Matrix4f<>));
+
+    LOG_INFO("Generated outline vertex input from shader reflection: {} bindings, {} attributes",
+             pipelineDesc.vertexBindings.size(),
+             pipelineDesc.vertexAttributes.size());
+  } else {
+    LOG_ERROR("Shader reflection vertex inputs not available - cannot create outline pipeline");
+    return nullptr;
+  }
 
   pipelineDesc.inputAssembly.topology               = rhi::PrimitiveType::Triangles;
   pipelineDesc.inputAssembly.primitiveRestartEnable = false;
@@ -494,12 +494,19 @@ rhi::GraphicsPipeline* MeshHighlightStrategy::getOrCreateOutlinePipeline_(const 
 
   pipelineDesc.multisample.rasterizationSamples = rhi::MSAASamples::Count1;
 
-  auto viewLayout        = m_frameResources->getViewDescriptorSetLayout();
-  auto modelMatrixLayout = m_frameResources->getModelMatrixDescriptorSetLayout();
+  std::vector<rhi::Shader*> outlineShaders;
+  if (m_outlineVertexShader) {
+    outlineShaders.push_back(m_outlineVertexShader);
+  }
+  if (m_pixelShader) {
+    outlineShaders.push_back(m_pixelShader);
+  }
 
-  pipelineDesc.setLayouts.push_back(viewLayout);
-  pipelineDesc.setLayouts.push_back(modelMatrixLayout);
-  pipelineDesc.setLayouts.push_back(m_highlightParamsLayout);
+  rhi::PipelineLayoutDesc outlineReflectionLayout
+      = rhi::pipeline_utils::generatePipelineLayoutFromShaders(outlineShaders);
+
+  auto outlineLayoutPtrs  = m_layoutManager.createAndManageLayouts(m_device, outlineReflectionLayout);
+  pipelineDesc.setLayouts = outlineLayoutPtrs;
 
   pipelineDesc.renderPass = m_renderPass;
 

@@ -17,6 +17,8 @@ namespace rhi {
 DXGI_FORMAT   g_getTextureFormatDx12(TextureFormat textureFormat);
 TextureFormat g_getTextureFormatDx12(DXGI_FORMAT formatType);
 
+DXGI_FORMAT g_getVertexFormatDx12(VertexFormat vertexFormat);
+
 int g_getTextureComponentCountDx12(TextureFormat type);
 int g_getTexturePixelSizeDx12(TextureFormat type);
 

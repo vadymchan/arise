@@ -11,11 +11,29 @@ namespace arise {
 namespace gfx {
 namespace rhi {
 
-GraphicsPipelineVk::GraphicsPipelineVk(const GraphicsPipelineDesc& desc, DeviceVk* device)
-    : GraphicsPipeline(desc)
+GraphicsPipelineVk::GraphicsPipelineVk(const GraphicsPipelineDesc& desc,
+                                       const PipelineLayoutDesc&   reflectionLayout,
+                                       DeviceVk*                   device)
+    : GraphicsPipeline(desc, reflectionLayout)
     , m_device_(device)
     , m_pipeline_(VK_NULL_HANDLE)
     , m_pipelineLayout_(VK_NULL_HANDLE) {
+  m_ownedLayouts_.reserve(desc.setLayouts.size());
+  std::vector<const DescriptorSetLayout*> ownedLayoutPtrs;
+  ownedLayoutPtrs.reserve(desc.setLayouts.size());
+
+  for (const auto* layout : desc.setLayouts) {
+    if (layout) {
+      auto copiedLayout = m_device_->createDescriptorSetLayout(layout->getDesc());
+      ownedLayoutPtrs.push_back(copiedLayout.get());
+      m_ownedLayouts_.push_back(std::move(copiedLayout));
+    } else {
+      ownedLayoutPtrs.push_back(nullptr);
+    }
+  }
+
+  m_desc_.setLayouts = ownedLayoutPtrs;
+
   if (!initialize_()) {
     LOG_ERROR("Failed to initialize Vulkan graphics pipeline");
   }
@@ -198,7 +216,7 @@ bool GraphicsPipelineVk::createVertexInputState_(VkPipelineVertexInputStateCreat
     VkVertexInputAttributeDescription attributeDesc = {};
     attributeDesc.location                          = attribute.location;
     attributeDesc.binding                           = attribute.binding;
-    attributeDesc.format                            = g_getTextureFormatVk(attribute.format);
+    attributeDesc.format                            = g_getVertexFormatVk(attribute.format);
     attributeDesc.offset                            = attribute.offset;
 
     attributeDescriptions.push_back(attributeDesc);

@@ -19,7 +19,7 @@ class RenderPassVk;
 
 class GraphicsPipelineVk : public GraphicsPipeline {
   public:
-  GraphicsPipelineVk(const GraphicsPipelineDesc& desc, DeviceVk* device);
+  GraphicsPipelineVk(const GraphicsPipelineDesc& desc, const PipelineLayoutDesc& reflectionLayout, DeviceVk* device);
   ~GraphicsPipelineVk() override;
 
   GraphicsPipelineVk(const GraphicsPipelineVk&)            = delete;
@@ -49,6 +49,8 @@ class GraphicsPipelineVk : public GraphicsPipeline {
 
   VkPipeline       m_pipeline_;
   VkPipelineLayout m_pipelineLayout_;
+
+  std::vector<std::unique_ptr<DescriptorSetLayout>> m_ownedLayouts_;  // to avoid dangling pointers
 };
 
 }  // namespace rhi

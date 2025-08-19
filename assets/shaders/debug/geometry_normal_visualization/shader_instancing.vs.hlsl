@@ -25,21 +25,15 @@ cbuffer ModelParam : register(b0, space1)
     ModelUniformBuffer ModelParam;
 }
 
+#include "../../shader_semantics.hlsli"
+
 struct VSInput
 {
-#ifdef __spirv__
-    [[vk::location(0)]] float3   Position  : POSITION0;
-    [[vk::location(1)]] float3   Normal    : NORMAL1;  
-    [[vk::location(2)]] float3   Tangent   : TANGENT2;  
-    [[vk::location(3)]] float3   Bitangent : BITANGENT3;  
-    [[vk::location(4)]] float4x4 Instance  : INSTANCE4;  
-#else
-    float3   Position  : POSITION0;
-    float3   Normal    : NORMAL1;
-    float3   Tangent   : TANGENT2;
-    float3   Bitangent : BITANGENT3;
-    float4x4 Instance  : INSTANCE4;
-#endif
+    VERTEX_ATTR(POSITION,  float3,   Position);
+    VERTEX_ATTR(NORMAL,    float3,   Normal);
+    VERTEX_ATTR(TANGENT,   float3,   Tangent);
+    VERTEX_ATTR(BITANGENT, float3,   Bitangent);
+    VERTEX_ATTR(INSTANCE,  float4x4, Instance);
 };
 
 

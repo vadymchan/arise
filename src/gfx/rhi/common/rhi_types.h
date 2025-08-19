@@ -93,10 +93,10 @@ struct VertexInputBindingDesc {
 };
 
 struct VertexInputAttributeDesc {
-  uint32_t      location = 0;  // shader - location in vk, semantic index in dx12
-  uint32_t      binding  = 0;  // binding in vk, input slot in dx12
-  TextureFormat format   = TextureFormat::Rgba8;
-  uint32_t      offset   = 0;
+  uint32_t     location = 0;  // shader - location in vk, semantic index in dx12
+  uint32_t     binding  = 0;  // binding in vk, input slot in dx12
+  VertexFormat format   = VertexFormat::Rgba8;
+  uint32_t     offset   = 0;
 
   // DirectX 12 specific semantic name (ignored in Vulkan)
   std::string semanticName

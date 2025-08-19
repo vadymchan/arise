@@ -135,6 +135,12 @@ gfx::rhi::ShaderMeta DxcUtil::reflectShader(const std::shared_ptr<IDxcBlob>& sha
     return {};
   }
 
+  LOG_INFO("Using {} backend for stage {}",
+           backend == ShaderBackend::DXIL    ? "DXIL"
+           : backend == ShaderBackend::SPIRV ? "SPIR-V"
+                                             : "UNKNOWN",
+           static_cast<int>(stage));
+
   switch (backend) {
     case ShaderBackend::DXIL:
       return reflectDxil_(shaderBlob, stage);
@@ -275,11 +281,20 @@ gfx::rhi::ShaderMeta DxcUtil::reflectDxil_(const std::shared_ptr<IDxcBlob>& shad
 
   // Extract vertex inputs (only for vertex shaders)
   if (stage == gfx::rhi::ShaderStageFlag::Vertex) {
+    LOG_DEBUG("Processing {} vertex input parameters", shaderDesc.InputParameters);
+
     for (UINT i = 0; i < shaderDesc.InputParameters; ++i) {
       D3D12_SIGNATURE_PARAMETER_DESC paramDesc;
       if (FAILED(reflection->GetInputParameterDesc(i, &paramDesc))) {
+        LOG_WARN("Failed to get input parameter desc for index {}", i);
         continue;
       }
+
+      LOG_DEBUG("Input {} - SemanticName: '{}', SemanticIndex: {}, SystemValueType: {}",
+                i,
+                paramDesc.SemanticName ? paramDesc.SemanticName : "NULL",
+                paramDesc.SemanticIndex,
+                static_cast<int>(paramDesc.SystemValueType));
 
       gfx::rhi::ShaderVertexInput vertexInput;
       vertexInput.semanticName = paramDesc.SemanticName ? paramDesc.SemanticName : "";
@@ -305,18 +320,18 @@ gfx::rhi::ShaderMeta DxcUtil::reflectDxil_(const std::shared_ptr<IDxcBlob>& shad
       switch (paramDesc.ComponentType) {
         case D3D_REGISTER_COMPONENT_FLOAT32:
           if (components == 1) {
-            vertexInput.format = gfx::rhi::TextureFormat::R32f;
+            vertexInput.format = gfx::rhi::VertexFormat::R32f;
           } else if (components == 2) {
-            vertexInput.format = gfx::rhi::TextureFormat::Rg32f;
+            vertexInput.format = gfx::rhi::VertexFormat::Rg32f;
           } else if (components == 3) {
-            vertexInput.format = gfx::rhi::TextureFormat::Rgb32f;
+            vertexInput.format = gfx::rhi::VertexFormat::Rgb32f;
           } else {
-            vertexInput.format = gfx::rhi::TextureFormat::Rgba32f;
+            vertexInput.format = gfx::rhi::VertexFormat::Rgba32f;
           }
           break;
           // TODO: add other types (int, uint) apart from float
         default:
-          vertexInput.format = gfx::rhi::TextureFormat::Rgba32f;
+          vertexInput.format = gfx::rhi::VertexFormat::Rgba32f;
           break;
       }
 
@@ -326,8 +341,14 @@ gfx::rhi::ShaderMeta DxcUtil::reflectDxil_(const std::shared_ptr<IDxcBlob>& shad
         continue;  // Skip built-ins, don't add to vertexInputs
       }
 
+      LOG_DEBUG("Added vertex input - semantic: '{}', location: {}, format: {}",
+                vertexInput.semanticName,
+                vertexInput.location,
+                static_cast<int>(vertexInput.format));
       meta.vertexInputs.push_back(vertexInput);
     }
+
+    LOG_INFO("Extracted {} vertex inputs total", meta.vertexInputs.size());
   }
 
   // Extract push constants
@@ -421,36 +442,41 @@ gfx::rhi::ShaderMeta DxcUtil::reflectSpirv_(const std::shared_ptr<IDxcBlob>& sha
     uint32_t inputVarCount = 0;
     result                 = spvReflectEnumerateInputVariables(&module, &inputVarCount, nullptr);
     if (result == SPV_REFLECT_RESULT_SUCCESS && inputVarCount > 0) {
+      LOG_DEBUG("Processing {} vertex input variables", inputVarCount);
+
       std::vector<SpvReflectInterfaceVariable*> inputVars(inputVarCount);
       result = spvReflectEnumerateInputVariables(&module, &inputVarCount, inputVars.data());
 
       if (result == SPV_REFLECT_RESULT_SUCCESS) {
         for (const auto* inputVar : inputVars) {
           if (!inputVar || inputVar->decoration_flags & SPV_REFLECT_DECORATION_BUILT_IN) {
+            LOG_DEBUG("Skipping built-in input variable at location {}", inputVar ? inputVar->location : UINT32_MAX);
             continue;  // Skip built-ins
           }
+
+          LOG_DEBUG("Input variable - location: {}, name: '{}'",
+                    inputVar->location,
+                    inputVar->name ? inputVar->name : "NULL");
 
           gfx::rhi::ShaderVertexInput vertexInput;
           vertexInput.location = inputVar->location;
 
-          // TODO: placeholder for semantic name mapping. consider using a more robust mapping
-          if (vertexInput.location == 0) {
-            vertexInput.semanticName = "POSITION";
-          } else if (vertexInput.location == 1) {
-            vertexInput.semanticName = "TEXCOORD";
-          } else if (vertexInput.location == 2) {
-            vertexInput.semanticName = "NORMAL";
-          } else if (vertexInput.location == 3) {
-            vertexInput.semanticName = "TANGENT";
-          } else if (vertexInput.location == 4) {
-            vertexInput.semanticName = "BITANGENT";
-          } else if (vertexInput.location == 5) {
-            vertexInput.semanticName = "COLOR";
-          } else if (vertexInput.location == 6) {
-            vertexInput.semanticName = "INSTANCE";
-          } else {
+          // Find semantic name for this location using the unified mapping table
+          vertexInput.semanticName = "UNKNOWN";
+          for (const auto& [semantic, location] : gfx::rhi::kVertexSemanticToLocation) {
+            if (location == vertexInput.location) {
+              vertexInput.semanticName = semantic;
+              break;
+            }
+          }
+
+          // Fallback to TEXCOORD for unknown locations (legacy behavior)
+          if (vertexInput.semanticName == "UNKNOWN") {
+            LOG_WARN("Unknown location {} - falling back to TEXCOORD", vertexInput.location);
             vertexInput.semanticName = "TEXCOORD";
           }
+
+          LOG_DEBUG("Mapped location {} to semantic '{}'", vertexInput.location, vertexInput.semanticName);
 
           // format information
           if (inputVar->type_description) {
@@ -469,13 +495,13 @@ gfx::rhi::ShaderMeta DxcUtil::reflectSpirv_(const std::shared_ptr<IDxcBlob>& sha
               // TODO: add support for signed/unsigned integers (currently assume all inputs are float)
               default:  // float
                 if (componentCount == 1) {
-                  vertexInput.format = gfx::rhi::TextureFormat::R32f;
+                  vertexInput.format = gfx::rhi::VertexFormat::R32f;
                 } else if (componentCount == 2) {
-                  vertexInput.format = gfx::rhi::TextureFormat::Rg32f;
+                  vertexInput.format = gfx::rhi::VertexFormat::Rg32f;
                 } else if (componentCount == 3) {
-                  vertexInput.format = gfx::rhi::TextureFormat::Rgb32f;
+                  vertexInput.format = gfx::rhi::VertexFormat::Rgb32f;
                 } else {
-                  vertexInput.format = gfx::rhi::TextureFormat::Rgba32f;
+                  vertexInput.format = gfx::rhi::VertexFormat::Rgba32f;
                 }
                 break;
             }
@@ -483,20 +509,30 @@ gfx::rhi::ShaderMeta DxcUtil::reflectSpirv_(const std::shared_ptr<IDxcBlob>& sha
 
           // TODO: dirty solution - should be done in a more robust way
           if (vertexInput.semanticName == "INSTANCE") {
+            LOG_DEBUG("Expanding INSTANCE matrix into 4 rows starting at location {}", vertexInput.location);
             for (uint32_t row = 0; row < 4; ++row) {
               gfx::rhi::ShaderVertexInput matrixRowInput = vertexInput;
               matrixRowInput.location                    = vertexInput.location + row;
               matrixRowInput.arraySize                   = 1;
-              matrixRowInput.format                      = gfx::rhi::TextureFormat::Rgba32f;
+              matrixRowInput.format                      = gfx::rhi::VertexFormat::Rgba32f;
 
+              LOG_DEBUG("Added INSTANCE row {} at location {}", row, matrixRowInput.location);
               meta.vertexInputs.push_back(matrixRowInput);
             }
           } else {
+            LOG_DEBUG("Added vertex input - semantic: '{}', location: {}, format: {}",
+                      vertexInput.semanticName,
+                      vertexInput.location,
+                      static_cast<int>(vertexInput.format));
             meta.vertexInputs.push_back(vertexInput);
           }
         }
       }
+    } else {
+      LOG_WARN("No input variables found for vertex shader");
     }
+
+    LOG_INFO("Extracted {} vertex inputs total", meta.vertexInputs.size());
   }
 
   // push constants

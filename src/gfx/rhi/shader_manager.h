@@ -84,7 +84,19 @@ class ShaderManager {
 
     auto backend = (m_device_->getApiType() == RenderingApi::Vulkan) ? ShaderBackend::SPIRV : ShaderBackend::DXIL;
     std::wstring wEntryPoint(shader->getEntryPoint().begin(), shader->getEntryPoint().end());
-    auto         compiledShader = DxcUtil::s_get().compileHlslFile(path, shader->getStage(), wEntryPoint, backend);
+
+    // Setup include directories for shader compilation
+    OptionalShaderParams shaderParams;
+    shaderParams.includeDirs.push_back(L"assets/shaders");
+
+    // Add the directory of the current shader file for relative includes
+    auto shaderDir = path.parent_path();
+    if (!shaderDir.empty()) {
+      shaderParams.includeDirs.emplace_back(shaderDir.wstring());
+    }
+
+    auto compiledShader
+        = DxcUtil::s_get().compileHlslFile(path, shader->getStage(), wEntryPoint, backend, shaderParams);
 
     if (!compiledShader) {
       LOG_ERROR("Shader compilation failed: {}", path.string());
@@ -155,7 +167,17 @@ class ShaderManager {
     // string -> wstring
     std::wstring wEntryPoint(entryPoint.begin(), entryPoint.end());
 
-    auto compiledShader = DxcUtil::s_get().compileHlslFile(path, stage, wEntryPoint, backend);
+    // Setup include directories for shader compilation
+    OptionalShaderParams shaderParams;
+    shaderParams.includeDirs.push_back(L"assets/shaders");
+
+    // Add the directory of the current shader file for relative includes
+    auto shaderDir = path.parent_path();
+    if (!shaderDir.empty()) {
+      shaderParams.includeDirs.emplace_back(shaderDir.wstring());
+    }
+
+    auto compiledShader = DxcUtil::s_get().compileHlslFile(path, stage, wEntryPoint, backend, shaderParams);
 
     if (!compiledShader) {
       LOG_ERROR("Shader compilation failed: {}", path.string());

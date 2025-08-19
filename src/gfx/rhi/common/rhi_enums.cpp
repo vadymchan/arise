@@ -36,6 +36,37 @@ int g_getTextureComponentCount(TextureFormat format, RenderingApi api) {
   }
 }
 
+int g_getVertexFormatComponentCount(VertexFormat format) {
+  switch (format) {
+    case VertexFormat::R8:
+    case VertexFormat::R8ui:
+    case VertexFormat::R16f:
+    case VertexFormat::R32f:
+    case VertexFormat::R32ui:
+    case VertexFormat::R32si:
+      return 1;
+    case VertexFormat::Rg8:
+    case VertexFormat::Rg16f:
+    case VertexFormat::Rg32f:
+      return 2;
+    case VertexFormat::Rgb8:
+    case VertexFormat::Rgb16f:
+    case VertexFormat::Rgb32f:
+      return 3;
+    case VertexFormat::Rgba8:
+    case VertexFormat::Rgba16f:
+    case VertexFormat::Rgba32f:
+    case VertexFormat::Rgba8ui:
+    case VertexFormat::Rgba8si:
+      return 4;
+    case VertexFormat::Count:
+    default:
+      LOG_ERROR("Unknown VertexFormat: {}", static_cast<int>(format));
+      assert(false && "Unknown VertexFormat");
+      return 0;
+  }
+}
+
 }  // namespace rhi
 }  // namespace gfx
 }  // namespace arise

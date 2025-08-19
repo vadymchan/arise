@@ -1,14 +1,10 @@
+#include "../../shader_semantics.hlsli"
+
 struct VSInput
 {
-#ifdef __spirv__
-    [[vk::location(0)]] float3 Position   : POSITION0;
-    [[vk::location(1)]] float3 Normal     : NORMAL1;  
-    [[vk::location(2)]] float4x4 Instance : INSTANCE2;  
-#else
-    float3 Position : POSITION0;
-    float3 Normal : NORMAL1;
-    float4x4 Instance : INSTANCE2;
-#endif
+    VERTEX_ATTR(POSITION, float3,   Position);
+    VERTEX_ATTR(NORMAL,   float3,   Normal);
+    VERTEX_ATTR(INSTANCE, float4x4, Instance);
 };
 
 struct ViewUniformBuffer

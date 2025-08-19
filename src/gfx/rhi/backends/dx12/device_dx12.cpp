@@ -273,7 +273,7 @@ std::unique_ptr<Shader> DeviceDx12::createShader(const ShaderDesc& desc) {
 }
 
 std::unique_ptr<GraphicsPipeline> DeviceDx12::createGraphicsPipeline(const GraphicsPipelineDesc& desc) {
-  return std::make_unique<GraphicsPipelineDx12>(desc, this);
+  return std::make_unique<GraphicsPipelineDx12>(desc, PipelineLayoutDesc{}, this);
 }
 
 std::unique_ptr<GraphicsPipeline> DeviceDx12::createGraphicsPipelineWithReflection(const GraphicsPipelineDesc& desc) {
@@ -285,7 +285,7 @@ std::unique_ptr<GraphicsPipeline> DeviceDx12::createGraphicsPipelineWithReflecti
   GraphicsPipelineDesc modifiedDesc = desc;
   modifiedDesc.setLayouts           = layoutPtrs;
 
-  auto pipeline = std::make_unique<GraphicsPipelineDx12>(modifiedDesc, this);
+  auto pipeline = std::make_unique<GraphicsPipelineDx12>(modifiedDesc, reflectionLayout, this);
 
   return std::move(pipeline);
 }

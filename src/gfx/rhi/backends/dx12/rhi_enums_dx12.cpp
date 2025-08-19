@@ -2,6 +2,8 @@
 
 #ifdef ARISE_USE_DX12
 
+#include "utils/logger/log.h"
+
 #include <cassert>
 
 namespace arise {
@@ -44,6 +46,29 @@ static const std::unordered_map<TextureFormat, DXGI_FORMAT> textureFormatMapping
   { TextureFormat::Bc6hUf16,   DXGI_FORMAT_BC6H_UF16          },
   { TextureFormat::Bc6hSf16,   DXGI_FORMAT_BC6H_SF16          },
   { TextureFormat::Bc7Unorm,   DXGI_FORMAT_BC7_UNORM          }
+};
+
+static const std::unordered_map<VertexFormat, DXGI_FORMAT> vertexFormatMappingToDXGI = {
+  { VertexFormat::R8,      DXGI_FORMAT_R8_UNORM           },
+  { VertexFormat::R8ui,    DXGI_FORMAT_R8_UINT            },
+  { VertexFormat::R16f,    DXGI_FORMAT_R16_FLOAT          },
+  { VertexFormat::R32f,    DXGI_FORMAT_R32_FLOAT          },
+  { VertexFormat::R32ui,   DXGI_FORMAT_R32_UINT           },
+  { VertexFormat::R32si,   DXGI_FORMAT_R32_SINT           },
+
+  { VertexFormat::Rg8,     DXGI_FORMAT_R8G8_UNORM         },
+  { VertexFormat::Rg16f,   DXGI_FORMAT_R16G16_FLOAT       },
+  { VertexFormat::Rg32f,   DXGI_FORMAT_R32G32_FLOAT       },
+  
+  { VertexFormat::Rgb8,    DXGI_FORMAT_UNKNOWN            }, // Need special handling - no RGB8 in DX12
+  { VertexFormat::Rgb16f,  DXGI_FORMAT_UNKNOWN            }, // Need special handling - no RGB16F in DX12
+  { VertexFormat::Rgb32f,  DXGI_FORMAT_R32G32B32_FLOAT    },
+
+  { VertexFormat::Rgba8,   DXGI_FORMAT_R8G8B8A8_UNORM     },
+  { VertexFormat::Rgba16f, DXGI_FORMAT_R16G16B16A16_FLOAT },
+  { VertexFormat::Rgba32f, DXGI_FORMAT_R32G32B32A32_FLOAT },
+  { VertexFormat::Rgba8ui, DXGI_FORMAT_R8G8B8A8_UINT      },
+  { VertexFormat::Rgba8si, DXGI_FORMAT_R8G8B8A8_SINT      }
 };
 
 static const std::unordered_map<ShaderBindingType, D3D12_DESCRIPTOR_RANGE_TYPE> bindingTypeMapping = {
@@ -556,6 +581,27 @@ DXGI_FORMAT g_getTextureFormatDx12(TextureFormat textureFormat) {
 
 TextureFormat g_getTextureFormatDx12(DXGI_FORMAT formatType) {
   return getEnumMapping(textureFormatMappingToGeneric, formatType, TextureFormat::Count);
+}
+
+DXGI_FORMAT g_getVertexFormatDx12(VertexFormat vertexFormat) {
+  DXGI_FORMAT format = getEnumMapping(vertexFormatMappingToDXGI, vertexFormat, DXGI_FORMAT_UNKNOWN);
+
+  if (format == DXGI_FORMAT_UNKNOWN) {
+    switch (vertexFormat) {
+      case VertexFormat::Rgb8:
+        LOG_WARN("Rgb8 -> RGBA8 fallback (alpha padding applied)");
+        return DXGI_FORMAT_R8G8B8A8_UNORM;
+      case VertexFormat::Rgb16f:
+        LOG_WARN("Rgb16f -> RGBA16f fallback (alpha padding applied)");
+        return DXGI_FORMAT_R16G16B16A16_FLOAT;
+      default:
+        LOG_ERROR("Unsupported vertex format: {}", static_cast<int>(vertexFormat));
+        assert(false && "Unsupported vertex format");
+        break;
+    }
+  }
+
+  return format;
 }
 
 D3D12_DESCRIPTOR_RANGE_TYPE g_getShaderBindingTypeDx12(ShaderBindingType bindingType) {

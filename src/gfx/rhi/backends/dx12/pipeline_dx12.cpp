@@ -15,9 +15,27 @@ namespace arise {
 namespace gfx {
 namespace rhi {
 
-GraphicsPipelineDx12::GraphicsPipelineDx12(const GraphicsPipelineDesc& desc, DeviceDx12* device)
-    : GraphicsPipeline(desc)
+GraphicsPipelineDx12::GraphicsPipelineDx12(const GraphicsPipelineDesc& desc,
+                                           const PipelineLayoutDesc&   reflectionLayout,
+                                           DeviceDx12*                 device)
+    : GraphicsPipeline(desc, reflectionLayout)
     , m_device_(device) {
+  m_ownedLayouts_.reserve(desc.setLayouts.size());
+  std::vector<const DescriptorSetLayout*> ownedLayoutPtrs;
+  ownedLayoutPtrs.reserve(desc.setLayouts.size());
+
+  for (const auto* layout : desc.setLayouts) {
+    if (layout) {
+      auto copiedLayout = m_device_->createDescriptorSetLayout(layout->getDesc());
+      ownedLayoutPtrs.push_back(copiedLayout.get());
+      m_ownedLayouts_.push_back(std::move(copiedLayout));
+    } else {
+      ownedLayoutPtrs.push_back(nullptr);
+    }
+  }
+
+  m_desc_.setLayouts = ownedLayoutPtrs;
+
   if (!initialize_()) {
     LOG_ERROR("Failed to initialize DirectX 12 graphics pipeline");
   }
@@ -165,7 +183,7 @@ bool GraphicsPipelineDx12::createPipelineState_() {
 
     element.SemanticName      = attribute.semanticName.c_str();
     element.SemanticIndex     = attribute.location;
-    element.Format            = g_getTextureFormatDx12(attribute.format);
+    element.Format            = g_getVertexFormatDx12(attribute.format);
     element.InputSlot         = attribute.binding;
     element.AlignedByteOffset = attribute.offset;
 

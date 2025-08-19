@@ -3,6 +3,7 @@
 
 #include "gfx/renderer/debug_strategies/debug_draw_strategy.h"
 #include "gfx/rhi/interface/render_pass.h"
+#include "gfx/rhi/shader_reflection/pipeline_layout_manager.h"
 
 #include <memory>
 #include <vector>
@@ -68,6 +69,8 @@ class WorldGridStrategy : public DebugDrawStrategy {
   // rhi::Buffer*              m_gridParametersBuffer = nullptr;
   // rhi::DescriptorSetLayout* m_gridLayout           = nullptr;
   // rhi::DescriptorSet*       m_gridDescriptorSet    = nullptr;
+
+  rhi::PipelineLayoutManager m_layoutManager;
 };
 
 }  // namespace renderer

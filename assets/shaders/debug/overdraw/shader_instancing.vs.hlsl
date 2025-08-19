@@ -25,15 +25,12 @@ cbuffer ModelParam : register(b0, space1)
     ModelUniformBuffer ModelParam;
 }
 
+#include "../../shader_semantics.hlsli"
+
 struct VSInput
 {
-#ifdef __spirv__
-    [[vk::location(0)]] float3 Position   : POSITION0;
-    [[vk::location(1)]] float4x4 Instance : INSTANCE1;  
-#else
-    float3   Position : POSITION0;
-    float4x4 Instance : INSTANCE1;
-#endif
+    VERTEX_ATTR(POSITION, float3,   Position);
+    VERTEX_ATTR(INSTANCE, float4x4, Instance);
 };
 
 struct VSOutput

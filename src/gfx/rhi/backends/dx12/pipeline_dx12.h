@@ -22,7 +22,9 @@ class DescriptorSetLayoutDx12;
 
 class GraphicsPipelineDx12 : public GraphicsPipeline {
   public:
-  GraphicsPipelineDx12(const GraphicsPipelineDesc& desc, DeviceDx12* device);
+  GraphicsPipelineDx12(const GraphicsPipelineDesc& desc,
+                       const PipelineLayoutDesc&   reflectionLayout,
+                       DeviceDx12*                 device);
   ~GraphicsPipelineDx12() = default;
 
   GraphicsPipelineDx12(const GraphicsPipelineDx12&)            = delete;
@@ -58,6 +60,8 @@ class GraphicsPipelineDx12 : public GraphicsPipeline {
 
   // Store blend factors separately since D3D12 doesn't include them in the blend state
   std::array<float, 4> m_blendFactors_;
+
+  std::vector<std::unique_ptr<DescriptorSetLayout>> m_ownedLayouts_;  // to avoid dangling pointers
 };
 
 }  // namespace rhi

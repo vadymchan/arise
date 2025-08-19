@@ -35,6 +35,31 @@ enum class VertexInputRate : uint8_t {
   Count
 };
 
+enum class VertexFormat : uint8_t {
+  R8,
+  R8ui,
+  R16f,
+  R32f,
+  R32ui,
+  R32si,
+
+  Rg8,
+  Rg16f,
+  Rg32f,
+
+  Rgb8,
+  Rgb16f,
+  Rgb32f,
+
+  Rgba8,
+  Rgba16f,
+  Rgba32f,
+  Rgba8ui,
+  Rgba8si,
+
+  Count
+};
+
 // Buffer update frequency
 enum class BufferType : uint8_t {
   Static,
@@ -396,6 +421,7 @@ enum class TextureCreateFlag : uint32_t {
 DECLARE_ENUM_BIT_OPERATORS(TextureCreateFlag)
 
 int g_getTextureComponentCount(TextureFormat format, RenderingApi api);
+int g_getVertexFormatComponentCount(VertexFormat format);
 
 }  // namespace rhi
 }  // namespace gfx

@@ -22,6 +22,8 @@ VkSamplerMipmapMode g_getTextureMipmapModeVk(TextureFilter textureFilter);
 VkFormat      g_getTextureFormatVk(TextureFormat textureFormat);
 TextureFormat g_getTextureFormatVk(VkFormat format);
 
+VkFormat g_getVertexFormatVk(VertexFormat vertexFormat);
+
 int g_getTextureComponentCountVk(TextureFormat type);
 int g_getTexturePixelSizeVk(TextureFormat type);
 

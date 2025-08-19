@@ -318,8 +318,7 @@ void LightVisualizationStrategy::prepareDrawCalls_(const RenderContext& context)
         materialDescriptorSet = getOrCreateMaterialDescriptorSet_(renderMesh->material);
       }
 
-      std::string pipelineKey = "light_visualization_pipeline_"
-                              + std::to_string(reinterpret_cast<uintptr_t>(renderMesh->gpuMesh->vertexBuffer));
+      std::string pipelineKey = "light_visualization_pipeline";
 
       rhi::GraphicsPipeline* pipeline = m_resourceManager->getPipeline(pipelineKey);
 

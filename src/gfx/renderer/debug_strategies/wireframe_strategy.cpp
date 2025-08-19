@@ -254,8 +254,7 @@ void WireframeStrategy::prepareDrawCalls_(const RenderContext& context) {
     }
 
     for (const auto& renderMesh : model->renderMeshes) {
-      std::string pipelineKey
-          = "wireframe_pipeline_" + std::to_string(reinterpret_cast<uintptr_t>(renderMesh->gpuMesh->vertexBuffer));
+      std::string pipelineKey = "wireframe_pipeline";
 
       rhi::GraphicsPipeline* pipeline = m_resourceManager->getPipeline(pipelineKey);
 

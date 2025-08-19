@@ -296,8 +296,7 @@ void BasePass::prepareDrawCalls_(const RenderContext& context) {
         continue;
       }
 
-      std::string pipelineKey
-          = "base_pipeline_" + std::to_string(reinterpret_cast<uintptr_t>(renderMesh->gpuMesh->vertexBuffer));
+      std::string pipelineKey = "base_pipeline";
 
       rhi::GraphicsPipeline* pipeline = m_resourceManager->getPipeline(pipelineKey);
 

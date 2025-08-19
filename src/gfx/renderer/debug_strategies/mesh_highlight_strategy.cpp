@@ -540,8 +540,7 @@ void MeshHighlightStrategy::prepareDrawCalls_(const RenderContext& context) {
         selectedComp.highlightColor, selectedComp.outlineThickness, selectedComp.xRay);
 
     for (const auto& renderMesh : renderModel->renderMeshes) {
-      std::string pipelineKey
-          = "highlight_pipeline_" + std::to_string(reinterpret_cast<uintptr_t>(renderMesh->gpuMesh->vertexBuffer));
+      std::string pipelineKey = "highlight_pipeline";
 
       rhi::GraphicsPipeline* stencilMarkPipeline = getOrCreateStencilMarkPipeline_(pipelineKey);
       rhi::GraphicsPipeline* outlinePipeline     = getOrCreateOutlinePipeline_(pipelineKey, selectedComp.xRay);

@@ -278,8 +278,7 @@ void NormalMapVisualizationStrategy::prepareDrawCalls_(const RenderContext& cont
         continue;
       }
 
-      std::string pipelineKey
-          = "normal_map_pipeline_" + std::to_string(reinterpret_cast<uintptr_t>(renderMesh->gpuMesh->vertexBuffer));
+      std::string pipelineKey = "normal_map_pipeline";
 
       rhi::GraphicsPipeline* pipeline = m_resourceManager->getPipeline(pipelineKey);
 
@@ -297,10 +296,9 @@ void NormalMapVisualizationStrategy::prepareDrawCalls_(const RenderContext& cont
                                                         sizeof(ecs::Vertex),
                                                         sizeof(math::Matrix4f<>));
 
-          LOG_INFO(
-              "Generated vertex input from shader reflection: {} bindings, {} attributes",
-              pipelineDesc.vertexBindings.size(),
-              pipelineDesc.vertexAttributes.size());
+          LOG_INFO("Generated vertex input from shader reflection: {} bindings, {} attributes",
+                   pipelineDesc.vertexBindings.size(),
+                   pipelineDesc.vertexAttributes.size());
         } else {
           LOG_ERROR("Shader reflection vertex inputs not available - cannot create pipeline");
           continue;

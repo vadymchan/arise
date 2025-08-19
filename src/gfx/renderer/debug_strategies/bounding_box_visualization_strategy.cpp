@@ -265,7 +265,7 @@ void BoundingBoxVisualizationStrategy::prepareDrawCalls_(const RenderContext& co
       continue;
     }
 
-    std::string pipelineKey = "bounding_box_pipeline_" + std::to_string(reinterpret_cast<uintptr_t>(model));
+    std::string pipelineKey = "bounding_box_pipeline";
 
     rhi::GraphicsPipeline* pipeline = m_resourceManager->getPipeline(pipelineKey);
 

@@ -60,7 +60,7 @@ class GraphicsPipeline : public Pipeline {
 
   protected:
   GraphicsPipelineDesc m_desc_;
-  PipelineLayoutDesc   m_reflectionLayout_; 
+  PipelineLayoutDesc   m_reflectionLayout_;
 };
 
 }  // namespace rhi

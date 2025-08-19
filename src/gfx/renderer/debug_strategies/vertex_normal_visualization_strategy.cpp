@@ -245,8 +245,7 @@ void VertexNormalVisualizationStrategy::prepareDrawCalls_(const RenderContext& c
     }
 
     for (const auto& renderMesh : model->renderMeshes) {
-      std::string pipelineKey
-          = "normal_vis_pipeline_" + std::to_string(reinterpret_cast<uintptr_t>(renderMesh->gpuMesh->vertexBuffer));
+      std::string pipelineKey = "normal_vis_pipeline";
 
       rhi::GraphicsPipeline* pipeline = m_resourceManager->getPipeline(pipelineKey);
 
@@ -265,13 +264,11 @@ void VertexNormalVisualizationStrategy::prepareDrawCalls_(const RenderContext& c
                                                         sizeof(ecs::Vertex),
                                                         sizeof(math::Matrix4f<>));
 
-          LOG_INFO(
-              "Generated vertex input from shader reflection: {} bindings, {} attributes",
-              pipelineDesc.vertexBindings.size(),
-              pipelineDesc.vertexAttributes.size());
+          LOG_INFO("Generated vertex input from shader reflection: {} bindings, {} attributes",
+                   pipelineDesc.vertexBindings.size(),
+                   pipelineDesc.vertexAttributes.size());
         } else {
-          LOG_ERROR(
-              "Shader reflection vertex inputs not available - cannot create pipeline");
+          LOG_ERROR("Shader reflection vertex inputs not available - cannot create pipeline");
           continue;
         }
 

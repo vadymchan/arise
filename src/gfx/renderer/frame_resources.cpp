@@ -1,7 +1,9 @@
 #include "gfx/renderer/frame_resources.h"
 
+#include "ecs/components/active_camera.h"
 #include "ecs/components/camera.h"
 #include "ecs/components/light.h"
+#include "ecs/systems/camera_manager_system.h"
 #include "ecs/systems/light_system.h"
 #include "ecs/systems/system_manager.h"
 #include "gfx/renderer/render_resource_manager.h"
@@ -355,16 +357,14 @@ void FrameResources::createRenderTargets_(RenderTargets& targets, const math::Di
 void FrameResources::updateViewResources_(const RenderContext& context) {
   CPU_ZONE_NC("Update View Buffer", color::YELLOW);
   auto& registry = context.scene->getEntityRegistry();
-  auto  view     = registry.view<ecs::Transform, ecs::Camera, ecs::CameraMatrices>();
 
-  if (view.begin() == view.end()) {
-    LOG_WARN("No main Camera exists!");
+  auto entity = ecs::CameraManagerSystem::findActiveCamera(registry);
+  if (entity == entt::null) {
+    LOG_WARN("No active camera found!");
     return;
   }
-
-  auto  entity       = *view.begin();
-  auto& transform    = view.get<ecs::Transform>(entity);
-  auto& cameraMatrix = view.get<ecs::CameraMatrices>(entity);
+  auto& transform    = registry.get<ecs::Transform>(entity);
+  auto& cameraMatrix = registry.get<ecs::CameraMatrices>(entity);
 
   if (!m_viewUniformBuffer) {
     rhi::BufferDesc viewUboDesc;

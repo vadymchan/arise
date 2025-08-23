@@ -1,10 +1,12 @@
 #include "scene/scene_saver.h"
 
+#include "ecs/components/active_camera.h"
 #include "ecs/components/camera.h"
 #include "ecs/components/light.h"
 #include "ecs/components/movement.h"
 #include "ecs/components/render_model.h"
 #include "ecs/components/transform.h"
+#include "ecs/systems/camera_manager_system.h"
 #include "file_loader/file_system_manager.h"
 #include "utils/logger/log.h"
 #include "utils/math/math_util.h"
@@ -94,6 +96,11 @@ void SceneSaver::serializeRegistry(const Registry&                   registry,
 
       const auto& camera = registry.get<ecs::Camera>(entity);
       serializeCamera(camera, componentObject, allocator);
+
+      bool isActive = registry.all_of<ecs::ActiveCamera>(entity);
+      if (isActive) {
+        componentObject.AddMember("active", true, allocator);
+      }
 
       componentsArray.PushBack(componentObject, allocator);
     }

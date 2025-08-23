@@ -3,10 +3,14 @@
 
 #include "config/config_manager.h"
 #include "ecs/component_loaders.h"
+#include "ecs/components/active_camera.h"
 #include "ecs/components/camera.h"
+#include "ecs/components/input_components.h"
 #include "ecs/components/light.h"
 #include "ecs/components/movement.h"
 #include "ecs/components/transform.h"
+#include "ecs/components/viewport_tag.h"
+#include "ecs/systems/camera_manager_system.h"
 #include "utils/logger/log.h"
 #include "utils/model/render_model_manager.h"
 #include "utils/path_manager/path_manager.h"
@@ -70,6 +74,8 @@ Scene* SceneLoader::loadSceneFromFile(const std::filesystem::path& configPath,
       ecs::g_createEntityFromConfig(registry, entityJson);
     }
   }
+
+  ecs::CameraManagerSystem::ensureActiveCameraExists(scene);
 
   return scene;
 }

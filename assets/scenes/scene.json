@@ -3,72 +3,18 @@
     "name": "scene",
     "entities": [
         {
-            "name": "Model_WaterBottle.gltf",
-            "components": [
-                {
-                    "type": "transform",
-                    "position": [
-                        -0.04140859842300415,
-                        4.626559257507324,
-                        -6.177685737609863
-                    ],
-                    "rotation": [
-                        0.0,
-                        -0.0,
-                        0.0
-                    ],
-                    "scale": [
-                        9.0,
-                        9.079999923706055,
-                        9.079999923706055
-                    ]
-                },
-                {
-                    "type": "model",
-                    "path": "assets/models\\gltf\\2.0\\WaterBottle\\glTF\\WaterBottle.gltf"
-                }
-            ]
-        },
-        {
-            "name": "Model_Avocado.gltf",
-            "components": [
-                {
-                    "type": "transform",
-                    "position": [
-                        -4.767551898956299,
-                        3.693049907684326,
-                        -6.345746994018555
-                    ],
-                    "rotation": [
-                        0.0,
-                        -0.0,
-                        6.713086128234863
-                    ],
-                    "scale": [
-                        27.7191219329834,
-                        21.37733268737793,
-                        21.377342224121095
-                    ]
-                },
-                {
-                    "type": "model",
-                    "path": "assets/models/gltf/2.0/Avocado\\glTF\\Avocado.gltf"
-                }
-            ]
-        },
-        {
             "name": "MainCamera",
             "components": [
                 {
                     "type": "transform",
                     "position": [
-                        -3.304457664489746,
-                        5.935012340545654,
-                        -14.269259452819825
+                        2.3762447834014894,
+                        8.215977668762207,
+                        -2.569305181503296
                     ],
                     "rotation": [
-                        20.300039291381837,
-                        2.9133658409118654,
+                        39.99995040893555,
+                        -144.39613342285157,
                         0.0
                     ],
                     "scale": [
@@ -80,10 +26,10 @@
                 {
                     "type": "camera",
                     "cameraType": "perspective",
-                    "fov": 1.57254159450531,
-                    "near": 0.0010000000474974514,
+                    "fov": 1.5707963705062867,
+                    "near": 0.10000000149011612,
                     "far": 1000.0,
-                    "width": 1562.0,
+                    "width": 1470.0,
                     "height": 1027.0
                 },
                 {
@@ -92,54 +38,56 @@
             ]
         },
         {
-            "name": "DirectionalLight",
-            "components": [
-                {
-                    "type": "light",
-                    "color": [
-                        1.0,
-                        1.0,
-                        1.0
-                    ],
-                    "intensity": 4.5
-                },
-                {
-                    "type": "directionalLight",
-                    "direction": [
-                        0.0,
-                        -0.6224371194839478,
-                        0.7826697826385498
-                    ]
-                }
-            ]
-        },
-        {
-            "name": "Model_TwoSidedPlane.gltf",
+            "name": "Model_Duck.gltf",
             "components": [
                 {
                     "type": "transform",
                     "position": [
-                        -2.169548749923706,
-                        3.818899154663086,
-                        -5.955410957336426
+                        2.5071985721588136,
+                        3.4570724964141847,
+                        -6.285557746887207
                     ],
                     "rotation": [
-                        0.0006648505805060267,
+                        0.0,
                         -0.0,
-                        -0.00016306834004353732
+                        0.0
                     ],
                     "scale": [
-                        0.9999942779541016,
                         1.0,
-                        0.9999942779541016
+                        1.0,
+                        1.0
                     ]
                 },
                 {
-                    "type": "movement"
+                    "type": "model",
+                    "path": "assets/models\\gltf\\2.0\\Duck\\glTF\\Duck.gltf"
+                }
+            ]
+        },
+        {
+            "name": "Model_SciFiHelmet.gltf",
+            "components": [
+                {
+                    "type": "transform",
+                    "position": [
+                        -7.98748779296875,
+                        4.322293281555176,
+                        -6.492524147033691
+                    ],
+                    "rotation": [
+                        0.0,
+                        -0.0,
+                        0.0
+                    ],
+                    "scale": [
+                        1.2599999904632569,
+                        1.2599965333938599,
+                        1.2599965333938599
+                    ]
                 },
                 {
                     "type": "model",
-                    "path": "assets/models/gltf/2.0/TwoSidedPlane/glTF/TwoSidedPlane.gltf"
+                    "path": "assets/models\\gltf\\2.0\\SciFiHelmet\\glTF\\SciFiHelmet.gltf"
                 }
             ]
         },
@@ -180,45 +128,70 @@
             ]
         },
         {
-            "name": "Model_SciFiHelmet.gltf",
+            "name": "Model_TwoSidedPlane.gltf",
             "components": [
                 {
                     "type": "transform",
                     "position": [
-                        -7.98748779296875,
-                        4.322293281555176,
-                        -6.492524147033691
+                        -2.169548749923706,
+                        3.818899154663086,
+                        -5.955410957336426
                     ],
                     "rotation": [
-                        0.0,
+                        0.0006648505805060267,
                         -0.0,
-                        0.0
+                        -0.00016306834004353732
                     ],
                     "scale": [
-                        1.2599999904632569,
-                        1.2599965333938599,
-                        1.2599965333938599
+                        0.9999942779541016,
+                        1.0,
+                        0.9999942779541016
                     ]
                 },
                 {
+                    "type": "movement"
+                },
+                {
                     "type": "model",
-                    "path": "assets/models\\gltf\\2.0\\SciFiHelmet\\glTF\\SciFiHelmet.gltf"
+                    "path": "assets/models/gltf/2.0/TwoSidedPlane/glTF/TwoSidedPlane.gltf"
                 }
             ]
         },
         {
-            "name": "Model_Duck.gltf",
+            "name": "DirectionalLight",
+            "components": [
+                {
+                    "type": "light",
+                    "color": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "intensity": 4.5
+                },
+                {
+                    "type": "directionalLight",
+                    "direction": [
+                        0.0,
+                        -0.6224371194839478,
+                        0.7826697826385498
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "MainCamera",
             "components": [
                 {
                     "type": "transform",
                     "position": [
-                        2.5071985721588136,
-                        3.4570724964141847,
-                        -6.285557746887207
+                        -3.304457664489746,
+                        5.935012340545654,
+                        -14.269259452819825
                     ],
                     "rotation": [
-                        0.0,
-                        -0.0,
+                        20.300039291381837,
+                        2.9133658409118654,
                         0.0
                     ],
                     "scale": [
@@ -228,8 +201,71 @@
                     ]
                 },
                 {
+                    "type": "camera",
+                    "cameraType": "perspective",
+                    "fov": 1.57254159450531,
+                    "near": 0.0010000000474974514,
+                    "far": 1000.0,
+                    "width": 1470.0,
+                    "height": 1027.0,
+                    "active": true
+                },
+                {
+                    "type": "movement"
+                }
+            ]
+        },
+        {
+            "name": "Model_Avocado.gltf",
+            "components": [
+                {
+                    "type": "transform",
+                    "position": [
+                        -4.767551898956299,
+                        3.693049907684326,
+                        -6.345746994018555
+                    ],
+                    "rotation": [
+                        0.0,
+                        -0.0,
+                        6.713086128234863
+                    ],
+                    "scale": [
+                        27.7191219329834,
+                        21.37733268737793,
+                        21.377342224121095
+                    ]
+                },
+                {
                     "type": "model",
-                    "path": "assets/models\\gltf\\2.0\\Duck\\glTF\\Duck.gltf"
+                    "path": "assets/models/gltf/2.0/Avocado\\glTF\\Avocado.gltf"
+                }
+            ]
+        },
+        {
+            "name": "Model_WaterBottle.gltf",
+            "components": [
+                {
+                    "type": "transform",
+                    "position": [
+                        -0.04140859842300415,
+                        4.626559257507324,
+                        -6.177685737609863
+                    ],
+                    "rotation": [
+                        0.0,
+                        -0.0,
+                        0.0
+                    ],
+                    "scale": [
+                        9.0,
+                        9.079999923706055,
+                        9.079999923706055
+                    ]
+                },
+                {
+                    "type": "model",
+                    "path": "assets/models\\gltf\\2.0\\WaterBottle\\glTF\\WaterBottle.gltf"
                 }
             ]
         }

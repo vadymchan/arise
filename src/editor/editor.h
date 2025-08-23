@@ -102,6 +102,7 @@ class Editor {
   // TODO: in future consider give to a user the ability to set values
   void addDirectionalLight();
   void addPointLight();
+  void addCamera();
   void addSpotLight();
 
   void removeSelectedEntity();

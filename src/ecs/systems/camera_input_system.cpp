@@ -1,5 +1,6 @@
 #include "ecs/systems/camera_input_system.h"
 
+#include "ecs/components/active_camera.h"
 #include "ecs/components/camera.h"
 #include "ecs/components/input_components.h"
 #include "ecs/components/movement.h"
@@ -14,7 +15,7 @@ namespace ecs {
 
 void CameraInputSystem::update(Scene* scene, float dt) {
   auto& registry = scene->getEntityRegistry();
-  auto  view     = registry.view<InputActions, MouseInput, ViewportTag, Movement, Transform, Camera>();
+  auto  view     = registry.view<InputActions, MouseInput, ViewportTag, Movement, Transform, Camera, ActiveCamera>();
 
   if (view.begin() == view.end()) {
     return;

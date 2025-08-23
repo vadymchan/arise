@@ -3,6 +3,7 @@
 #include "components/input_components.h"
 #include "components/viewport_tag.h"
 #include "config/config_manager.h"
+#include "ecs/components/active_camera.h"
 #include "ecs/components/camera.h"
 #include "ecs/components/light.h"
 #include "ecs/components/movement.h"
@@ -206,6 +207,11 @@ void g_processEntityComponents(Registry& registry, Entity entity, const ConfigVa
       registry.emplace<InputActions>(entity);
       registry.emplace<MouseInput>(entity);
       registry.emplace<ViewportTag>(entity, "Render Window");
+
+      if (component.HasMember("active") && component["active"].IsBool() && component["active"].GetBool()) {
+        registry.emplace<ActiveCamera>(entity);
+        LOG_INFO("Loaded camera as active: entity {}", static_cast<uint32_t>(entity));
+      }
     } else if (componentType == "movement") {
       registry.emplace<Movement>(entity);
     } else if (componentType == "model") {

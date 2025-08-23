@@ -1,5 +1,6 @@
 #include "ecs/systems/mouse_picking_system.h"
 
+#include "ecs/components/active_camera.h"
 #include "ecs/components/bounding_volume.h"
 #include "ecs/components/camera.h"
 #include "ecs/components/mesh.h"
@@ -7,6 +8,7 @@
 #include "ecs/components/selected.h"
 #include "ecs/components/transform.h"
 #include "ecs/components/viewport_tag.h"
+#include "ecs/systems/camera_manager_system.h"
 #include "scene/scene.h"
 #include "utils/logger/log.h"
 
@@ -66,14 +68,7 @@ entt::entity MousePickingSystem::processMouseClick_(Scene* scene, int mouseX, in
 
 entt::entity MousePickingSystem::findActiveCamera_(Scene* scene) {
   auto& registry = scene->getEntityRegistry();
-
-  auto view = registry.view<Transform, Camera, CameraMatrices>();
-
-  if (view.begin() != view.end()) {
-    return *view.begin();
-  }
-
-  return entt::null;
+  return CameraManagerSystem::findActiveCamera(registry);
 }
 
 math::Rayf<> MousePickingSystem::createRayFromScreen_(int                     mouseX,

@@ -1,6 +1,7 @@
 #include "editor/editor.h"
 
 #include "config/config_manager.h"
+#include "ecs/components/active_camera.h"
 #include "ecs/components/camera.h"
 #include "ecs/components/input_components.h"
 #include "ecs/components/light.h"
@@ -13,6 +14,7 @@
 #include "ecs/components/tags.h"
 #include "ecs/components/transform.h"
 #include "ecs/components/viewport_tag.h"
+#include "ecs/systems/camera_manager_system.h"
 #include "ecs/systems/mouse_picking_system.h"
 #include "ecs/systems/system_manager.h"
 #include "gfx/renderer/renderer.h"
@@ -818,6 +820,10 @@ void Editor::renderSceneHierarchyWindow() {
       addSpotLight();
     }
 
+    if (ImGui::Button("Add Camera")) {
+      addCamera();
+    }
+
     if (m_selectedEntity != entt::null) {
       ImGui::SameLine();
       if (ImGui::Button("Remove Selected")) {
@@ -907,6 +913,15 @@ void Editor::renderInspectorWindow() {
   if (registry.all_of<ecs::Camera>(m_selectedEntity)) {
     if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen)) {
       auto& camera = registry.get<ecs::Camera>(m_selectedEntity);
+
+      bool isActive = registry.all_of<ecs::ActiveCamera>(m_selectedEntity);
+      if (ImGui::RadioButton("Active Camera", isActive)) {
+        if (!isActive) {
+          ecs::CameraManagerSystem::setActiveCamera(registry, m_selectedEntity);
+        }
+      }
+
+      ImGui::Separator();
 
       const char* typeItems[] = {"Perspective", "Orthographic"};
       int         currentType = static_cast<int>(camera.type);
@@ -1607,6 +1622,14 @@ bool Editor::shouldRenderGizmo_() {
     return false;
   }
 
+  // Don't render gizmo for the active camera
+  bool isCamera       = registry.all_of<ecs::Camera>(m_selectedEntity);
+  bool isActiveCamera = registry.all_of<ecs::ActiveCamera>(m_selectedEntity);
+
+  if (isCamera && isActiveCamera) {
+    return false;
+  }
+
   return true;
 }
 
@@ -1617,14 +1640,10 @@ entt::entity Editor::getCameraEntity_() {
     return entt::null;
   }
 
-  auto& registry   = scene->getEntityRegistry();
-  auto  cameraView = registry.view<ecs::Camera, ecs::CameraMatrices>();
+  auto& registry = scene->getEntityRegistry();
 
-  if (cameraView.begin() == cameraView.end()) {
-    return entt::null;
-  }
-
-  return cameraView.front();
+  // Use the active camera for gizmo rendering
+  return ecs::CameraManagerSystem::findActiveCamera(registry);
 }
 
 void Editor::setupImGuizmo_(const ImVec2& viewportPos, const math::Dimension2i& viewportSize) {
@@ -1900,6 +1919,33 @@ void Editor::addSpotLight() {
   handleEntitySelection(entity);
 
   LOG_INFO("Spot light added");
+}
+
+void Editor::addCamera() {
+  auto sceneManager = ServiceLocator::s_get<SceneManager>();
+  auto scene        = sceneManager->getCurrentScene();
+
+  if (!scene) {
+    LOG_ERROR("No scene is currently loaded");
+    return;
+  }
+
+  auto newCamera = ecs::CameraManagerSystem::createCamera(scene, "New Camera");
+
+  if (newCamera != entt::null) {
+    auto& registry        = scene->getEntityRegistry();
+    auto& transform       = registry.get<ecs::Transform>(newCamera);
+    transform.translation = getPositionInFrontOfCamera_();
+
+    ecs::CameraManagerSystem::setActiveCamera(registry, newCamera);
+
+    markStatsDirty();
+    handleEntitySelection(newCamera);
+
+    LOG_INFO("Camera added and set as active");
+  } else {
+    LOG_ERROR("Failed to create new camera");
+  }
 }
 
 void Editor::removeSelectedEntity() {

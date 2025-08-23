@@ -59,12 +59,15 @@ class Editor {
   void setApplicationMode(ApplicationMode mode) { m_renderParams.appMode = mode; }
 
   void clearViewportTextureIDs();
+  
+  void markStatsDirty() { m_sceneStats.isDirty = true; }
 
   private:
   void resizeViewport(const gfx::renderer::RenderContext& context);
 
   void renderMainMenu();
   void renderPerformanceWindow();
+  void renderSceneStatsWindow();
   void renderViewportWindow(gfx::renderer::RenderContext& context);
   void renderModeSelectionWindow();
   void renderSceneHierarchyWindow();
@@ -179,6 +182,27 @@ class Editor {
   std::function<void()>                          m_applicationModeToggleCallback;
 
   bool m_preserveRenderModeOnSelection = false;
+
+  struct SceneStats {
+    // Geometry stats
+    uint32_t totalEntities = 0;
+    uint32_t meshEntities = 0;
+    uint32_t totalMeshes = 0;
+    uint64_t totalTriangles = 0;
+    uint64_t totalVertices = 0;
+    uint32_t lightEntities = 0;
+    uint32_t cameraEntities = 0;
+    
+    // Rendering stats
+    uint32_t drawCalls = 0;
+    uint32_t trianglesRendered = 0;
+    uint32_t instancesRendered = 0;
+    uint32_t setPassCalls = 0;
+    uint32_t batches = 0;
+    
+    bool isDirty = true;
+  };
+  SceneStats m_sceneStats;
 };
 
 }  // namespace arise

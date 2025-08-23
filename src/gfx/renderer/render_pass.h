@@ -70,7 +70,7 @@ class RenderPass {
    * - Binds descriptors and records draw commands
    * - endRenderPass
    */
-  virtual void render(const RenderContext& context) = 0;
+  virtual void render(RenderContext& context) = 0;
 
   /**
    * Called at the end of each frame (optional)

@@ -25,7 +25,7 @@ class DebugPass : public RenderPass {
 
   void resize(const math::Dimension2i& newDimension) override;
   void prepareFrame(const RenderContext& context) override;
-  void render(const RenderContext& context) override;
+  void render(RenderContext& context) override;
 
   void endFrame() override {}
   void clearSceneResources();

@@ -25,7 +25,7 @@ class FinalPass : public RenderPass {
 
   void prepareFrame(const RenderContext& context) override {}
 
-  void render(const RenderContext& context) override;
+  void render(RenderContext& context) override;
 
   void cleanup() override;
 

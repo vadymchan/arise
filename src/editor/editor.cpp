@@ -4,10 +4,14 @@
 #include "ecs/components/camera.h"
 #include "ecs/components/input_components.h"
 #include "ecs/components/light.h"
+#include "ecs/components/material.h"
+#include "ecs/components/mesh.h"
+#include "ecs/components/model.h"
 #include "ecs/components/movement.h"
 #include "ecs/components/render_model.h"
 #include "ecs/components/selected.h"
 #include "ecs/components/tags.h"
+#include "ecs/components/transform.h"
 #include "ecs/components/viewport_tag.h"
 #include "ecs/systems/mouse_picking_system.h"
 #include "ecs/systems/system_manager.h"
@@ -30,6 +34,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <set>
 
 namespace arise {
 
@@ -77,6 +82,13 @@ void Editor::render(gfx::renderer::RenderContext& context) {
     return;
   }
 
+  // Copy render statistics from the context
+  m_sceneStats.drawCalls         = context.statistics.drawCalls;
+  m_sceneStats.trianglesRendered = context.statistics.trianglesRendered;
+  m_sceneStats.instancesRendered = context.statistics.instancesRendered;
+  m_sceneStats.setPassCalls      = context.statistics.setPassCalls;
+  m_sceneStats.batches           = context.statistics.batches;
+
   if (m_pendingViewportResize) {
     resizeViewport(context);
     m_pendingViewportResize = false;
@@ -109,6 +121,7 @@ void Editor::render(gfx::renderer::RenderContext& context) {
     ImGui::DockSpaceOverViewport();
 
     renderPerformanceWindow();
+    renderSceneStatsWindow();
     renderViewportWindow(context);
     renderModeSelectionWindow();
     renderSceneHierarchyWindow();
@@ -353,6 +366,212 @@ void Editor::renderPerformanceWindow() {
     }
   } else {
     ImGui::Text("Accumulating data...");
+  }
+
+  ImGui::End();
+}
+
+void Editor::renderSceneStatsWindow() {
+  ImGui::Begin("Scene Statistics");
+
+  auto sceneManager = ServiceLocator::s_get<SceneManager>();
+  if (!sceneManager) {
+    ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.5f, 1.0f), "SceneManager not available");
+    ImGui::End();
+    return;
+  }
+
+  auto scene = sceneManager->getCurrentScene();
+  if (!scene) {
+    ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.5f, 1.0f), "No scene is currently loaded");
+    ImGui::End();
+    return;
+  }
+
+  auto& registry = scene->getEntityRegistry();
+
+  // Check for entity count changes to auto-mark as dirty
+  auto modelView       = registry.view<ecs::Model*>();
+  auto renderModelView = registry.view<ecs::RenderModel*>();
+
+  uint32_t currentMeshEntities = static_cast<uint32_t>(modelView.size());
+  if (currentMeshEntities == 0) {
+    currentMeshEntities = static_cast<uint32_t>(renderModelView.size());
+  }
+
+  if (currentMeshEntities != m_sceneStats.meshEntities) {
+    m_sceneStats.isDirty = true;
+  }
+
+  if (m_sceneStats.isDirty) {
+    m_sceneStats.totalEntities  = 0;
+    m_sceneStats.meshEntities   = 0;
+    m_sceneStats.totalMeshes    = 0;
+    m_sceneStats.totalTriangles = 0;
+    m_sceneStats.totalVertices  = 0;
+    m_sceneStats.lightEntities  = 0;
+    m_sceneStats.cameraEntities = 0;
+
+    std::set<entt::entity> allEntities;
+
+    for (auto entity : registry.view<ecs::Transform>()) {
+      allEntities.insert(entity);
+    }
+    for (auto entity : registry.view<ecs::Model*>()) {
+      allEntities.insert(entity);
+    }
+    for (auto entity : registry.view<ecs::RenderModel*>()) {
+      allEntities.insert(entity);
+    }
+    for (auto entity : registry.view<ecs::DirectionalLight>()) {
+      allEntities.insert(entity);
+    }
+    for (auto entity : registry.view<ecs::PointLight>()) {
+      allEntities.insert(entity);
+    }
+    for (auto entity : registry.view<ecs::SpotLight>()) {
+      allEntities.insert(entity);
+    }
+    for (auto entity : registry.view<ecs::Camera>()) {
+      allEntities.insert(entity);
+    }
+
+    m_sceneStats.totalEntities = static_cast<uint32_t>(allEntities.size());
+
+    for (auto entity : modelView) {
+      auto* model = modelView.get<ecs::Model*>(entity);
+      m_sceneStats.meshEntities++;
+      if (!model) {
+        continue;
+      }
+
+      for (const auto* mesh : model->meshes) {
+        m_sceneStats.totalMeshes++;
+
+        if (!mesh) {
+          continue;
+        }
+
+        uint64_t vertices            = mesh->vertices.size();
+        uint64_t triangles           = mesh->indices.size() / 3;
+        m_sceneStats.totalVertices  += vertices;
+        m_sceneStats.totalTriangles += triangles;
+      }
+    }
+
+    // fallback to RenderModel if no Model components (less accurate)
+    if (modelView.size() == 0 && renderModelView.size() > 0) {
+      for (auto entity : renderModelView) {
+        auto* renderModel = renderModelView.get<ecs::RenderModel*>(entity);
+        if (!renderModel) {
+          continue;
+        }
+        m_sceneStats.meshEntities++;
+        for (const auto* renderMesh : renderModel->renderMeshes) {
+          m_sceneStats.totalMeshes++;
+        }
+      }
+    }
+
+    // lights and cameras
+    m_sceneStats.lightEntities = static_cast<uint32_t>(registry.view<ecs::DirectionalLight>().size())
+                               + static_cast<uint32_t>(registry.view<ecs::PointLight>().size())
+                               + static_cast<uint32_t>(registry.view<ecs::SpotLight>().size());
+    m_sceneStats.cameraEntities = static_cast<uint32_t>(registry.view<ecs::Camera>().size());
+
+    m_sceneStats.isDirty = false;
+  }
+
+  // GEOMETRY Statistics
+  ImGui::TextColored(ImVec4(0.9f, 0.7f, 0.2f, 1.0f), "GEOMETRY");
+  ImGui::Separator();
+  if (ImGui::BeginTable(
+          "GeometryTable", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit)) {
+    ImGui::TableSetupColumn("Parameter", ImGuiTableColumnFlags_WidthFixed, 120.0f);
+    ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
+    ImGui::TableHeadersRow();
+
+    ImGui::TableNextRow();
+    ImGui::TableSetColumnIndex(0);
+    ImGui::Text("Entities");
+    ImGui::TableSetColumnIndex(1);
+    ImGui::Text("%u total", m_sceneStats.totalEntities);
+
+    ImGui::TableNextRow();
+    ImGui::TableSetColumnIndex(0);
+    ImGui::Text("Meshes");
+    ImGui::TableSetColumnIndex(1);
+    ImGui::Text("%u total", m_sceneStats.meshEntities);
+
+    ImGui::TableNextRow();
+    ImGui::TableSetColumnIndex(0);
+    ImGui::Text("Triangles");
+    ImGui::TableSetColumnIndex(1);
+    if (m_sceneStats.totalTriangles >= 1'000'000) {
+      ImGui::Text("%.1fM", m_sceneStats.totalTriangles / 1000000.0);
+    } else if (m_sceneStats.totalTriangles >= 1000) {
+      ImGui::Text("%.1fK", m_sceneStats.totalTriangles / 1000.0);
+    } else {
+      ImGui::Text("%llu", m_sceneStats.totalTriangles);
+    }
+
+    ImGui::TableNextRow();
+    ImGui::TableSetColumnIndex(0);
+    ImGui::Text("Vertices");
+    ImGui::TableSetColumnIndex(1);
+    if (m_sceneStats.totalVertices >= 1'000'000) {
+      ImGui::Text("%.1fM", m_sceneStats.totalVertices / 1000000.0);
+    } else if (m_sceneStats.totalVertices >= 1000) {
+      ImGui::Text("%.1fK", m_sceneStats.totalVertices / 1000.0);
+    } else {
+      ImGui::Text("%llu", m_sceneStats.totalVertices);
+    }
+
+    ImGui::TableNextRow();
+    ImGui::TableSetColumnIndex(0);
+    ImGui::Text("Lights");
+    ImGui::TableSetColumnIndex(1);
+    ImGui::Text("%u total", m_sceneStats.lightEntities);
+
+    ImGui::TableNextRow();
+    ImGui::TableSetColumnIndex(0);
+    ImGui::Text("Cameras");
+    ImGui::TableSetColumnIndex(1);
+    ImGui::Text("%u total", m_sceneStats.cameraEntities);
+
+    ImGui::EndTable();
+  }
+
+  ImGui::Spacing();
+
+  // RENDERING Statistics
+  ImGui::TextColored(ImVec4(0.2f, 0.9f, 0.5f, 1.0f), "RENDERING");
+  ImGui::Separator();
+  if (ImGui::BeginTable(
+          "RenderingTable", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit)) {
+    ImGui::TableSetupColumn("Parameter", ImGuiTableColumnFlags_WidthFixed, 120.0f);
+    ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
+    ImGui::TableHeadersRow();
+
+    ImGui::TableNextRow();
+    ImGui::TableSetColumnIndex(0);
+    ImGui::Text("Draw Calls");
+    ImGui::TableSetColumnIndex(1);
+    ImGui::Text("%u", m_sceneStats.drawCalls);
+
+    ImGui::TableNextRow();
+    ImGui::TableSetColumnIndex(0);
+    ImGui::Text("Batches");
+    ImGui::TableSetColumnIndex(1);
+    ImGui::Text("%u", m_sceneStats.batches);
+
+    ImGui::TableNextRow();
+    ImGui::TableSetColumnIndex(0);
+    ImGui::Text("SetPass");
+    ImGui::TableSetColumnIndex(1);
+    ImGui::Text("%u", m_sceneStats.setPassCalls);
+
+    ImGui::EndTable();
   }
 
   ImGui::End();
@@ -1613,6 +1832,7 @@ void Editor::addDirectionalLight() {
   auto& dirLight     = registry.emplace<ecs::DirectionalLight>(entity);
   dirLight.direction = math::Vector3f(0.0f, -1.0f, 0.0f);
 
+  markStatsDirty();
   handleEntitySelection(entity);
 
   LOG_INFO("Directional light added");
@@ -1643,6 +1863,7 @@ void Editor::addPointLight() {
   auto& pointLight = registry.emplace<ecs::PointLight>(entity);
   pointLight.range = 10.0f;
 
+  markStatsDirty();
   handleEntitySelection(entity);
 
   LOG_INFO("Point light added");
@@ -1675,6 +1896,7 @@ void Editor::addSpotLight() {
   spotLight.innerConeAngle = 15.0f;
   spotLight.outerConeAngle = 30.0f;
 
+  markStatsDirty();
   handleEntitySelection(entity);
 
   LOG_INFO("Spot light added");
@@ -1744,6 +1966,7 @@ void Editor::removeSelectedEntity() {
   }
 
   registry.destroy(m_selectedEntity);
+  markStatsDirty();
   LOG_INFO("{} removed", entityType);
 
   m_selectedEntity = entt::null;
@@ -2031,6 +2254,7 @@ void Editor::createModelEntity(const std::filesystem::path& modelPath, const ecs
             registry.emplace<ecs::Model*>(entity, model);
             registry.emplace<ecs::RenderModel*>(entity, renderModel);
 
+            markStatsDirty();
             handleEntitySelection(entity);
             LOG_INFO("Model loaded successfully: {}", modelPath.string());
           } else {
@@ -2054,16 +2278,19 @@ void Editor::createModelEntity(const std::filesystem::path& modelPath, const ecs
         registry.emplace<ecs::Model*>(entity, model);
         registry.emplace<ecs::RenderModel*>(entity, renderModel);
 
+        markStatsDirty();
         handleEntitySelection(entity);
         LOG_INFO("Model loaded successfully: {}", modelPath.string());
       } else {
         LOG_ERROR("Failed to load model: {}", modelPath.string());
         registry.destroy(entity);
+        markStatsDirty();
         return;
       }
     } else {
       LOG_ERROR("RenderModelManager not available");
       registry.destroy(entity);
+      markStatsDirty();
       return;
     }
   }
@@ -2238,6 +2465,7 @@ void Editor::switchToScene_(const std::string& sceneName) {
     }
 
     m_selectedEntity = entt::null;
+    markStatsDirty();  // Scene switch changes entity counts
     LOG_INFO("Switched to scene: {}", sceneName);
   } else {
     LOG_ERROR("Failed to switch to scene: {}", sceneName);
@@ -2270,6 +2498,7 @@ void Editor::createNewScene_() {
 
   if (sceneManager->switchToScene(sceneName)) {
     LOG_INFO("Created and switched to new scene: {}", sceneName);
+    markStatsDirty();  // Scene switch changes entity counts
     createDefaultCamera_();
     saveCurrentScene_();
   } else {
@@ -2313,6 +2542,7 @@ void Editor::createDefaultCamera_() {
 
   registry.emplace<ecs::Movement>(cameraEntity);
 
+  markStatsDirty();
   LOG_INFO("Created default camera with input components");
 }
 

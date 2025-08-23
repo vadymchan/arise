@@ -16,7 +16,7 @@ void FinalPass::initialize(rhi::Device*           device,
   m_frameResources  = frameResources;
 }
 
-void FinalPass::render(const RenderContext& context) {
+void FinalPass::render(RenderContext& context) {
   CPU_ZONE_NC("FinalPass::render", color::ORANGE);
 
   auto commandBuffer = context.commandBuffer.get();

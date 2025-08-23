@@ -13,6 +13,27 @@ namespace gfx {
 namespace renderer {
 
 /**
+ * Statistics collected during frame rendering
+ */
+struct RenderStatistics {
+  uint32_t drawCalls         = 0;
+  uint32_t trianglesRendered = 0;
+  uint32_t instancesRendered = 0;
+  uint32_t verticesProcessed = 0;
+  uint32_t setPassCalls      = 0;  // Pipeline switches
+  uint32_t batches           = 0;  // Number of draw call batches
+
+  void reset() {
+    drawCalls         = 0;
+    trianglesRendered = 0;
+    instancesRendered = 0;
+    verticesProcessed = 0;
+    setPassCalls      = 0;
+    batches           = 0;
+  }
+};
+
+/**
  * Context holding all the information needed for rendering a frame
  */
 struct RenderContext {
@@ -21,6 +42,7 @@ struct RenderContext {
   math::Dimension2i                   viewportDimension;
   RenderSettings                      renderSettings;
   uint32_t                            currentImageIndex = 0;
+  RenderStatistics                    statistics;
 };
 
 }  // namespace renderer

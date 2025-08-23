@@ -91,7 +91,7 @@ void BasePass::prepareFrame(const RenderContext& context) {
   prepareDrawCalls_(context);
 }
 
-void BasePass::render(const RenderContext& context) {
+void BasePass::render(RenderContext& context) {
   CPU_ZONE_NC("BasePass::render", color::ORANGE);
 
   auto commandBuffer = context.commandBuffer.get();
@@ -130,8 +130,23 @@ void BasePass::render(const RenderContext& context) {
 
   {
     CPU_ZONE_NC("Draw Models", color::GREEN);
+    
+    rhi::GraphicsPipeline* lastPipeline = nullptr;
+    rhi::DescriptorSet* lastMaterialDescriptorSet = nullptr;
+    
     for (const auto& drawData : m_drawData) {
-      commandBuffer->setPipeline(drawData.pipeline);
+      // render statistics - pipeline switches
+      if (drawData.pipeline != lastPipeline) {
+        commandBuffer->setPipeline(drawData.pipeline);
+        context.statistics.setPassCalls++;
+        lastPipeline = drawData.pipeline;
+      }
+      
+      // render statistics - material batches (using descriptor set as proxy for material)
+      if (drawData.materialDescriptorSet != lastMaterialDescriptorSet) {
+        context.statistics.batches++;
+        lastMaterialDescriptorSet = drawData.materialDescriptorSet;
+      }
 
       if (m_frameResources->getViewDescriptorSet()) {
         commandBuffer->bindDescriptorSet(0, m_frameResources->getViewDescriptorSet());
@@ -158,6 +173,11 @@ void BasePass::render(const RenderContext& context) {
       commandBuffer->bindIndexBuffer(drawData.indexBuffer, 0, true);
 
       commandBuffer->drawIndexedInstanced(drawData.indexCount, drawData.instanceCount, 0, 0, 0);
+      
+      // render statistics
+      context.statistics.drawCalls++;
+      context.statistics.instancesRendered += drawData.instanceCount;
+      context.statistics.trianglesRendered += (drawData.indexCount / 3) * drawData.instanceCount;
     }
   }
   commandBuffer->endRenderPass();

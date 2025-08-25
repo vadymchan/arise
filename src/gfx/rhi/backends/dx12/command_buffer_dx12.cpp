@@ -101,19 +101,17 @@ void CommandBufferDx12::setPipeline(Pipeline* pipeline) {
     return;
   }
 
-  auto pipelineDx12 = dynamic_cast<GraphicsPipelineDx12*>(pipeline);
-  if (!pipelineDx12) {
-    LOG_ERROR("Invalid pipeline type");
-    return;
-  }
+  auto pipelineType = pipeline->getType();
 
-  m_commandList_->SetPipelineState(pipelineDx12->getPipelineState());  // PSO
-
-  // root signature (graphics / compute)
-  auto pipelineType = pipelineDx12->getType();
   if (pipelineType == PipelineType::Graphics) {
-    m_commandList_->SetGraphicsRootSignature(pipelineDx12->getRootSignature());
+    auto pipelineDx12 = dynamic_cast<GraphicsPipelineDx12*>(pipeline);
+    if (!pipelineDx12) {
+      LOG_ERROR("Invalid graphics pipeline type");
+      return;
+    }
 
+    m_commandList_->SetPipelineState(pipelineDx12->getPipelineState());
+    m_commandList_->SetGraphicsRootSignature(pipelineDx12->getRootSignature());
     m_commandList_->OMSetBlendFactor(pipelineDx12->getBlendFactors().data());
 
     const auto& desc = pipelineDx12->getDesc();
@@ -131,11 +129,21 @@ void CommandBufferDx12::setPipeline(Pipeline* pipeline) {
     D3D_PRIMITIVE_TOPOLOGY topology = g_getPrimitiveTopologyDx12(pipelineDx12->getPrimitiveType());
     m_commandList_->IASetPrimitiveTopology(topology);
 
-  } else if (pipelineType == PipelineType::Compute) {
-    m_commandList_->SetComputeRootSignature(pipelineDx12->getRootSignature());
-  }
+    m_currentPipeline_ = pipelineDx12;
 
-  m_currentPipeline_ = pipelineDx12;
+  } else if (pipelineType == PipelineType::Compute) {
+    auto pipelineDx12 = dynamic_cast<ComputePipelineDx12*>(pipeline);
+    if (!pipelineDx12) {
+      LOG_ERROR("Invalid compute pipeline type");
+      return;
+    }
+
+    m_commandList_->SetPipelineState(pipelineDx12->getPipelineState());
+    m_commandList_->SetComputeRootSignature(pipelineDx12->getRootSignature());
+
+    m_currentComputePipeline_ = pipelineDx12;
+    m_currentPipeline_        = nullptr;
+  }
 }
 
 void CommandBufferDx12::setViewport(const Viewport& viewport) {
@@ -302,6 +310,15 @@ void CommandBufferDx12::drawIndexedInstanced(
     return;
   }
   m_commandList_->DrawIndexedInstanced(indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
+}
+
+void CommandBufferDx12::dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) {
+  if (!m_isRecording_) {
+    LOG_ERROR("Command buffer is not recording");
+    return;
+  }
+
+  m_commandList_->Dispatch(groupCountX, groupCountY, groupCountZ);
 }
 
 void CommandBufferDx12::resourceBarrier(const ResourceBarrierDesc& barrier) {

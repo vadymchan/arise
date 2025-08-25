@@ -90,28 +90,41 @@ void CommandBufferVk::setPipeline(Pipeline* pipeline) {
     return;
   }
 
-  auto pipelineVk = dynamic_cast<GraphicsPipelineVk*>(pipeline);
-  if (!pipelineVk) {
-    LOG_ERROR("Invalid pipeline type");
+  VkPipelineBindPoint bindPoint;
+  VkPipeline          vkPipeline = VK_NULL_HANDLE;
+
+  auto pipelineType = pipeline->getType();
+
+  if (pipelineType == PipelineType::Graphics) {
+    auto pipelineVk = dynamic_cast<GraphicsPipelineVk*>(pipeline);
+    if (!pipelineVk) {
+      LOG_ERROR("Invalid graphics pipeline type");
+      return;
+    }
+
+    bindPoint                 = VK_PIPELINE_BIND_POINT_GRAPHICS;
+    vkPipeline                = pipelineVk->getPipeline();
+    m_currentPipeline_        = pipelineVk;
+    m_currentComputePipeline_ = nullptr;
+
+  } else if (pipelineType == PipelineType::Compute) {
+    auto pipelineVk = dynamic_cast<ComputePipelineVk*>(pipeline);
+    if (!pipelineVk) {
+      LOG_ERROR("Invalid compute pipeline type");
+      return;
+    }
+
+    bindPoint                 = VK_PIPELINE_BIND_POINT_COMPUTE;
+    vkPipeline                = pipelineVk->getPipeline();
+    m_currentComputePipeline_ = pipelineVk;
+    m_currentPipeline_        = nullptr;
+
+  } else {
+    LOG_ERROR("Unknown pipeline type");
     return;
   }
 
-  VkPipelineBindPoint bindPoint;
-  switch (pipelineVk->getType()) {
-    case PipelineType::Graphics:
-      bindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-      break;
-    case PipelineType::Compute:
-      bindPoint = VK_PIPELINE_BIND_POINT_COMPUTE;
-      break;
-    default:
-      LOG_ERROR("Invalid pipeline type");
-      return;
-  }
-
-  vkCmdBindPipeline(m_commandBuffer_, bindPoint, pipelineVk->getPipeline());
-
-  m_currentPipeline_  = pipelineVk;
+  vkCmdBindPipeline(m_commandBuffer_, bindPoint, vkPipeline);
   m_currentBindPoint_ = bindPoint;
 }
 
@@ -249,6 +262,15 @@ void CommandBufferVk::drawIndexedInstanced(
   }
 
   vkCmdDrawIndexed(m_commandBuffer_, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
+}
+
+void CommandBufferVk::dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) {
+  if (!m_isRecording_) {
+    LOG_ERROR("Command buffer is not recording");
+    return;
+  }
+
+  vkCmdDispatch(m_commandBuffer_, groupCountX, groupCountY, groupCountZ);
 }
 
 void CommandBufferVk::resourceBarrier(const ResourceBarrierDesc& barrier) {

@@ -33,6 +33,8 @@ class DeviceVk : public Device {
   std::unique_ptr<Shader>              createShader(const ShaderDesc& desc) override;
   std::unique_ptr<GraphicsPipeline>    createGraphicsPipeline(const GraphicsPipelineDesc& desc) override;
   std::unique_ptr<GraphicsPipeline>    createGraphicsPipelineWithReflection(const GraphicsPipelineDesc& desc) override;
+  std::unique_ptr<ComputePipeline>     createComputePipeline(const ComputePipelineDesc& desc) override;
+  std::unique_ptr<ComputePipeline>     createComputePipelineWithReflection(const ComputePipelineDesc& desc) override;
   std::unique_ptr<DescriptorSetLayout> createDescriptorSetLayout(const DescriptorSetLayoutDesc& desc) override;
   std::unique_ptr<DescriptorSet>       createDescriptorSet(const DescriptorSetLayout* layout) override;
   std::unique_ptr<RenderPass>          createRenderPass(const RenderPassDesc& desc) override;

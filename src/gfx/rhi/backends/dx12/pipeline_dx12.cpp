@@ -15,6 +15,10 @@ namespace arise {
 namespace gfx {
 namespace rhi {
 
+//-------------------------------------------------------------------------
+// GraphicsPipelineDx12 implementation
+//-------------------------------------------------------------------------
+
 GraphicsPipelineDx12::GraphicsPipelineDx12(const GraphicsPipelineDesc& desc,
                                            const PipelineLayoutDesc&   reflectionLayout,
                                            DeviceDx12*                 device)
@@ -406,6 +410,196 @@ D3D12_SHADER_VISIBILITY GraphicsPipelineDx12::determineShaderVisibility_(
   }
 
   return g_getShaderVisibilityDx12(commonFlag);
+}
+
+//-------------------------------------------------------------------------
+// ComputePipelineDx12 implementation
+//-------------------------------------------------------------------------
+
+ComputePipelineDx12::ComputePipelineDx12(const ComputePipelineDesc& desc,
+                                         const PipelineLayoutDesc&  reflectionLayout,
+                                         DeviceDx12*                device)
+    : ComputePipeline(desc, reflectionLayout)
+    , m_device_(device) {
+  m_ownedLayouts_.reserve(desc.setLayouts.size());
+  std::vector<const DescriptorSetLayout*> ownedLayoutPtrs;
+  ownedLayoutPtrs.reserve(desc.setLayouts.size());
+
+  for (const auto* layout : desc.setLayouts) {
+    if (layout) {
+      auto copiedLayout = m_device_->createDescriptorSetLayout(layout->getDesc());
+      ownedLayoutPtrs.push_back(copiedLayout.get());
+      m_ownedLayouts_.push_back(std::move(copiedLayout));
+    } else {
+      ownedLayoutPtrs.push_back(nullptr);
+    }
+  }
+
+  m_desc_.setLayouts = ownedLayoutPtrs;
+
+  if (!initialize_()) {
+    LOG_ERROR("Failed to initialize DirectX 12 compute pipeline");
+  }
+}
+
+bool ComputePipelineDx12::rebuild() {
+  m_pipelineState_.Reset();
+  if (createPipelineState_()) {
+    LOG_INFO("Successfully rebuilt DirectX 12 compute pipeline");
+    m_updateFrame = -1;
+    return true;
+  } else {
+    LOG_ERROR("Failed to rebuild DirectX 12 compute pipeline");
+    return false;
+  }
+}
+
+bool ComputePipelineDx12::initialize_() {
+  if (!createRootSignature_()) {
+    LOG_ERROR("Failed to create root signature for DX12 compute pipeline");
+    return false;
+  }
+
+  if (!createPipelineState_()) {
+    LOG_ERROR("Failed to create compute pipeline state object for DX12");
+    return false;
+  }
+
+  return true;
+}
+
+bool ComputePipelineDx12::createRootSignature_() {
+  std::vector<D3D12_ROOT_PARAMETER>                rootParameters;
+  std::vector<std::vector<D3D12_DESCRIPTOR_RANGE>> allRanges;
+  allRanges.reserve(m_desc_.setLayouts.size());
+
+  for (size_t i = 0; i < m_desc_.setLayouts.size(); ++i) {
+    const auto* layoutBase = m_desc_.setLayouts[i];
+    if (!layoutBase) {
+      LOG_ERROR("Null descriptor set layout provided");
+      continue;
+    }
+
+    const auto* layout = dynamic_cast<const DescriptorSetLayoutDx12*>(layoutBase);
+    if (!layout) {
+      LOG_ERROR("Invalid descriptor set layout type for DX12 compute pipeline");
+      return false;
+    }
+
+    const auto& originalRanges = layout->getDescriptorRanges();
+    if (originalRanges.empty()) {
+      continue;
+    }
+
+    std::vector<D3D12_DESCRIPTOR_RANGE> newRanges;
+    newRanges.reserve(originalRanges.size());
+
+    for (const auto& range : originalRanges) {
+      D3D12_DESCRIPTOR_RANGE newRange = range;
+      newRange.RegisterSpace          = static_cast<UINT>(i);
+      newRanges.push_back(newRange);
+    }
+
+    allRanges.push_back(std::move(newRanges));
+
+    D3D12_ROOT_PARAMETER rootParam                = {};
+    rootParam.ParameterType                       = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    rootParam.DescriptorTable.NumDescriptorRanges = static_cast<UINT>(allRanges.back().size());
+    rootParam.DescriptorTable.pDescriptorRanges   = allRanges.back().data();
+    rootParam.ShaderVisibility                    = D3D12_SHADER_VISIBILITY_ALL;
+
+    rootParameters.push_back(rootParam);
+  }
+
+  // sampler descriptor ranges
+  std::vector<D3D12_STATIC_SAMPLER_DESC> staticSamplers;
+
+  // default sampler
+  D3D12_STATIC_SAMPLER_DESC sampler = {};
+  sampler.Filter                    = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+  sampler.AddressU                  = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+  sampler.AddressV                  = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+  sampler.AddressW                  = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+  sampler.MipLODBias                = 0;
+  sampler.MaxAnisotropy             = 1;
+  sampler.ComparisonFunc            = D3D12_COMPARISON_FUNC_NEVER;
+  sampler.BorderColor               = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+  sampler.MinLOD                    = 0.0f;
+  sampler.MaxLOD                    = D3D12_FLOAT32_MAX;
+  sampler.ShaderRegister            = 0;
+  sampler.RegisterSpace             = 0;
+  sampler.ShaderVisibility          = D3D12_SHADER_VISIBILITY_ALL;
+  staticSamplers.push_back(sampler);
+
+  // root signature desc
+  D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
+  rootSignatureDesc.NumParameters             = static_cast<UINT>(rootParameters.size());
+  rootSignatureDesc.pParameters               = rootParameters.empty() ? nullptr : rootParameters.data();
+  rootSignatureDesc.NumStaticSamplers         = static_cast<UINT>(staticSamplers.size());
+  rootSignatureDesc.pStaticSamplers           = staticSamplers.empty() ? nullptr : staticSamplers.data();
+  rootSignatureDesc.Flags                     = D3D12_ROOT_SIGNATURE_FLAG_NONE;
+
+  ComPtr<ID3DBlob> signature;
+  ComPtr<ID3DBlob> error;
+  HRESULT hr = D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error);
+
+  if (FAILED(hr)) {
+    if (error) {
+      LOG_ERROR("Failed to serialize root signature: {}", static_cast<char*>(error->GetBufferPointer()));
+    }
+    return false;
+  }
+
+  hr = m_device_->getDevice()->CreateRootSignature(
+      0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_rootSignature_));
+
+  if (FAILED(hr)) {
+    LOG_ERROR("Failed to create root signature: {}", hr);
+    return false;
+  }
+
+  return true;
+}
+
+bool ComputePipelineDx12::createPipelineState_() {
+  if (!m_desc_.computeShader) {
+    LOG_ERROR("Compute shader is required for compute pipeline");
+    return false;
+  }
+
+  auto* shaderDx12 = dynamic_cast<ShaderDx12*>(m_desc_.computeShader);
+  if (!shaderDx12) {
+    LOG_ERROR("Invalid shader type for DX12 compute pipeline");
+    return false;
+  }
+
+  ComPtr<ID3DBlob> computeShaderBlob = shaderDx12->getShaderBlob();
+  if (!computeShaderBlob) {
+    LOG_ERROR("Failed to get compute shader blob");
+    return false;
+  }
+
+  D3D12_COMPUTE_PIPELINE_STATE_DESC psoDesc = {};
+  psoDesc.pRootSignature                    = m_rootSignature_.Get();
+  psoDesc.CS.pShaderBytecode                = computeShaderBlob->GetBufferPointer();
+  psoDesc.CS.BytecodeLength                 = computeShaderBlob->GetBufferSize();
+  psoDesc.NodeMask                          = 0;
+  psoDesc.CachedPSO                         = {nullptr, 0};
+  psoDesc.Flags                             = D3D12_PIPELINE_STATE_FLAG_NONE;
+
+  HRESULT hr = m_device_->getDevice()->CreateComputePipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState_));
+
+  if (FAILED(hr)) {
+    LOG_ERROR("Failed to create compute pipeline state: {}", hr);
+    return false;
+  }
+
+  return true;
+}
+
+D3D12_SHADER_VISIBILITY ComputePipelineDx12::determineShaderVisibility_(
+    const std::vector<DescriptorSetLayoutBindingDesc>& bindings) {
+  return D3D12_SHADER_VISIBILITY_ALL;
 }
 
 }  // namespace rhi

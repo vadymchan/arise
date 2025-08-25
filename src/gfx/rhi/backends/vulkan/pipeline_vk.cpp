@@ -11,6 +11,10 @@ namespace arise {
 namespace gfx {
 namespace rhi {
 
+//-------------------------------------------------------------------------
+// GraphicsPipelineVk implementation
+//-------------------------------------------------------------------------
+
 GraphicsPipelineVk::GraphicsPipelineVk(const GraphicsPipelineDesc& desc,
                                        const PipelineLayoutDesc&   reflectionLayout,
                                        DeviceVk*                   device)
@@ -373,6 +377,140 @@ bool GraphicsPipelineVk::createPipelineLayout_() {
 
   if (vkCreatePipelineLayout(m_device_->getDevice(), &pipelineLayoutInfo, nullptr, &m_pipelineLayout_) != VK_SUCCESS) {
     LOG_ERROR("Failed to create pipeline layout");
+    return false;
+  }
+
+  return true;
+}
+
+//-------------------------------------------------------------------------
+// ComputePipelineVk implementation
+//-------------------------------------------------------------------------
+
+ComputePipelineVk::ComputePipelineVk(const ComputePipelineDesc& desc,
+                                     const PipelineLayoutDesc&   reflectionLayout,
+                                     DeviceVk*                   device)
+    : ComputePipeline(desc, reflectionLayout)
+    , m_device_(device)
+    , m_pipeline_(VK_NULL_HANDLE)
+    , m_pipelineLayout_(VK_NULL_HANDLE) {
+  m_ownedLayouts_.reserve(desc.setLayouts.size());
+  std::vector<const DescriptorSetLayout*> ownedLayoutPtrs;
+  ownedLayoutPtrs.reserve(desc.setLayouts.size());
+
+  for (const auto* layout : desc.setLayouts) {
+    if (layout) {
+      auto copiedLayout = m_device_->createDescriptorSetLayout(layout->getDesc());
+      ownedLayoutPtrs.push_back(copiedLayout.get());
+      m_ownedLayouts_.push_back(std::move(copiedLayout));
+    } else {
+      ownedLayoutPtrs.push_back(nullptr);
+    }
+  }
+
+  m_desc_.setLayouts = ownedLayoutPtrs;
+
+  if (!initialize_()) {
+    LOG_ERROR("Failed to initialize Vulkan compute pipeline");
+  }
+}
+
+ComputePipelineVk::~ComputePipelineVk() {
+  if (m_pipeline_ != VK_NULL_HANDLE) {
+    vkDestroyPipeline(m_device_->getDevice(), m_pipeline_, nullptr);
+    m_pipeline_ = VK_NULL_HANDLE;
+  }
+
+  if (m_pipelineLayout_ != VK_NULL_HANDLE) {
+    vkDestroyPipelineLayout(m_device_->getDevice(), m_pipelineLayout_, nullptr);
+    m_pipelineLayout_ = VK_NULL_HANDLE;
+  }
+}
+
+bool ComputePipelineVk::rebuild() {
+  if (m_pipeline_ != VK_NULL_HANDLE) {
+    vkDestroyPipeline(m_device_->getDevice(), m_pipeline_, nullptr);
+    m_pipeline_ = VK_NULL_HANDLE;
+  }
+
+  if (createPipeline_()) {
+    LOG_INFO("Successfully rebuilt Vulkan compute pipeline");
+    m_updateFrame = -1;
+    return true;
+  }
+
+  LOG_ERROR("Failed to rebuild Vulkan compute pipeline");
+  return false;
+}
+
+bool ComputePipelineVk::initialize_() {
+  if (!createPipelineLayout_()) {
+    LOG_ERROR("Failed to create compute pipeline layout");
+    return false;
+  }
+
+  return createPipeline_();
+}
+
+bool ComputePipelineVk::createPipeline_() {
+  if (!m_desc_.computeShader) {
+    LOG_ERROR("Compute shader is required for compute pipeline");
+    return false;
+  }
+
+  auto* shaderVk = dynamic_cast<ShaderVk*>(m_desc_.computeShader);
+  if (!shaderVk) {
+    LOG_ERROR("Invalid shader type for Vulkan compute pipeline");
+    return false;
+  }
+
+  VkPipelineShaderStageCreateInfo shaderStageInfo = {};
+  shaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+  shaderStageInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+  shaderStageInfo.module = shaderVk->getShaderModule();
+  shaderStageInfo.pName = shaderVk->getEntryPoint().c_str();
+
+  VkComputePipelineCreateInfo pipelineInfo = {};
+  pipelineInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+  pipelineInfo.stage = shaderStageInfo;
+  pipelineInfo.layout = m_pipelineLayout_;
+  pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+  pipelineInfo.basePipelineIndex = -1;
+
+  if (vkCreateComputePipelines(m_device_->getDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_pipeline_) != VK_SUCCESS) {
+    LOG_ERROR("Failed to create compute pipeline");
+    return false;
+  }
+
+  return true;
+}
+
+bool ComputePipelineVk::createPipelineLayout_() {
+  std::vector<VkDescriptorSetLayout> vkDescriptorSetLayouts;
+  
+  for (const auto* layoutBase : m_desc_.setLayouts) {
+    if (!layoutBase) {
+      continue;
+    }
+
+    const auto* layoutVk = dynamic_cast<const DescriptorSetLayoutVk*>(layoutBase);
+    if (!layoutVk) {
+      LOG_ERROR("Invalid descriptor set layout type for Vulkan compute pipeline");
+      return false;
+    }
+
+    vkDescriptorSetLayouts.push_back(layoutVk->getLayout());
+  }
+
+  VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
+  pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+  pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(vkDescriptorSetLayouts.size());
+  pipelineLayoutInfo.pSetLayouts = vkDescriptorSetLayouts.empty() ? nullptr : vkDescriptorSetLayouts.data();
+  pipelineLayoutInfo.pushConstantRangeCount = 0;
+  pipelineLayoutInfo.pPushConstantRanges = nullptr;
+
+  if (vkCreatePipelineLayout(m_device_->getDevice(), &pipelineLayoutInfo, nullptr, &m_pipelineLayout_) != VK_SUCCESS) {
+    LOG_ERROR("Failed to create compute pipeline layout");
     return false;
   }
 

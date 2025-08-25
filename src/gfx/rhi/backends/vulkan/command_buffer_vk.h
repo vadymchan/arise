@@ -13,6 +13,7 @@ namespace rhi {
 
 class DeviceVk;
 class GraphicsPipelineVk;
+class ComputePipelineVk;
 class BufferVk;
 class TextureVk;
 class DescriptorSetVk;
@@ -53,6 +54,9 @@ class CommandBufferVk : public CommandBuffer {
   void drawInstanced(uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex = 0, uint32_t firstInstance = 0) override;
   void drawIndexedInstanced(uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex = 0, int32_t vertexOffset = 0, uint32_t firstInstance = 0) override;
 
+  // Compute dispatch
+  void dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) override;
+
   // Resource barriers
   void resourceBarrier(const ResourceBarrierDesc& barrier) override;
 
@@ -84,12 +88,13 @@ class CommandBufferVk : public CommandBuffer {
   VkCommandPool   m_commandPool_;
 
   // Current state tracking
-  GraphicsPipelineVk* m_currentPipeline_    = nullptr;
-  RenderPassVk*       m_currentRenderPass_  = nullptr;
-  FramebufferVk*      m_currentFramebuffer_ = nullptr;
-  bool                m_isRenderPassActive_ = false;
-  bool                m_isRecording_        = false;
-  VkPipelineBindPoint m_currentBindPoint_   = VK_PIPELINE_BIND_POINT_GRAPHICS;
+  GraphicsPipelineVk* m_currentPipeline_        = nullptr;
+  ComputePipelineVk*  m_currentComputePipeline_ = nullptr;
+  RenderPassVk*       m_currentRenderPass_      = nullptr;
+  FramebufferVk*      m_currentFramebuffer_     = nullptr;
+  bool                m_isRenderPassActive_     = false;
+  bool                m_isRecording_            = false;
+  VkPipelineBindPoint m_currentBindPoint_       = VK_PIPELINE_BIND_POINT_GRAPHICS;
 };
 
 // clang-format on

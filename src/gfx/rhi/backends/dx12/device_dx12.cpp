@@ -476,6 +476,32 @@ void DeviceDx12::waitIdle() {
   CloseHandle(eventHandle);
 }
 
+std::unique_ptr<ComputePipeline> DeviceDx12::createComputePipeline(const ComputePipelineDesc& desc) {
+  return std::make_unique<ComputePipelineDx12>(desc, PipelineLayoutDesc{}, this);
+}
+
+std::unique_ptr<ComputePipeline> DeviceDx12::createComputePipelineWithReflection(const ComputePipelineDesc& desc) {
+  if (!desc.computeShader) {
+    LOG_ERROR("Compute shader is required for compute pipeline");
+    return nullptr;
+  }
+
+  std::vector<Shader*> shaders          = {desc.computeShader};
+  PipelineLayoutDesc   reflectionLayout = pipeline_utils::generatePipelineLayoutFromShaders(shaders);
+
+  std::vector<std::unique_ptr<DescriptorSetLayout>> ownedLayouts;
+  auto layoutPtrs = pipeline_utils::createDescriptorSetLayouts(this, reflectionLayout, ownedLayouts);
+
+  ComputePipelineDesc reflectedDesc = desc;
+  reflectedDesc.setLayouts = layoutPtrs;
+
+  auto pipeline = std::make_unique<ComputePipelineDx12>(reflectedDesc, reflectionLayout, this);
+
+  ownedLayouts.clear();
+
+  return pipeline;
+}
+
 }  // namespace rhi
 }  // namespace gfx
 }  // namespace arise

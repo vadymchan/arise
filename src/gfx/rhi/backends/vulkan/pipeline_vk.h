@@ -53,6 +53,35 @@ class GraphicsPipelineVk : public GraphicsPipeline {
   std::vector<std::unique_ptr<DescriptorSetLayout>> m_ownedLayouts_;  // to avoid dangling pointers
 };
 
+class ComputePipelineVk : public ComputePipeline {
+  public:
+  ComputePipelineVk(const ComputePipelineDesc& desc, const PipelineLayoutDesc& reflectionLayout, DeviceVk* device);
+  ~ComputePipelineVk() override;
+
+  ComputePipelineVk(const ComputePipelineVk&)            = delete;
+  ComputePipelineVk& operator=(const ComputePipelineVk&) = delete;
+
+  bool rebuild() override;
+
+  // Vulkan-specific methods
+  VkPipeline getPipeline() const { return m_pipeline_; }
+
+  VkPipelineLayout getPipelineLayout() const { return m_pipelineLayout_; }
+
+  private:
+  bool initialize_();
+
+  bool createPipeline_();
+  bool createPipelineLayout_();
+
+  DeviceVk* m_device_;
+
+  VkPipeline       m_pipeline_;
+  VkPipelineLayout m_pipelineLayout_;
+
+  std::vector<std::unique_ptr<DescriptorSetLayout>> m_ownedLayouts_;  // to avoid dangling pointers
+};
+
 }  // namespace rhi
 }  // namespace gfx
 }  // namespace arise

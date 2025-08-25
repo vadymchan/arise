@@ -64,6 +64,39 @@ class GraphicsPipelineDx12 : public GraphicsPipeline {
   std::vector<std::unique_ptr<DescriptorSetLayout>> m_ownedLayouts_;  // to avoid dangling pointers
 };
 
+class ComputePipelineDx12 : public ComputePipeline {
+  public:
+  ComputePipelineDx12(const ComputePipelineDesc& desc,
+                      const PipelineLayoutDesc&   reflectionLayout,
+                      DeviceDx12*                 device);
+  ~ComputePipelineDx12() = default;
+
+  ComputePipelineDx12(const ComputePipelineDx12&)            = delete;
+  ComputePipelineDx12& operator=(const ComputePipelineDx12&) = delete;
+
+  bool rebuild() override;
+
+  // DirectX 12-specific methods
+  ID3D12PipelineState* getPipelineState() const { return m_pipelineState_.Get(); }
+
+  ID3D12RootSignature* getRootSignature() const { return m_rootSignature_.Get(); }
+
+  private:
+  bool initialize_();
+
+  bool createRootSignature_();
+  bool createPipelineState_();
+
+  D3D12_SHADER_VISIBILITY determineShaderVisibility_(const std::vector<DescriptorSetLayoutBindingDesc>& bindings);
+
+  DeviceDx12* m_device_;
+
+  ComPtr<ID3D12PipelineState> m_pipelineState_;
+  ComPtr<ID3D12RootSignature> m_rootSignature_;
+
+  std::vector<std::unique_ptr<DescriptorSetLayout>> m_ownedLayouts_;  // to avoid dangling pointers
+};
+
 }  // namespace rhi
 }  // namespace gfx
 }  // namespace arise

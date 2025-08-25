@@ -224,6 +224,11 @@ struct GraphicsPipelineDesc {
   uint32_t                                subpass    = 0;
 };
 
+struct ComputePipelineDesc {
+  Shader* computeShader = nullptr;
+  std::vector<const DescriptorSetLayout*> setLayouts;
+};
+
 //------------------------------------------------------
 // Render pass and framebuffer
 //------------------------------------------------------

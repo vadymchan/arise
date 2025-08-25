@@ -20,6 +20,7 @@ class Texture;
 class Sampler;
 class Shader;
 class GraphicsPipeline;
+class ComputePipeline;
 class DescriptorSetLayout;
 class DescriptorSet;
 class RenderPass;
@@ -53,10 +54,9 @@ class Device {
   virtual std::unique_ptr<Sampler>             createSampler(const SamplerDesc& desc)                                   = 0;
   virtual std::unique_ptr<Shader>              createShader(const ShaderDesc& desc)                                     = 0;
   virtual std::unique_ptr<GraphicsPipeline>    createGraphicsPipeline(const GraphicsPipelineDesc& desc)                 = 0;
-  /**
-   * Create graphics pipeline with automatic shader reflection
-   */
-  virtual std::unique_ptr<GraphicsPipeline>    createGraphicsPipelineWithReflection(const GraphicsPipelineDesc& desc) = 0;
+  virtual std::unique_ptr<GraphicsPipeline>    createGraphicsPipelineWithReflection(const GraphicsPipelineDesc& desc)   = 0;
+  virtual std::unique_ptr<ComputePipeline>     createComputePipeline(const ComputePipelineDesc& desc)                   = 0;
+  virtual std::unique_ptr<ComputePipeline>     createComputePipelineWithReflection(const ComputePipelineDesc& desc)     = 0;
   virtual std::unique_ptr<DescriptorSetLayout> createDescriptorSetLayout(const DescriptorSetLayoutDesc& desc)           = 0;
   virtual std::unique_ptr<DescriptorSet>       createDescriptorSet(const DescriptorSetLayout* layout)                   = 0;
   virtual std::unique_ptr<RenderPass>          createRenderPass(const RenderPassDesc& desc)                             = 0;

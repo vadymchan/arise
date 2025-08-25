@@ -577,6 +577,32 @@ void DeviceVk::waitIdle() {
   }
 }
 
+std::unique_ptr<ComputePipeline> DeviceVk::createComputePipeline(const ComputePipelineDesc& desc) {
+  return std::make_unique<ComputePipelineVk>(desc, PipelineLayoutDesc{}, this);
+}
+
+std::unique_ptr<ComputePipeline> DeviceVk::createComputePipelineWithReflection(const ComputePipelineDesc& desc) {
+  if (!desc.computeShader) {
+    LOG_ERROR("Compute shader is required for compute pipeline");
+    return nullptr;
+  }
+
+  std::vector<Shader*> shaders          = {desc.computeShader};
+  PipelineLayoutDesc   reflectionLayout = pipeline_utils::generatePipelineLayoutFromShaders(shaders);
+
+  std::vector<std::unique_ptr<DescriptorSetLayout>> ownedLayouts;
+  auto layoutPtrs = pipeline_utils::createDescriptorSetLayouts(this, reflectionLayout, ownedLayouts);
+
+  ComputePipelineDesc reflectedDesc = desc;
+  reflectedDesc.setLayouts          = layoutPtrs;
+
+  auto pipeline = std::make_unique<ComputePipelineVk>(reflectedDesc, reflectionLayout, this);
+
+  ownedLayouts.clear();
+
+  return pipeline;
+}
+
 }  // namespace rhi
 }  // namespace gfx
 }  // namespace arise

@@ -48,7 +48,8 @@ class CommandBuffer {
   virtual void drawIndexedInstanced(uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex = 0, int32_t vertexOffset = 0, uint32_t firstInstance = 0) = 0;
   // TODO: add more draw commands if needed
 
-  // TODO: in future add 'Compute dispatch' section
+  // Compute dispatch
+  virtual void dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) = 0;
 
   // Resource barriers
   virtual void resourceBarrier(const ResourceBarrierDesc& barrier) = 0;

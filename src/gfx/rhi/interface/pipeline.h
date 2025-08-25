@@ -50,7 +50,7 @@ class GraphicsPipeline : public Pipeline {
 
   virtual ~GraphicsPipeline() = default;
 
-  PipelineType getType() const { return PipelineType::Graphics; }
+  PipelineType getType() const override { return PipelineType::Graphics; }
 
   const GraphicsPipelineDesc& getDesc() const { return m_desc_; }
 
@@ -61,6 +61,27 @@ class GraphicsPipeline : public Pipeline {
   protected:
   GraphicsPipelineDesc m_desc_;
   PipelineLayoutDesc   m_reflectionLayout_;
+};
+
+/**
+ * Represents a compute pipeline that can be used for GPU compute operations.
+ * Contains a single compute shader and descriptor set layouts.
+ */
+class ComputePipeline : public Pipeline {
+  public:
+  ComputePipeline(const ComputePipelineDesc& desc, const PipelineLayoutDesc& reflectionLayout = {})
+      : m_desc_(desc)
+      , m_reflectionLayout_(reflectionLayout) {}
+
+  virtual ~ComputePipeline() = default;
+
+  PipelineType getType() const override { return PipelineType::Compute; }
+
+  const ComputePipelineDesc& getDesc() const { return m_desc_; }
+
+  protected:
+  ComputePipelineDesc m_desc_;
+  PipelineLayoutDesc  m_reflectionLayout_;
 };
 
 }  // namespace rhi

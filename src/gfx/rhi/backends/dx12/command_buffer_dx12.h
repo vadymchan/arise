@@ -15,6 +15,7 @@ class BufferDx12;
 class TextureDx12;
 class DescriptorSetDx12;
 class GraphicsPipelineDx12;
+class ComputePipelineDx12;
 class RenderPassDx12;
 class FramebufferDx12;
 
@@ -56,6 +57,9 @@ class CommandBufferDx12 : public CommandBuffer {
   void drawIndexed(uint32_t indexCount, uint32_t firstIndex = 0, int32_t vertexOffset = 0) override;
   void drawInstanced(uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex = 0, uint32_t firstInstance = 0) override;
   void drawIndexedInstanced(uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex = 0, int32_t vertexOffset = 0, uint32_t firstInstance = 0) override;
+  
+  // Compute dispatch
+  void dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) override;
   
   // Resource barriers
   void resourceBarrier(const ResourceBarrierDesc& barrier) override;
@@ -104,6 +108,7 @@ class CommandBufferDx12 : public CommandBuffer {
   ID3D12CommandAllocator*    m_commandAllocator_;
 
   GraphicsPipelineDx12*    m_currentPipeline_    = nullptr;
+  ComputePipelineDx12*     m_currentComputePipeline_ = nullptr;
   RenderPassDx12*          m_currentRenderPass_  = nullptr;
   FramebufferDx12*         m_currentFramebuffer_ = nullptr;
   bool                     m_isRenderPassActive_ = false;
